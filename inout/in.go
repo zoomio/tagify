@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/gpestana/htmlizer"
 )
 
 // In - Input. This struct provides methods for reading strings
@@ -58,6 +60,17 @@ func NewIn(name string) In {
 		lines, err = linesFromReader(resp.Body)
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from %s: %v", name, err))
+		}
+
+		// will trim out all the tabs from text
+		hizer, err := htmlizer.New([]rune{'\t'})
+		if err != nil {
+			panic(fmt.Sprintf("error in reading from %s: %v", name, err))
+		}
+
+		for i, line := range lines {
+			hizer.Load(line)
+			lines[i] = hizer.HumanReadable()
 		}
 	}
 
