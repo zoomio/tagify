@@ -7,4 +7,4 @@ if [ -z "$OS" ]; then
 fi
 
 go test ./...
-env GOOS=${OS} GOARCH=amd64 go build -o tagify .
+env GOOS=${OS} GOARCH=amd64 go build -o tagify cmd/cli/cli.go
