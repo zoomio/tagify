@@ -78,6 +78,23 @@ func NewIn(name string) In {
 	}
 }
 
+// NewInFromString ...
+func NewInFromString(input string) In {
+	var lines []string
+	scanner := bufio.NewScanner(strings.NewReader(input))
+	// Set the split function for the scanning operation.
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		panic(fmt.Sprintf("error in reading input: %v", err))
+	}
+	return In{
+		lines: lines,
+	}
+}
+
 // ReadAllStrings provides slice of strings from input split by white space.
 func (in *In) ReadAllStrings() []string {
 	tokens := make([]string, 0)
