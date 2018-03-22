@@ -2,10 +2,10 @@
 
 Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent tags as an output.
 
-Example:
+Example, get 10 most frequent words from StackOverflow main page:
 ```bash
 $ tagify -s=https://stackoverflow.com -l=10
-in to a of on How not using from with
+application using page add file server run ionic local error
 ```
 
 ## Installation
