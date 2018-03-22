@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gpestana/htmlizer"
@@ -37,8 +36,8 @@ func NewIn(name string) In {
 		lines, err = linesFromReader(bufio.NewReader(os.Stdin))
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from STDIN: %v", err))
-		}	
-	// File system	
+		}
+	// File system
 	} else if _, err := os.Stat(name); err == nil {
 		f, err := os.Open(name)
 		if err != nil {
@@ -65,7 +64,7 @@ func NewIn(name string) In {
 		// will trim out all the tabs from text
 		hizer, err := htmlizer.New([]rune{'\t'})
 		if err != nil {
-			panic(fmt.Sprintf("error in reading from %s: %v", name, err))
+			panic(fmt.Sprintf("error in triming content from %s: %v", name, err))
 		}
 
 		for i, line := range lines {
@@ -88,23 +87,6 @@ func (in *In) ReadAllStrings() []string {
 		}
 	}
 	return tokens
-}
-
-// ReadAllInts reads all remaining tokens from this input stream, parses them as integers,
-// and returns them as an array of integers.
-//
-// Returns all remaining lines in this input stream, as an array of integers
-func (in *In) ReadAllInts() []int {
-	fields := in.ReadAllStrings()
-	vals := make([]int, len(fields))
-	for i, f := range fields {
-		n, err := strconv.ParseInt(f, 10, 64)
-		if err != nil {
-			panic(fmt.Sprintf("error in parsing %s: %v", f, err))
-		}
-		vals[i] = int(n)
-	}
-	return vals
 }
 
 func linesFromReader(r io.Reader) ([]string, error) {

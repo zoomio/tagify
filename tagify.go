@@ -37,14 +37,18 @@ func toStrings(items []*item) []string {
 	return strs
 }
 
-// Process ...
+// Process produces slice of tags ordered by frequency and limited by limit.
 func Process(source string, limit int) []string {
 	in := inout.NewIn(source)
 	strs := in.ReadAllStrings()
 	if strs == nil || len(strs) == 0 {
 		return []string{}
 	}
-	items := toItems(countStrings(strs))
+	filtered := Filter(strs)
+	if len(filtered) == 0 {
+		return []string{}
+	}
+	items := toItems(countStrings(filtered))
 	sortByCountDescending(items)
 	if limit > 0 {
 		return toStrings(items[:limit])

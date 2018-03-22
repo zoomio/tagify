@@ -13,5 +13,6 @@ func main() {
 	limit := flag.Int("l", 0, "Tags limit")
 	flag.Parse()
 
+	tagify.InitStopWords()
 	fmt.Printf("%v\n", strings.Join(tagify.Process(*source, *limit), " "))
 }
