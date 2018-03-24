@@ -7,14 +7,20 @@ import (
 	"net/http"
 	"os"
 	"strings"
+)
 
-	"github.com/gpestana/htmlizer"
+// Source types
+const (
+	STDIn = iota
+	FS
+	Web
 )
 
 // In - Input. This struct provides methods for reading strings
 // and numbers from standard input, file input, URLs, and sockets.
 type In struct {
 	lines []string
+	SourceType int
 }
 
 // NewIn initializes an input stream from STDIN, file or web page.
@@ -22,60 +28,50 @@ type In struct {
 // name - the filename or web page name, reads from STDIN if name is empty.
 // Panics on errors.
 func NewIn(name string) In {
-	var lines []string
+	in := In{}
 
 	// STDIN
 	if name == "" {
+		in.SourceType = STDIn
 		stat, err := os.Stdin.Stat()
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from STDIN: %v", err))
 		}
 		if (stat.Mode() & os.ModeCharDevice) != 0 {
-			return In{}
+			return in
 		}
-		lines, err = linesFromReader(bufio.NewReader(os.Stdin))
+		in.lines, err = linesFromReader(bufio.NewReader(os.Stdin))
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from STDIN: %v", err))
 		}
 	// File system
 	} else if _, err := os.Stat(name); err == nil {
+		in.SourceType = FS
 		f, err := os.Open(name)
 		if err != nil {
 			panic(fmt.Sprintf("error in opening file %s for reading: %v", name, err))
 		}
 		defer f.Close()
-		lines, err = linesFromReader(bufio.NewReader(f))
+		in.lines, err = linesFromReader(bufio.NewReader(f))
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from file %s: %v", name, err))
 		}
 	// HTTP
 	} else {
+		in.SourceType = Web
 		resp, err := http.Get(name)
 		if err != nil {
 			panic(fmt.Sprintf("provided name=%s is not a file and not a URL: %v", name, err))
 		}
 
 		defer resp.Body.Close()
-		lines, err = linesFromReader(resp.Body)
+		in.lines, err = linesFromReader(resp.Body)
 		if err != nil {
 			panic(fmt.Sprintf("error in reading from %s: %v", name, err))
 		}
-
-		// will trim out all the tabs from text
-		hizer, err := htmlizer.New([]rune{'\t'})
-		if err != nil {
-			panic(fmt.Sprintf("error in triming content from %s: %v", name, err))
-		}
-
-		for i, line := range lines {
-			hizer.Load(line)
-			lines[i] = hizer.HumanReadable()
-		}
 	}
 
-	return In{
-		lines: lines,
-	}
+	return in
 }
 
 // NewInFromString ...
@@ -93,6 +89,11 @@ func NewInFromString(input string) In {
 	return In{
 		lines: lines,
 	}
+}
+
+// GetLines returns lines.
+func (in *In) GetLines() []string {
+	return in.lines
 }
 
 // ReadAllStrings provides slice of strings from input split by white space.

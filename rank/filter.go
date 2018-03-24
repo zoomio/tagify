@@ -1,15 +1,17 @@
-package tagify
+package rank
 
 import (
 	"regexp"
 	"strings"
+
+	"github.com/gobuffalo/packr"
 
 	"github.com/zoomio/tagify/inout"
 )
 
 var (
 	index stopWords
-	reg = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
+	reg   = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 )
 
 // stopWords ...
@@ -32,8 +34,8 @@ func sanitize(s string) string {
 }
 
 // InitStopWords ...
-func InitStopWords() {
-	in := inout.NewIn("stop-word-list.txt")
+func InitStopWords(box *packr.Box) {
+	in := inout.NewInFromString(box.String("stop-word-list.txt"))
 	strs := in.ReadAllStrings()
 	index = indexStopWords(strs)
 }
@@ -42,11 +44,20 @@ func InitStopWords() {
 func Filter(strs []string) []string {
 	filtered := make([]string, 0)
 	for _, s := range strs {
-		v := sanitize(strings.ToLower(s))
-		if v == "" || index[v] {
+		sanitized, ok := Assess(s)
+		if !ok {
 			continue
 		}
-		filtered = append(filtered, v)
+		filtered = append(filtered, sanitized)
 	}
 	return filtered
+}
+
+// Assess sanitizes word and tells whether it is allowed token or not.
+func Assess(sanitized string) (string, bool) {
+	v := sanitize(strings.ToLower(sanitized))
+	if v == "" || index[v] {
+		return v, false
+	}
+	return v, true
 }

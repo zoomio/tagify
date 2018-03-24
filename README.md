@@ -8,11 +8,13 @@ $ tagify -s=https://stackoverflow.com -l=10
 application using page add file server run ionic local error
 ```
 
-## Installation
-
-TODO
-
 ## Development
 
 * [Go](https://golang.org/dl/)
 * [Dep](https://golang.github.io/dep/docs/installation.html)
+
+## TODO
+
+* Introduce verbose mode with self-explanatory output
+* Add automatic release pipeline
+* Increase test coverage

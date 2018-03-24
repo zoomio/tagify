@@ -1,55 +1,36 @@
 package tagify
 
 import (
+	"github.com/zoomio/tagify/rank"
 	"github.com/zoomio/tagify/inout"
 )
 
-type item struct {
-	value string
-	count int
-}
-
-func countStrings(strs []string) map[string]int {
-	items := make(map[string]int)
-	for _, s := range strs {
-		items[s]++
-	}
-	return items
-}
-
-func toItems(strs map[string]int) []*item {
-	items := make([]*item, len(strs))
-	var i int
-	for s, count := range strs {
-		items[i] = &item{value: s, count: count}
-		i++
-	}
-	return items
-}
-
-func toStrings(items []*item) []string {
+func toStrings(items []*rank.Item) []string {
 	strs := make([]string, len(items))
 	var i int
 	for _, item := range items {
-		strs[i] = item.value
+		strs[i] = item.Value
 		i++
 	}
 	return strs
 }
 
-// Process produces slice of tags ordered by frequency and limited by limit.
-func Process(source string, limit int) []string {
+// GetTags produces slice of tags ordered by frequency and limited by limit.
+func GetTags(source string, limit int) []string {
 	in := inout.NewIn(source)
-	strs := in.ReadAllStrings()
-	if strs == nil || len(strs) == 0 {
-		return []string{}
+
+	var items []*rank.Item
+
+	switch in.SourceType {
+	case inout.STDIn, inout.FS:
+		items = rank.ParseText(in.ReadAllStrings())
+	case inout.Web:
+		items = rank.ParseHTML(in.GetLines())
+	default:
+		panic("unrecognized source")
 	}
-	filtered := Filter(strs)
-	if len(filtered) == 0 {
-		return []string{}
-	}
-	items := toItems(countStrings(filtered))
-	sortByCountDescending(items)
+
+	sortByScoreDescending(items)
 	if limit > 0 {
 		return toStrings(items[:limit])
 	}

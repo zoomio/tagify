@@ -1,4 +1,4 @@
-package tagify
+package rank
 
 import (
 	"testing"

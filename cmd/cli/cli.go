@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gobuffalo/packr"
+
 	"github.com/zoomio/tagify"
+	"github.com/zoomio/tagify/rank"
 )
 
 func main() {
@@ -13,6 +16,7 @@ func main() {
 	limit := flag.Int("l", 0, "Tags limit")
 	flag.Parse()
 
-	tagify.InitStopWords()
-	fmt.Printf("%v\n", strings.Join(tagify.Process(*source, *limit), " "))
+	box := packr.NewBox("../../_files")
+	rank.InitStopWords(&box)
+	fmt.Printf("%v\n", strings.Join(tagify.GetTags(*source, *limit), " "))
 }

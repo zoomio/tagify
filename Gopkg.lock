@@ -8,10 +8,22 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/gobuffalo/packr"
+  packages = ["."]
+  revision = "3b045e91f1107684685627303665f7e02b1be016"
+  version = "v1.10.6"
+
+[[projects]]
   name = "github.com/gpestana/htmlizer"
   packages = ["."]
   revision = "76498b8c7d3d98b7669e81f7a60ca13aa217b106"
   version = "v1.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -20,19 +32,8 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/stretchr/objx"
-  packages = ["."]
-  revision = "facf9a85c22f48d2f52f2380e4efce1768749a89"
-  version = "v0.1"
-
-[[projects]]
   name = "github.com/stretchr/testify"
-  packages = [
-    ".",
-    "assert",
-    "http",
-    "mock"
-  ]
+  packages = ["assert"]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
@@ -48,6 +49,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5394610718e6c4a66e7d13975f1ab4730292074111bcf332035012af854fa762"
+  inputs-digest = "93d107d538c2c0d62d209ddc4bcdf50ce7a4d557e19fdbfcb5927e025b20650b"
   solver-name = "gps-cdcl"
   solver-version = 1
