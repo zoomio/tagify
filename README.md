@@ -15,12 +15,6 @@ application using page add file server run ionic local error
 * [Go](https://golang.org/dl/)
 * [Dep](https://golang.github.io/dep/docs/installation.html)
 
-## TODO
-
-* Introduce verbose mode with self-explanatory output
-* Add automatic release pipeline
-* Increase test coverage
-
 ## License
 
 Released under the [Apache License 2.0](https://raw.githubusercontent.com/zoomio/tagify/master/LICENSE).
