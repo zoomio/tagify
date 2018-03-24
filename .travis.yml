@@ -8,6 +8,7 @@ install:
   - dep ensure
 
 script: 
+  - ./_scripts/lint.sh
   - ./_scripts/build.sh darwin
   - ./_scripts/build.sh linux
 
