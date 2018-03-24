@@ -20,3 +20,7 @@ application using page add file server run ionic local error
 * Introduce verbose mode with self-explanatory output
 * Add automatic release pipeline
 * Increase test coverage
+
+## License
+
+Released under the [Apache License 2.0](https://raw.githubusercontent.com/zoomio/tagify/master/LICENSE).
