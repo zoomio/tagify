@@ -20,6 +20,12 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  revision = "04140366298a54a039076d798123ffa108fff46c"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -49,6 +55,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "93d107d538c2c0d62d209ddc4bcdf50ce7a4d557e19fdbfcb5927e025b20650b"
+  inputs-digest = "021a748ca8588d7871bd011e576ceaa531727b6dee3f607df76d8c101e5b9cc0"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/packr"
+	"github.com/jinzhu/inflection"
 
 	"github.com/zoomio/tagify/inout"
 )
@@ -33,6 +34,10 @@ func sanitize(s string) string {
 	return reg.ReplaceAllString(s, "${2}")
 }
 
+func toSingular(s string) string {
+	return inflection.Singular(s)
+}
+
 // InitStopWords ...
 func InitStopWords(box *packr.Box) {
 	in := inout.NewInFromString(box.String("stop-word-list.txt"))
@@ -56,8 +61,11 @@ func Filter(strs []string) []string {
 // Assess sanitizes word and tells whether it is allowed token or not.
 func Assess(sanitized string) (string, bool) {
 	v := sanitize(strings.ToLower(sanitized))
-	if v == "" || index[v] {
+	if v == "" {
 		return v, false
 	}
-	return v, true
+	if index[v] {
+		return v, false
+	}
+	return toSingular(v), true
 }
