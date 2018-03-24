@@ -49,7 +49,7 @@ func InitStopWords(box *packr.Box) {
 func Filter(strs []string) []string {
 	filtered := make([]string, 0)
 	for _, s := range strs {
-		sanitized, ok := Assess(s)
+		sanitized, ok := Normalize(s)
 		if !ok {
 			continue
 		}
@@ -58,8 +58,8 @@ func Filter(strs []string) []string {
 	return filtered
 }
 
-// Assess sanitizes word and tells whether it is allowed token or not.
-func Assess(sanitized string) (string, bool) {
+// Normalize sanitizes word and tells whether it is allowed token or not.
+func Normalize(sanitized string) (string, bool) {
 	v := sanitize(strings.ToLower(sanitized))
 	if v == "" {
 		return v, false
