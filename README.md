@@ -1,4 +1,6 @@
-# tagify
+# Tagify
+
+[![Build Status](https://travis-ci.org/zoomio/tagify.svg?branch=master)](https://travis-ci.org/zoomio/tagify)
 
 Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent tags as an output.
 
