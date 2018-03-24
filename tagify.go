@@ -16,7 +16,7 @@ func toStrings(items []*rank.Item) []string {
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source string, limit int) []string {
+func GetTags(source string, limit int, verbose bool) []string {
 	in := inout.NewIn(source)
 
 	var items []*rank.Item
@@ -25,7 +25,7 @@ func GetTags(source string, limit int) []string {
 	case inout.STDIn, inout.FS:
 		items = rank.ParseText(in.ReadAllStrings())
 	case inout.Web:
-		items = rank.ParseHTML(in.GetLines())
+		items = rank.ParseHTML(in.GetLines(), verbose)
 	default:
 		panic("unrecognized source")
 	}

@@ -29,7 +29,7 @@ var (
 // Result:
 //	foo: 5 + 1, story: 5, management: 1 + 1, skills: 1 + 1.
 //
-func ParseHTML(lines []string) []*Item {
+func ParseHTML(lines []string, verbose bool) []*Item {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil {
@@ -38,6 +38,11 @@ func ParseHTML(lines []string) []*Item {
 
 	for _, line := range lines {
 		hizer.Load(line)
+	}
+
+	if verbose {
+		fmt.Println("\nparsed HTML: ")
+		fmt.Printf("%v\n\n", hizer)
 	}
 
 	index := make(map[string]*Item)
