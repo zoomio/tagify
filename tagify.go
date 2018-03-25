@@ -15,24 +15,37 @@ func toStrings(items []*rank.Item) []string {
 	return strs
 }
 
-// GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source string, limit int, verbose bool) []string {
-	in := inout.NewIn(source)
-
+func processInput(in *inout.In, limit int, verbose bool) ([]string, error) {
 	var items []*rank.Item
 
-	switch in.SourceType {
-	case inout.STDIn, inout.FS:
-		items = rank.ParseText(in.ReadAllStrings())
-	case inout.Web:
-		items = rank.ParseHTML(in.GetLines(), verbose)
+	switch in.ContentType {
+	case inout.HTML:
+		items = rank.ParseHTML(in.GetLines(), verbose)		
 	default:
-		panic("unrecognized source")
+		items = rank.ParseText(in.ReadAllStrings())
 	}
 
 	sortByScoreDescending(items)
 	if limit > 0 {
-		return toStrings(items[:limit])
+		return toStrings(items[:limit]), nil
 	}
-	return toStrings(items)
+	return toStrings(items), nil
+}
+
+// GetTags produces slice of tags ordered by frequency and limited by limit.
+func GetTags(source string, contentType, limit int, verbose bool) ([]string, error) {
+	in, err := inout.NewIn(source, contentType)
+	if err != nil {
+		return []string{}, err
+	}
+	return processInput(&in, limit, verbose)
+}
+
+// GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
+func GetTagsFromString(input string, contentType, limit int, verbose bool) ([]string, error) {
+	in, err := inout.NewInFromString(input, contentType)
+	if err != nil {
+		return []string{}, err
+	}
+	return processInput(&in, limit, verbose)
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/zoomio/tagify/inout"
 )
 
+const stopWordsFileName = "stop-word-list.txt"
+
 var (
 	index stopWords
 	reg   = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
@@ -39,10 +41,13 @@ func toSingular(s string) string {
 }
 
 // InitStopWords ...
-func InitStopWords(box *packr.Box) {
-	in := inout.NewInFromString(box.String("stop-word-list.txt"))
-	strs := in.ReadAllStrings()
-	index = indexStopWords(strs)
+func InitStopWords(box *packr.Box) error {
+	in, err := inout.NewInFromString(box.String(stopWordsFileName), int(inout.Text))
+	if err != nil {
+		return err
+	}
+	index = indexStopWords(in.ReadAllStrings())
+	return nil
 }
 
 // Filter ...

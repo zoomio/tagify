@@ -1,8 +1,8 @@
 package main
 
 import (
+	"os"
 	"flag"
-	"fmt"
 	"strings"
 
 	"github.com/gobuffalo/packr"
@@ -15,9 +15,25 @@ func main() {
 	source := flag.String("s", "", "Source")
 	limit := flag.Int("l", 0, "Tags limit")
 	verbose := flag.Bool("v", false, "Verbose mode")
+	contentType := flag.Int("t", -1, "Content type")
 	flag.Parse()
 
 	box := packr.NewBox("../../_files")
-	rank.InitStopWords(&box)
-	fmt.Printf("%v\n", strings.Join(tagify.GetTags(*source, *limit, *verbose), " "))
+
+	var err error
+	var tags []string
+	
+	err = rank.InitStopWords(&box)
+	if err != nil && *verbose {
+		println(err)
+		os.Exit(1)
+	}
+
+	tags, err = tagify.GetTags(*source, *contentType, *limit, *verbose)
+	if err != nil && *verbose {
+		println(err)
+		os.Exit(2)
+	}
+
+	println(strings.Join(tags, " "))
 }
