@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.2.0
+ - code refactoring;
+ - simplified internal structure for ease of API use.
+
 ## 0.1.0
  - better error handling;
  - code refactoring;

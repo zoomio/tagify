@@ -4,29 +4,16 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gobuffalo/packr"
 	"github.com/jinzhu/inflection"
-
-	"github.com/zoomio/tagify/inout"
 )
 
-const stopWordsFileName = "stop-word-list.txt"
-
 var (
-	index stopWords
+	index = stopWords(make(map[string]bool))
 	reg   = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 )
 
 // stopWords ...
 type stopWords map[string]bool
-
-func indexStopWords(strs []string) stopWords {
-	sw := stopWords(make(map[string]bool))
-	for _, s := range strs {
-		sw[strings.ToLower(s)] = true
-	}
-	return sw
-}
 
 // sanitize ...
 func sanitize(s string) string {
@@ -40,14 +27,11 @@ func toSingular(s string) string {
 	return inflection.Singular(s)
 }
 
-// InitStopWords ...
-func InitStopWords(box *packr.Box) error {
-	in, err := inout.NewInFromString(box.String(stopWordsFileName), int(inout.Text))
-	if err != nil {
-		return err
+// RegisterStopWords ...
+func RegisterStopWords(words []string) {
+	for _, s := range words {
+		index[strings.ToLower(s)] = true
 	}
-	index = indexStopWords(in.ReadAllStrings())
-	return nil
 }
 
 // Filter ...
