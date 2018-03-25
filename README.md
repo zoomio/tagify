@@ -24,10 +24,13 @@ application using page add file server run ionic local error
 go get -u github.com/zoomio/tagify/...
 ```
 
-## Development
+## Changelog
 
-* [Go](https://golang.org/dl/)
-* [Dep](https://golang.github.io/dep/docs/installation.html)
+See [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](https://raw.githubusercontent.com/zoomio/tagify/master/CONTRIBUTING.md)
 
 ## License
 
