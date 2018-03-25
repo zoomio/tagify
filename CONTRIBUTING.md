@@ -21,3 +21,8 @@ Prior to accepting your contributions we ask that you please follow the appropri
 * [Go](https://golang.org/dl/)
 * To build binary run `./_scripts/build.sh` in shell, it will produce `tagify` binary.
 * To install use `./_scripts/install.sh`, it will put `tagify` binary under `~/bin` directory assuming it is in your `PATH`.
+
+## Release
+
+* All notable changes comming with the new version should be documented in [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md).
+* Use `./_scripts/tag.sh <x.y.z>` to tag, push and trigger new release. 
