@@ -9,6 +9,8 @@ install:
 
 script: 
   - ./_scripts/test.sh
+
+before_deploy:
   - ./_scripts/build.sh darwin ${TRAVIS_TAG}
   - ./_scripts/build.sh linux ${TRAVIS_TAG}
 
