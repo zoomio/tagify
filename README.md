@@ -10,6 +10,14 @@ $ tagify -s=https://stackoverflow.com -l=10
 application using page add file server run ionic local error
 ```
 
+In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)):
+```Go
+...
+tags, _ := tagify.GetTags("https://stackoverflow.com", tagify.HTML, 10, false)
+println(strings.Join(tags, " "))
+...
+```
+
 ## Installation
 
 ### Binary

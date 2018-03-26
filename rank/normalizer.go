@@ -1,6 +1,7 @@
 package rank
 
 import (
+	"math"
 	"regexp"
 	"strings"
 
@@ -56,5 +57,44 @@ func Normalize(sanitized string) (string, bool) {
 	if index[v] {
 		return v, false
 	}
-	return toSingular(v), true
+	return v, true
+}
+
+// Dedupe ...
+func Dedupe(items []*Item, limit int) []string {
+	var deDupedSize int
+	var selectedItems []*Item
+	lenItems := len(items)
+	if limit <= 0 || limit >= lenItems {
+		deDupedSize = lenItems
+		selectedItems = items
+	} else {
+		deDupedSize = int(math.Min(float64(lenItems), float64(limit)))
+		selectedItems = items[:int(math.Min(float64(lenItems), float64(limit * 2)))]
+	}
+	return deDupe(deDupedSize, selectedItems)
+}
+
+func deDupe(size int, items []*Item) []string {
+	index := make(map[string]int)
+	deDuped := make([]string, size)
+	var i, j int
+	for i < size {
+		item := items[j]
+		if _, ok := index[item.Value]; !ok {
+			index[item.Value] = j
+		}
+		s := toSingular(item.Value)
+		k, ok := index[s]
+		if s != item.Value && (!ok || ok && j < k) {
+			deDuped[i] = item.Value
+			index[s] = j
+			i++
+		} else if s == item.Value && j == k {
+			deDuped[i] = item.Value
+			i++
+		}
+		j++
+	}
+	return deDuped
 }

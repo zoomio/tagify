@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	tags, err := tagify.GetTags(*source, *contentType, *limit, *verbose)
+	tags, err := tagify.GetTags(*source, tagify.ContentTypeOf(*contentType), *limit, *verbose)
 	if err != nil && *verbose {
 		println(err)
 		os.Exit(2)

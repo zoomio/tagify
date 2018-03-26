@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.3.0
+ - added de-duplication algorithm based on the inflection;
+ - `#GetTags` and `#GetTagsFromString` now accept `contentType` of type `ContentType`, which is more typo-proof.
+
 ## 0.2.0
  - code refactoring;
  - simplified internal structure for ease of API use.
