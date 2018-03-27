@@ -1,6 +1,7 @@
 # Tagify
 
 [![Build Status](https://travis-ci.org/zoomio/tagify.svg?branch=master)](https://travis-ci.org/zoomio/tagify)
+[![Go Report Card](https://goreportcard.com/badge/github.com/zoomio/tagify)](https://goreportcard.com/report/github.com/zoomio/tagify)
 
 Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent tags as an output.
 
