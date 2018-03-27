@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"flag"
+	"os"
 	"strings"
-	
+
 	"github.com/zoomio/tagify"
 )
 

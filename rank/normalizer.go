@@ -70,7 +70,7 @@ func Dedupe(items []*Item, limit int) []string {
 		selectedItems = items
 	} else {
 		deDupedSize = int(math.Min(float64(lenItems), float64(limit)))
-		selectedItems = items[:int(math.Min(float64(lenItems), float64(limit * 2)))]
+		selectedItems = items[:int(math.Min(float64(lenItems), float64(limit*2)))]
 	}
 	return deDupe(deDupedSize, selectedItems)
 }

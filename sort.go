@@ -1,13 +1,13 @@
 package tagify
 
 import (
-	"strings"
 	"sort"
+	"strings"
 
 	"github.com/zoomio/tagify/rank"
 )
 
-// sortByScoreDescending sorts items by score in descending order, 
+// sortByScoreDescending sorts items by score in descending order,
 // if scores are equal it compares string values.
 func sortByScoreDescending(items []*rank.Item) {
 	by(func(i1, i2 *rank.Item) bool {

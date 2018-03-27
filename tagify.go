@@ -2,7 +2,7 @@ package tagify
 
 import (
 	"fmt"
-	
+
 	"github.com/gobuffalo/packr"
 
 	"github.com/zoomio/tagify/rank"
@@ -13,13 +13,13 @@ func processInput(in *In, limit int, verbose bool) ([]string, error) {
 
 	switch in.ContentType {
 	case HTML:
-		items = rank.ParseHTML(in.GetLines(), verbose)		
+		items = rank.ParseHTML(in.GetLines(), verbose)
 	default:
 		items = rank.ParseText(in.ReadAllStrings())
 	}
 
 	sortByScoreDescending(items)
-	
+
 	return rank.Dedupe(items, limit), nil
 }
 

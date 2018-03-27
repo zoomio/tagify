@@ -25,5 +25,5 @@ func TestToSingular(t *testing.T) {
 }
 
 func TestDeDupe(t *testing.T) {
-	
+
 }

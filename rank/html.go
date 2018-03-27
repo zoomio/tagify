@@ -22,7 +22,7 @@ var (
 //
 // Example:
 //	<h1>A story about foo
-//	<p> Foo was a good guy but, had a quite poor time management skills, 
+//	<p> Foo was a good guy but, had a quite poor time management skills,
 //	therefore he had issues with shipping all his tasks. Though foo had heaps
 //	of other amazing skills, which were appreciated by his management.
 //
