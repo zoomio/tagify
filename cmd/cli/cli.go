@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 
@@ -12,6 +13,7 @@ func main() {
 	source := flag.String("s", "", "Source")
 	limit := flag.Int("l", 0, "Tags limit")
 	verbose := flag.Bool("v", false, "Verbose mode")
+	detailed := flag.Bool("d", false, "Detailed")
 	contentType := flag.String("t", tagify.Unknown.String(), "Content type (Text or HTML)")
 	flag.Parse()
 
@@ -27,5 +29,10 @@ func main() {
 		os.Exit(2)
 	}
 
-	println(strings.Join(tags, " "))
+	if *detailed {
+		fmt.Printf("%#v", tags)
+		return
+	}
+
+	println(strings.Join(tagify.ToStrings(tags), " "))
 }

@@ -1,44 +1,45 @@
 package tagify
 
 import (
-	"fmt"
-
 	"github.com/gobuffalo/packr"
 
-	"github.com/zoomio/tagify/rank"
+	"github.com/zoomio/tagify/processor"
 )
 
-func processInput(in *In, limit int, verbose bool) ([]string, error) {
-	var items []*rank.Item
+func processInput(in *In, limit int, verbose bool) ([]*processor.Tag, error) {
+	var items []*processor.Tag
+
+	strs, err := in.ReadAllStrings()
+	if err != nil {
+		return items, err
+	}
 
 	switch in.ContentType {
 	case HTML:
-		items = rank.ParseHTML(in.GetLines(), verbose)
+		items = processor.ParseHTML(strs, verbose)
 	default:
-		items = rank.ParseText(in.ReadAllStrings())
+		items = processor.ParseText(strs)
 	}
-
-	sortByScoreDescending(items)
-
-	return rank.Dedupe(items, limit), nil
+	return processor.Run(items, limit), nil
 }
 
 // Init initializes Tagify.
 func Init() error {
 	box := packr.NewBox("./_files")
-	in, err := NewInFromString(box.String("stop-word-list.txt"), Text)
+	in := NewInFromString(box.String("stop-word-list.txt"), Text)
+	strs, err := in.ReadAllStrings()
 	if err != nil {
-		return fmt.Errorf("error in initialization of Tagify: %v", err)
+		return err
 	}
-	rank.RegisterStopWords(in.ReadAllStrings())
+	processor.RegisterStopWords(strs)
 	return nil
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source string, contentType ContentType, limit int, verbose bool) ([]string, error) {
+func GetTags(source string, contentType ContentType, limit int, verbose bool) ([]*processor.Tag, error) {
 	in, err := NewIn(source)
 	if err != nil {
-		return []string{}, err
+		return []*processor.Tag{}, err
 	}
 	if contentType > Unknown {
 		in.ContentType = contentType
@@ -47,10 +48,16 @@ func GetTags(source string, contentType ContentType, limit int, verbose bool) ([
 }
 
 // GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
-func GetTagsFromString(input string, contentType ContentType, limit int, verbose bool) ([]string, error) {
-	in, err := NewInFromString(input, contentType)
-	if err != nil {
-		return []string{}, err
-	}
+func GetTagsFromString(input string, contentType ContentType, limit int, verbose bool) ([]*processor.Tag, error) {
+	in := NewInFromString(input, contentType)
 	return processInput(&in, limit, verbose)
+}
+
+// ToStrings ...
+func ToStrings(items []*processor.Tag) []string {
+	strs := make([]string, len(items))
+	for i, item := range items {
+		strs[i] = item.Value
+	}
+	return strs
 }

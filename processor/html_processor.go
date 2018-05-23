@@ -1,4 +1,4 @@
-package rank
+package processor
 
 import (
 	"fmt"
@@ -24,12 +24,12 @@ var (
 //	<h1>A story about foo
 //	<p> Foo was a good guy but, had a quite poor time management skills,
 //	therefore he had issues with shipping all his tasks. Though foo had heaps
-//	of other amazing skills, which were appreciated by his management.
+//	of other amazing skills, which gained him a fortune.
 //
 // Result:
-//	foo: 5 + 1, story: 5, management: 1 + 1, skills: 1 + 1.
+//	foo: 5 + 1 = 6, story: 5, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(lines []string, verbose bool) []*Item {
+func ParseHTML(lines []string, verbose bool) []*Tag {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil {
@@ -45,7 +45,7 @@ func ParseHTML(lines []string, verbose bool) []*Item {
 		fmt.Printf("%v\n\n", hizer)
 	}
 
-	index := make(map[string]*Item)
+	index := make(map[string]*Tag)
 
 	for tag, weight := range tagWeights {
 		tags, err := hizer.GetValues(tag)
@@ -58,10 +58,11 @@ func ParseHTML(lines []string, verbose bool) []*Item {
 			for _, token := range tokens {
 				item, ok := index[token]
 				if !ok {
-					item = &Item{Value: token}
+					item = &Tag{Value: token}
 					index[token] = item
 				}
-				item.Score = item.Score + weight
+				item.Score += weight
+				item.Count++
 			}
 		}
 	}

@@ -1,19 +1,20 @@
-package rank
+package processor
 
 // ParseText ...
-func ParseText(tokens []string) []*Item {
+func ParseText(tokens []string) []*Tag {
 	tokens = Filter(tokens)
 	if len(tokens) == 0 {
-		return []*Item{}
+		return []*Tag{}
 	}
-	index := make(map[string]*Item)
+	index := make(map[string]*Tag)
 	for _, token := range tokens {
 		item, ok := index[token]
 		if !ok {
-			item = &Item{Value: token}
+			item = &Tag{Value: token}
 			index[token] = item
 		}
-		item.Score = item.Score + 1
+		item.Score++
+		item.Count++
 	}
 	return flatten(index)
 }
