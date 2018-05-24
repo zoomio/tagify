@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if *detailed {
-		fmt.Printf("%#v", tags)
+		fmt.Printf("%v", tags)
 		return
 	}
 
