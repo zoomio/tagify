@@ -62,10 +62,11 @@ func NewIn(name string) (In, error) {
 
 	in.reader = &r
 
-	_, err = os.Stat(name)
-	if name != "" && err != nil {
+	_, statErr := os.Stat(name)
+	if name != "" && statErr != nil {
 		in.ContentType = HTML
 	}
+
 	return in, err
 }
 
@@ -85,4 +86,13 @@ func (in *In) ReadAllStrings() ([]string, error) {
 		return []string{}, err
 	}
 	return strs, nil
+}
+
+// ReadAllLines provides slice of lines from input.
+func (in *In) ReadAllLines() ([]string, error) {
+	lines, err := in.reader.LinesFromReader()
+	if err != nil {
+		return []string{}, err
+	}
+	return lines, nil
 }

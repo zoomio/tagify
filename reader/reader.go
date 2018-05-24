@@ -82,7 +82,7 @@ func (in *Reader) ReadString() (string, error) {
 // ReadAllStrings provides slice of strings from input split by white space.
 func (in *Reader) ReadAllStrings() ([]string, error) {
 	tokens := make([]string, 0)
-	lines, err := in.linesFromReader()
+	lines, err := in.LinesFromReader()
 	if err != nil {
 		return tokens, fmt.Errorf("error in reading from scanner: %v", err)
 	}
@@ -102,7 +102,8 @@ func (in *Reader) Close() {
 	}
 }
 
-func (in *Reader) linesFromReader() ([]string, error) {
+// LinesFromReader provides slice of text lines from input.
+func (in *Reader) LinesFromReader() ([]string, error) {
 	defer in.Close()
 	var lines []string
 	for in.scanner.Scan() {

@@ -9,15 +9,18 @@ import (
 func processInput(in *In, limit int, verbose bool) ([]*processor.Tag, error) {
 	var items []*processor.Tag
 
-	strs, err := in.ReadAllStrings()
-	if err != nil {
-		return items, err
-	}
-
 	switch in.ContentType {
 	case HTML:
-		items = processor.ParseHTML(strs, verbose)
+		lines, err := in.ReadAllLines()
+		if err != nil {
+			return items, err
+		}
+		items = processor.ParseHTML(lines, verbose)
 	default:
+		strs, err := in.ReadAllStrings()
+		if err != nil {
+			return items, err
+		}
 		items = processor.ParseText(strs)
 	}
 	return processor.Run(items, limit), nil
