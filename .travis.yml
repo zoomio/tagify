@@ -8,11 +8,11 @@ install:
   - dep ensure
 
 script: 
-  - ./_scripts/test.sh
+  - ./_bin/test.sh
 
 before_deploy:
-  - ./_scripts/build.sh darwin ${TRAVIS_TAG}
-  - ./_scripts/build.sh linux ${TRAVIS_TAG}
+  - ./_bin/build.sh darwin ${TRAVIS_TAG}
+  - ./_bin/build.sh linux ${TRAVIS_TAG}
 
 deploy:
   provider: releases

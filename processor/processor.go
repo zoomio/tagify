@@ -8,11 +8,6 @@ import (
 	"github.com/jinzhu/inflection"
 )
 
-const (
-	maxLimit     = 20
-	defaultLimit = 5
-)
-
 var (
 	stopWordsIndex = make(map[string]bool)
 	sanitizeRegex  = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
@@ -90,10 +85,6 @@ func Run(items []*Tag, limit int) []*Tag {
 	}
 
 	sortByScoreDescending(uniqueTags)
-
-	if limit == 0 || limit > maxLimit {
-		limit = defaultLimit
-	}
 
 	// take only rquested size (limit) or just everything if result is smaller than limit
 	return uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.5.0
+ - removed default and max limits for the tags query;
+ - moved `_scripts` to `_bin`;
+ - moved `_files` to `_resources`.
+
 ## 0.4.0
  - refactored everything; 
  - added comments in some places to better understand logic;

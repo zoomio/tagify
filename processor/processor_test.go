@@ -56,7 +56,8 @@ func TestRun_Sorts(t *testing.T) {
 		{Value: "bar", Score: 3},
 		{Value: "bee", Score: 4},
 	}
-	processed := Run(items, 0)
+	processed := Run(items, 5)
+	assert.Len(t, processed, 5)
 	assert.Equal(t, "foo", processed[0].Value)
 	assert.Equal(t, "bee", processed[1].Value)
 	assert.Equal(t, "bar", processed[2].Value)
@@ -72,7 +73,7 @@ func TestRun_DeDupes(t *testing.T) {
 		{Value: "bar", Score: 3},
 		{Value: "cats", Score: 1},
 	}
-	processed := Run(items, 0)
+	processed := Run(items, 5)
 	assert.Len(t, processed, 3)
 	assert.Equal(t, "people", processed[0].Value)
 	assert.Equal(t, "cat", processed[1].Value)
