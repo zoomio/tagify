@@ -9,10 +9,10 @@ import (
 
 var (
 	tagWeights = map[string]float64{
-		"<h1>": 5,
-		"<h2>": 4,
-		"<h3>": 3,
-		"<h4>": 2,
+		"<h1>": 2,
+		"<h2>": 1.3,
+		"<h3>": 1.2,
+		"<h4>": 1.1,
 		"<p>":  1,
 	}
 )
@@ -27,7 +27,7 @@ var (
 //	of other amazing skills, which gained him a fortune.
 //
 // Result:
-//	foo: 5 + 1 = 6, story: 5, management: 1 + 1 = 2, skills: 1 + 1 = 2.
+//	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
 func ParseHTML(lines []string, verbose bool) []*Tag {
 	// will trim out all the tabs from text

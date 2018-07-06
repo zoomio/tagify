@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	stopWordsIndex = make(map[string]bool)
-	sanitizeRegex  = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
+	stopWordsIndex        = make(map[string]bool)
+	sanitizeRegex         = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
+	notAWord              = regexp.MustCompile(`([^a-z'-]+)`)
+	doubleNotWordySymbols = regexp.MustCompile(`[\W]{2}`)
 )
 
 // RegisterStopWords ...
@@ -33,9 +35,9 @@ func Filter(strs []string) []string {
 	return result
 }
 
-// Run first sorts given list based on scores,
-// then iterates over the given list and de-dupes items in the list by merging inflections,
-// then sorts de-duped list by scores in descending order and
+// Run - 1st sorts given list,
+// then iterates over it and de-dupes items in the list by merging inflections,
+// then sorts de-duped list again and
 // takes only rquested size (limit) or just everything if result is smaller than limit.
 //
 // nolint: gocyclo
@@ -44,7 +46,7 @@ func Run(items []*Tag, limit int) []*Tag {
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
 
-	sortByScoreDescending(items)
+	sortTagItems(items)
 
 	for i, tag := range items {
 
@@ -84,7 +86,7 @@ func Run(items []*Tag, limit int) []*Tag {
 		}
 	}
 
-	sortByScoreDescending(uniqueTags)
+	sortTagItems(uniqueTags)
 
 	// take only rquested size (limit) or just everything if result is smaller than limit
 	return uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
@@ -102,6 +104,11 @@ func normalize(word string) (string, bool) {
 
 	// Remove not allowed symbols (sanitize)
 	word = sanitizeRegex.ReplaceAllString(word, "${2}")
+
+	// Defensive check if sanitized result is still not a word
+	if notAWord.MatchString(word) || doubleNotWordySymbols.MatchString(word) {
+		return "", false
+	}
 
 	// False if it is a stop word
 	if stopWordsIndex[word] {

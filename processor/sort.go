@@ -5,15 +5,26 @@ import (
 	"strings"
 )
 
-// sortByScoreDescending sorts items by score in descending order,
-// if scores are equal it compares string values.
-func sortByScoreDescending(items []*Tag) {
+// sortTagItems sorts items by score in descending order,
+// if scores are equal it sorts by count if counts are equal, 
+// it sorts string values alphabetically.
+func sortTagItems(items []*Tag) {
 	by(func(i1, i2 *Tag) bool {
+		// Higher score goes 1st
 		if i1.Score > i2.Score {
 			return true
 		} else if i1.Score < i2.Score {
 			return false
 		}
+
+		// Bigger count goes 1st
+		if i1.Count > i2.Count {
+			return true
+		} else if i1.Count < i2.Count {
+			return false
+		}
+
+		// Alphabetic sort
 		return strings.Compare(i1.Value, i2.Value) < 0
 	}).Sort(items)
 }

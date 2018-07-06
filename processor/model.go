@@ -10,7 +10,7 @@ type Tag struct {
 }
 
 func (t *Tag) String() string {
-	return fmt.Sprintf("[%.2f, %d] %s", t.Score, t.Count, t.Value)
+	return fmt.Sprintf("(%s - [score: %.2f, count: %d])", t.Value, t.Score, t.Count)
 }
 
 func flatten(dict map[string]*Tag) []*Tag {

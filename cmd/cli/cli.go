@@ -11,7 +11,7 @@ import (
 
 func main() {
 	source := flag.String("s", "", "Source")
-	limit := flag.Int("l", 0, "Tags limit")
+	limit := flag.Int("l", 5, "Tags limit")
 	verbose := flag.Bool("v", false, "Verbose mode")
 	detailed := flag.Bool("d", false, "Detailed")
 	contentType := flag.String("t", tagify.Unknown.String(), "Content type (Text or HTML)")
@@ -30,9 +30,9 @@ func main() {
 	}
 
 	if *detailed {
-		fmt.Printf("%v", tags)
+		fmt.Printf("%v\n", tags)
 		return
 	}
 
-	println(strings.Join(tagify.ToStrings(tags), " "))
+	fmt.Printf("%s\n", strings.Join(tagify.ToStrings(tags), " "))
 }

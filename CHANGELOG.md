@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.6.0
+ - improved stop words list;
+ - changed math for HTML tag weights;
+ - improved `#normalize` to be mored defensive in case if sanitize regex still returns not a word.
+
 ## 0.5.0
  - removed default and max limits for the tags query;
  - moved `_scripts` to `_bin`;

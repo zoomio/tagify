@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSanitize(t *testing.T) {
+func TestNormalize(t *testing.T) {
 	n, ok := normalize("(part)")
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
@@ -32,6 +32,12 @@ func TestSanitize(t *testing.T) {
 	assert.Equal(t, "d'arko", n)
 
 	n, ok = normalize("1)")
+	assert.False(t, ok)
+	assert.Equal(t, "", n)
+}
+
+func TestSanitize_timestamp(t *testing.T) {
+	n, ok := normalize("2018-02-24T12:00:49Z")
 	assert.False(t, ok)
 	assert.Equal(t, "", n)
 }
