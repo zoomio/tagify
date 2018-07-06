@@ -6,7 +6,7 @@ import (
 )
 
 // sortTagItems sorts items by score in descending order,
-// if scores are equal it sorts by count if counts are equal, 
+// if scores are equal it sorts by count if counts are equal,
 // it sorts string values alphabetically.
 func sortTagItems(items []*Tag) {
 	by(func(i1, i2 *Tag) bool {
