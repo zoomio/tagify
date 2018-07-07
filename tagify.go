@@ -1,7 +1,7 @@
 package tagify
 
 import (
-	"github.com/gobuffalo/packr"
+	"strings"
 
 	"github.com/zoomio/tagify/processor"
 )
@@ -28,13 +28,7 @@ func processInput(in *In, limit int, verbose bool) ([]*processor.Tag, error) {
 
 // Init initializes Tagify.
 func Init() error {
-	box := packr.NewBox("./_resources")
-	in := NewInFromString(box.String("stop-word-list.txt"), Text)
-	strs, err := in.ReadAllStrings()
-	if err != nil {
-		return err
-	}
-	processor.RegisterStopWords(strs)
+	processor.RegisterStopWords(strings.Split(processor.StopWords, "\n"))
 	return nil
 }
 

@@ -12,7 +12,4 @@ if [ ! -z "$VERSION" ]; then
     VERSION="_$VERSION"
 fi
 
-# use packr, to include files in binary
-go get -u github.com/gobuffalo/packr/...
-
-env GOOS=${OS} GOARCH=amd64 packr build -o ${BINARY}_${OS}${VERSION} cmd/cli/cli.go
+env GOOS=${OS} GOARCH=amd64 go build -o ${BINARY}_${OS}${VERSION} cmd/cli/cli.go

@@ -8,12 +8,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/gobuffalo/packr"
-  packages = ["."]
-  revision = "3b045e91f1107684685627303665f7e02b1be016"
-  version = "v1.10.6"
-
-[[projects]]
   name = "github.com/gpestana/htmlizer"
   packages = ["."]
   revision = "76498b8c7d3d98b7669e81f7a60ca13aa217b106"
@@ -24,12 +18,6 @@
   name = "github.com/jinzhu/inflection"
   packages = ["."]
   revision = "04140366298a54a039076d798123ffa108fff46c"
-
-[[projects]]
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -55,6 +43,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "021a748ca8588d7871bd011e576ceaa531727b6dee3f607df76d8c101e5b9cc0"
+  inputs-digest = "c87fcca10dbc20bb398d84661d6829f3ae57de83fa459845ea6bef91dd1cf589"
   solver-name = "gps-cdcl"
   solver-version = 1

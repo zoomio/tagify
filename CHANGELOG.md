@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.7.0
+ - moved stop words in `*.go` file;
+ - removed dependency on `github.com/gobuffalo/packr`.
+
 ## 0.6.0
  - improved stop words list;
  - changed math for HTML tag weights;

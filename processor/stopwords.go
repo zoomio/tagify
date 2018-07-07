@@ -1,3 +1,7 @@
+package processor
+
+// StopWords ...
+const StopWords = `
 'll
 've
 I 
@@ -721,3 +725,4 @@ yourself
 yourselves
 z
 zero
+`
