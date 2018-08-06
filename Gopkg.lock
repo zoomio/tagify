@@ -32,6 +32,12 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/zoomio/stopwords"
+  packages = ["."]
+  revision = "b943f89a93d5378dacbfcc7fa34bfc14219cabc6"
+  version = "v0.1.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -43,6 +49,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c87fcca10dbc20bb398d84661d6829f3ae57de83fa459845ea6bef91dd1cf589"
+  inputs-digest = "7983a07d85093fcea0a3b6913dad18e59ed33db34cb057bf5374f6e4986b2966"
   solver-name = "gps-cdcl"
   solver-version = 1
