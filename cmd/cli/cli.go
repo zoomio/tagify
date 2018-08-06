@@ -17,17 +17,11 @@ func main() {
 	doFiltering := flag.Bool("no-stop", true, "Filter by stop-words")
 	flag.Parse()
 
-	err := tagify.Init()
-	if err != nil && *verbose {
-		println(err)
-		os.Exit(1)
-	}
-
 	cntType := tagify.ContentTypeOf(*contentType)
 	tags, err := tagify.GetTags(*source, cntType, *limit, *verbose, *doFiltering)
 	if err != nil && *verbose {
 		println(err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 
 	fmt.Printf("%s\n", strings.Join(tagify.ToStrings(tags), " "))

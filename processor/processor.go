@@ -6,23 +6,14 @@ import (
 	"strings"
 
 	"github.com/jinzhu/inflection"
+	"github.com/zoomio/stopwords"
 )
 
 var (
-	stopWords             = make([]string, 0)
-	stopWordsIndex        = make(map[string]bool)
 	sanitizeRegex         = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 	notAWord              = regexp.MustCompile(`([^a-z'-]+)`)
 	doubleNotWordySymbols = regexp.MustCompile(`[\W]{2}`)
 )
-
-// RegisterStopWords ...
-func RegisterStopWords(words []string) {
-	stopWords = words
-	for _, s := range words {
-		stopWordsIndex[strings.ToLower(s)] = true
-	}
-}
 
 // sanitize ...
 func sanitize(strs []string, filterByStopWords bool) []string {
@@ -100,7 +91,7 @@ func Normalize(word string, filterByStopWords bool) (string, bool) {
 	word = strings.Replace(strings.ToLower(word), "’", "'", -1)
 
 	// False if it is a stop word
-	if filterByStopWords && stopWordsIndex[word] {
+	if filterByStopWords && stopwords.IsStopWord(word) {
 		return word, false
 	}
 

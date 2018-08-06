@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.9.0
+ - externalized stop-words into standalone package `github.com/zoomio/stopwords`.
+
 ## 0.8.0
  - more refactorring;
  - enabled skipped test;

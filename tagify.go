@@ -2,7 +2,6 @@ package tagify
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/zoomio/tagify/processor"
 )
@@ -29,12 +28,6 @@ func processInput(in *In, limit int, verbose, doFiltering bool) ([]*processor.Ta
 	}
 
 	return tags, nil
-}
-
-// Init initializes Tagify.
-func Init() error {
-	processor.RegisterStopWords(strings.Split(processor.StopWords, "\n"))
-	return nil
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
