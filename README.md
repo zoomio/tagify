@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/zoomio/tagify.svg?branch=master)](https://travis-ci.org/zoomio/tagify)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zoomio/tagify)](https://goreportcard.com/report/github.com/zoomio/tagify)
 
-Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent tags as an output.
+Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output.
 
 Example, get 10 most frequent words from StackOverflow main page:
 ```bash
@@ -18,6 +18,8 @@ tags, _ := tagify.GetTags("https://stackoverflow.com", tagify.HTML, 10, false)
 println(strings.Join(tags, " "))
 ...
 ```
+
+Use `-no-stop` flag todisable stop-words filtering ([processor/stopwords.go](https://raw.githubusercontent.com/zoomio/tagify/master/processor/stopwords.go)).
 
 ## Installation
 

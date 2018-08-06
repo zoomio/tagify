@@ -7,39 +7,37 @@ import (
 )
 
 func TestNormalize(t *testing.T) {
-	n, ok := normalize("(part)")
+	n, ok := Normalize("(part)", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
 
-	n, ok = normalize("(part1)")
+	n, ok = Normalize("(part1)", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
 
-	n, ok = normalize("part1")
+	n, ok = Normalize("part1", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
 
-	n, ok = normalize("part}1")
+	n, ok = Normalize("part}1", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
 
-	n, ok = normalize("{part}")
+	n, ok = Normalize("{part}", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
 
-	n, ok = normalize("{d'arko}")
+	n, ok = Normalize("{d'arko}", false)
 	assert.True(t, ok)
 	assert.Equal(t, "d'arko", n)
 
-	n, ok = normalize("1)")
+	_, ok = Normalize("1)", false)
 	assert.False(t, ok)
-	assert.Equal(t, "", n)
 }
 
 func TestSanitize_timestamp(t *testing.T) {
-	n, ok := normalize("2018-02-24T12:00:49Z")
+	_, ok := Normalize("2018-02-24T12:00:49Z", false)
 	assert.False(t, ok)
-	assert.Equal(t, "", n)
 }
 
 func TestRun_Limits(t *testing.T) {

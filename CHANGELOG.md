@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.8.0
+ - more refactorring;
+ - enabled skipped test;
+ - added `-no-stop` boolean flag, to allow disabling of stop-words filter.
+
 ## 0.7.0
  - moved stop words in `*.go` file;
  - removed dependency on `github.com/gobuffalo/packr`.

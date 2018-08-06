@@ -1,29 +1,34 @@
 package tagify
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/zoomio/tagify/processor"
 )
 
-func processInput(in *In, limit int, verbose bool) ([]*processor.Tag, error) {
-	var items []*processor.Tag
+func processInput(in *In, limit int, verbose, doFiltering bool) ([]*processor.Tag, error) {
+	var tags []*processor.Tag
+
+	lines, err := in.ReadAllLines()
+	if err != nil {
+		return tags, err
+	}
 
 	switch in.ContentType {
 	case HTML:
-		lines, err := in.ReadAllLines()
-		if err != nil {
-			return items, err
-		}
-		items = processor.ParseHTML(lines, verbose)
+		tags, _ = processor.ParseHTML(lines, verbose, doFiltering)
 	default:
-		strs, err := in.ReadAllStrings()
-		if err != nil {
-			return items, err
-		}
-		items = processor.ParseText(strs)
+		tags = processor.ParseText(lines, doFiltering)
 	}
-	return processor.Run(items, limit), nil
+
+	tags = processor.Run(tags, limit)
+	if verbose {
+		fmt.Printf("%v\n", tags)
+		fmt.Printf("\nsize: %d\n\n", len(tags))
+	}
+
+	return tags, nil
 }
 
 // Init initializes Tagify.
@@ -33,7 +38,7 @@ func Init() error {
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source string, contentType ContentType, limit int, verbose bool) ([]*processor.Tag, error) {
+func GetTags(source string, contentType ContentType, limit int, verbose, filterStopwords bool) ([]*processor.Tag, error) {
 	in, err := NewIn(source)
 	if err != nil {
 		return []*processor.Tag{}, err
@@ -41,20 +46,17 @@ func GetTags(source string, contentType ContentType, limit int, verbose bool) ([
 	if contentType > Unknown {
 		in.ContentType = contentType
 	}
-	return processInput(&in, limit, verbose)
+
+	return processInput(&in, limit, verbose, filterStopwords)
 }
 
 // GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
-func GetTagsFromString(input string, contentType ContentType, limit int, verbose bool) ([]*processor.Tag, error) {
+func GetTagsFromString(input string, contentType ContentType, limit int, verbose, filterStopwords bool) ([]*processor.Tag, error) {
 	in := NewInFromString(input, contentType)
-	return processInput(&in, limit, verbose)
+	return processInput(&in, limit, verbose, filterStopwords)
 }
 
 // ToStrings ...
 func ToStrings(items []*processor.Tag) []string {
-	strs := make([]string, len(items))
-	for i, item := range items {
-		strs[i] = item.Value
-	}
-	return strs
+	return processor.ToStrings(items)
 }

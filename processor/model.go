@@ -22,3 +22,12 @@ func flatten(dict map[string]*Tag) []*Tag {
 	}
 	return flat
 }
+
+// ToStrings ...
+func ToStrings(items []*Tag) []string {
+	strs := make([]string, len(items))
+	for i, item := range items {
+		strs[i] = item.Value
+	}
+	return strs
+}

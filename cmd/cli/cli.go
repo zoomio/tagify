@@ -13,8 +13,8 @@ func main() {
 	source := flag.String("s", "", "Source")
 	limit := flag.Int("l", 5, "Tags limit")
 	verbose := flag.Bool("v", false, "Verbose mode")
-	detailed := flag.Bool("d", false, "Detailed")
 	contentType := flag.String("t", tagify.Unknown.String(), "Content type (Text or HTML)")
+	doFiltering := flag.Bool("no-stop", true, "Filter by stop-words")
 	flag.Parse()
 
 	err := tagify.Init()
@@ -23,15 +23,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	tags, err := tagify.GetTags(*source, tagify.ContentTypeOf(*contentType), *limit, *verbose)
+	cntType := tagify.ContentTypeOf(*contentType)
+	tags, err := tagify.GetTags(*source, cntType, *limit, *verbose, *doFiltering)
 	if err != nil && *verbose {
 		println(err)
 		os.Exit(2)
-	}
-
-	if *detailed {
-		fmt.Printf("%v\n", tags)
-		return
 	}
 
 	fmt.Printf("%s\n", strings.Join(tagify.ToStrings(tags), " "))

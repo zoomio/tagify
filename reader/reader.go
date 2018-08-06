@@ -35,6 +35,15 @@ func NewIn(name string) (Reader, error) {
 			return in, errors.New("unsupported mode")
 		}
 		reader = bufio.NewReader(os.Stdin)
+
+		// HTTP
+	} else if strings.HasPrefix(name, "http") || strings.HasPrefix(name, "https") {
+		resp, err := http.Get(name)
+		if err != nil {
+			return in, fmt.Errorf("provided name=%s is not a file and not a URL: %v", name, err)
+		}
+		reader = resp.Body
+
 		// File system
 	} else if _, err := os.Stat(name); err == nil {
 		f, err := os.Open(name)
@@ -42,13 +51,10 @@ func NewIn(name string) (Reader, error) {
 			return in, fmt.Errorf("error in opening file %s for reading: %v", name, err)
 		}
 		reader = bufio.NewReader(f)
-		// HTTP
+
+		// Unresolvable "name"
 	} else {
-		resp, err := http.Get(name)
-		if err != nil {
-			return in, fmt.Errorf("provided name=%s is not a file and not a URL: %v", name, err)
-		}
-		reader = resp.Body
+		return Reader{}, fmt.Errorf("unknown type of provided input name: %s", name)
 	}
 
 	return Reader{

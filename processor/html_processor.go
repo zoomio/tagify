@@ -29,7 +29,7 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(lines []string, verbose bool) []*Tag {
+func ParseHTML(lines []string, verbose, doFiltering bool) ([]*Tag, []string) {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil {
@@ -37,7 +37,10 @@ func ParseHTML(lines []string, verbose bool) []*Tag {
 	}
 
 	for _, line := range lines {
-		hizer.Load(line)
+		err = hizer.Load(line)
+		if err != nil {
+			fmt.Printf("error in loading line \"%s\": %v", line, err)
+		}
 	}
 
 	if verbose {
@@ -46,15 +49,17 @@ func ParseHTML(lines []string, verbose bool) []*Tag {
 	}
 
 	index := make(map[string]*Tag)
+	textLines := make([]string, 0)
 
 	for tag, weight := range tagWeights {
 		tags, err := hizer.GetValues(tag)
 		if err != nil {
-			fmt.Printf("error in  getting values of tag %s: %v", tag, err)
+			fmt.Printf("error in getting values of tag %s: %v", tag, err)
 			continue
 		}
 		for _, t := range tags {
-			tokens := Filter(strings.Fields(t.Value))
+			textLines = append(textLines, t.Value)
+			tokens := sanitize(strings.Fields(t.Value), doFiltering)
 			for _, token := range tokens {
 				item, ok := index[token]
 				if !ok {
@@ -67,5 +72,5 @@ func ParseHTML(lines []string, verbose bool) []*Tag {
 		}
 	}
 
-	return flatten(index)
+	return flatten(index), textLines
 }
