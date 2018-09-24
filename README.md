@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/zoomio/tagify.svg?branch=master)](https://travis-ci.org/zoomio/tagify)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zoomio/tagify)](https://goreportcard.com/report/github.com/zoomio/tagify)
 
-Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output.
+Gets STDIN, file or HTTP address (does not support SPA at the moment - Work-in-Progress) as an input and returns ordered list of most frequent words as an output.
 
 Example, get 10 most frequent words from StackOverflow main page:
 ```bash
