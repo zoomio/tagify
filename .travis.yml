@@ -1,11 +1,13 @@
 language: go
 
 go:
-  - "1.10.x"
+  - "1.11.x"
+
+env:
+  - GO111MODULE=on
 
 install:
-  - go get -u github.com/golang/dep/cmd/dep
-  - dep ensure
+  - go get -v ./...
 
 script: 
   - ./_bin/test.sh

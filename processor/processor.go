@@ -108,6 +108,11 @@ func Normalize(word string, filterByStopWords bool) (string, bool) {
 		return word, false
 	}
 
+	// Defensive check if word starts with hyphen
+	if strings.HasPrefix(word, "-") {
+		return word, false
+	}
+
 	// Allowed word
 	return word, true
 }

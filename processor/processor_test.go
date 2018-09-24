@@ -33,6 +33,9 @@ func TestNormalize(t *testing.T) {
 
 	_, ok = Normalize("1)", false)
 	assert.False(t, ok)
+
+	_, ok = Normalize("-no-stop", false)
+	assert.False(t, ok)
 }
 
 func TestSanitize_timestamp(t *testing.T) {
