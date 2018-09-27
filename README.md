@@ -7,17 +7,11 @@ Gets STDIN, file or HTTP address (does not support SPA at the moment - Work-in-P
 
 Example, get 10 most frequent words from StackOverflow main page:
 ```bash
-$ tagify -s=https://stackoverflow.com -l=10
-application using page add file server run ionic local error
+$ tagify -s=https://github.com/zoomio/tagify -l=3
+frequent address apache
 ```
 
-In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)):
-```Go
-...
-tags, _ := tagify.GetTags("https://stackoverflow.com", tagify.HTML, 10, false)
-println(strings.Join(tags, " "))
-...
-```
+In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
 
 Use `-no-stop` flag todisable stop-words filtering ([processor/stopwords.go](https://raw.githubusercontent.com/zoomio/tagify/master/processor/stopwords.go)).
 
