@@ -9,3 +9,6 @@ gometalinter --fast --vendor ./...
 
 # test code
 go test -v ./...
+
+# clean after self
+go mod tidy

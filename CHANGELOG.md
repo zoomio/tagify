@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.11.0
+ - externalized inout into standalone package `github.com/zoomio/inout`.
+
 ## 0.10.0
  - skip words that start with hyphen;
  - moved to Go Modules.

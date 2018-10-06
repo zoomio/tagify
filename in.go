@@ -3,7 +3,7 @@ package tagify
 import (
 	"os"
 
-	"github.com/zoomio/tagify/reader"
+	"github.com/zoomio/inout"
 )
 
 // Content types
@@ -45,7 +45,7 @@ func (contentType ContentType) String() string {
 // In - Input. This struct provides methods for reading strings
 // and numbers from standard input, file input, URLs, and sockets.
 type In struct {
-	reader *reader.Reader
+	reader *inout.Reader
 	ContentType
 }
 
@@ -55,7 +55,7 @@ type In struct {
 // Panics on errors.
 func NewIn(name string) (In, error) {
 	in := In{}
-	r, err := reader.NewIn(name)
+	r, err := inout.New(name)
 	if err != nil {
 		return in, err
 	}
@@ -72,7 +72,7 @@ func NewIn(name string) (In, error) {
 
 // NewInFromString ...
 func NewInFromString(input string, contentType ContentType) In {
-	r := reader.NewInFromString(input)
+	r := inout.NewFromString(input)
 	return In{
 		ContentType: contentType,
 		reader:      &r,

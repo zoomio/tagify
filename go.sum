@@ -8,6 +8,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
+github.com/zoomio/inout v0.1.0 h1:Zt77PxNoZNOGrqXj/Z4/TKFBliY/uyfwW9B+A9ZfVL8=
+github.com/zoomio/inout v0.1.0/go.mod h1:qKcHwWogaJ8b4tf3evxvJRzoCNtPQXFDD/Eqsz9aQ+4=
 github.com/zoomio/stopwords v0.1.0 h1:e2h5S4/bPhd+SxH0KK1GDrImGvh8nAiDUKFtwPjX8tg=
 github.com/zoomio/stopwords v0.1.0/go.mod h1:kWfEg5gTkmJajmmwDYkmzVrORTrViQ2/P6/mkgZ7WWc=
 golang.org/x/net v0.0.0-20180320002117-6078986fec03 h1:7AqHAZ7CvA95ugmTHvadCc9K2ltE9f5dYKpce5J1kn8=
