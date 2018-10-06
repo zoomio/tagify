@@ -81,7 +81,7 @@ func NewInFromString(input string, contentType ContentType) In {
 
 // ReadAllStrings provides slice of strings from input split by white space.
 func (in *In) ReadAllStrings() ([]string, error) {
-	strs, err := in.reader.ReadAllStrings()
+	strs, err := in.reader.ReadWords()
 	if err != nil {
 		return []string{}, err
 	}
@@ -90,7 +90,7 @@ func (in *In) ReadAllStrings() ([]string, error) {
 
 // ReadAllLines provides slice of lines from input.
 func (in *In) ReadAllLines() ([]string, error) {
-	lines, err := in.reader.LinesFromReader()
+	lines, err := in.reader.ReadLines()
 	if err != nil {
 		return []string{}, err
 	}

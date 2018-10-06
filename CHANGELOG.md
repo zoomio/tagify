@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.12.0
+ - bumped `github.com/zoomio/inout` from `0.1.0` to `0.2.0`.
+
 ## 0.11.0
  - externalized inout into standalone package `github.com/zoomio/inout`.
 
