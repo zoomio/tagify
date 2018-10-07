@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.13.0
+ - breaking change: signature of `processor#ParseHTML` changed, added extra `bool` argument - `tagify` (if set to true, then output `[]*Tag` slice will be populated, otherwise it will be empty) and return tuple values swapped places - `([]string, []*Tag)` instead of `([]*Tag, []string)`.
+
 ## 0.12.0
  - bumped `github.com/zoomio/inout` from `0.1.0` to `0.2.0`.
 

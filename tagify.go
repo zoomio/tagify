@@ -16,7 +16,7 @@ func processInput(in *In, limit int, verbose, doFiltering bool) ([]*processor.Ta
 
 	switch in.ContentType {
 	case HTML:
-		tags, _ = processor.ParseHTML(lines, verbose, doFiltering)
+		_, tags = processor.ParseHTML(lines, true, verbose, doFiltering)
 	default:
 		tags = processor.ParseText(lines, doFiltering)
 	}

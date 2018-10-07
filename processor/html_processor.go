@@ -17,7 +17,8 @@ var (
 	}
 )
 
-// ParseHTML receives lines of raw strings from the Web and produces result of prioritised tags
+// ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
+// plus list of prioritised tags (if tagify == true)
 // based on the importance of HTML tags which wrap sentences.
 //
 // Example:
@@ -29,7 +30,7 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(lines []string, verbose, doFiltering bool) ([]*Tag, []string) {
+func ParseHTML(lines []string, tagify, verbose, doFiltering bool) ([]string, []*Tag) {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil {
@@ -48,8 +49,8 @@ func ParseHTML(lines []string, verbose, doFiltering bool) ([]*Tag, []string) {
 		fmt.Printf("%v\n\n", hizer)
 	}
 
-	index := make(map[string]*Tag)
 	textLines := make([]string, 0)
+	index := make(map[string]*Tag)
 
 	for tag, weight := range tagWeights {
 		tags, err := hizer.GetValues(tag)
@@ -59,6 +60,11 @@ func ParseHTML(lines []string, verbose, doFiltering bool) ([]*Tag, []string) {
 		}
 		for _, t := range tags {
 			textLines = append(textLines, t.Value)
+
+			if !tagify {
+				continue
+			}
+
 			tokens := sanitize(strings.Fields(t.Value), doFiltering)
 			for _, token := range tokens {
 				item, ok := index[token]
@@ -72,5 +78,5 @@ func ParseHTML(lines []string, verbose, doFiltering bool) ([]*Tag, []string) {
 		}
 	}
 
-	return flatten(index), textLines
+	return textLines, flatten(index)
 }
