@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/zoomio/tagify.svg?branch=master)](https://travis-ci.org/zoomio/tagify)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zoomio/tagify)](https://goreportcard.com/report/github.com/zoomio/tagify)
 
-Gets STDIN, file or HTTP address (does not support SPA at the moment - Work-in-Progress) as an input and returns ordered list of most frequent words as an output.
+Visit playground [here](https://www.zoomio.org/tagify).
+
+Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output. Does not support Single Page Apps (browser rendered) at the moment - Work-in-Progress.
 
 Example, get 10 most frequent words from StackOverflow main page:
 ```bash
@@ -13,7 +15,7 @@ frequent address apache
 
 In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
 
-Use `-no-stop` flag todisable stop-words filtering ([processor/stopwords.go](https://raw.githubusercontent.com/zoomio/tagify/master/processor/stopwords.go)).
+Use `-no-stop` flag to disable stop-words filtering ([processor/stopwords.go](https://raw.githubusercontent.com/zoomio/tagify/master/processor/stopwords.go)).
 
 ## Installation
 
