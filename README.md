@@ -17,7 +17,7 @@ frequent address apache
 
 In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
 
-Use `-no-stop` flag to disable stop-words filtering ([processor/stopwords.go](https://raw.githubusercontent.com/zoomio/tagify/master/processor/stopwords.go)).
+Use `-no-stop` flag to disable stop-words filtering ([processor/stopwords.go](https://github.com/zoomio/stopwords/blob/master/stopwords.go)).
 
 ## Installation
 
