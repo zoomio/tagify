@@ -2,3 +2,4 @@
 /tagify_linux*
 /cli
 vendor/
+*.out
