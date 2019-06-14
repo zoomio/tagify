@@ -25,4 +25,5 @@ Prior to accepting your contributions we ask that you please follow the appropri
 ## Release
 
 * All notable changes comming with the new version should be documented in [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md).
+* Use `./_bin/test.sh` to run tests. 
 * Use `./_bin/tag.sh <x.y.z>` to tag, push and trigger new release. 

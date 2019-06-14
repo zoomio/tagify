@@ -23,7 +23,7 @@ func flatten(dict map[string]*Tag) []*Tag {
 	return flat
 }
 
-// ToStrings ...
+// ToStrings transforms list of given tags into a list of strings.
 func ToStrings(items []*Tag) []string {
 	strs := make([]string, len(items))
 	for i, item := range items {

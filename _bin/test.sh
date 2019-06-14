@@ -8,7 +8,8 @@ gometalinter --install
 gometalinter --fast --vendor ./...
 
 # test code
-go test -v ./...
+go test -coverprofile=coverage.out -v ./...
+go tool cover -func=coverage.out
 
 # clean after self
 go mod tidy

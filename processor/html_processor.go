@@ -30,17 +30,21 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(lines []string, tagify, verbose, doFiltering bool) ([]string, []*Tag) {
+func ParseHTML(lines []string, doTagify, verbose, doFiltering bool) ([]string, []*Tag) {
+	tagNames := make([]string, 0)
+	tagIndex := make(map[string]*Tag)
+
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
-	if err != nil {
-		panic(fmt.Sprintf("error in parsing HTML lines: %v", err))
+	if err != nil && verbose {
+		fmt.Printf("error in parsing HTML lines: %v\n", err)
+		return tagNames, flatten(tagIndex)
 	}
 
 	for _, line := range lines {
 		err = hizer.Load(line)
-		if err != nil {
-			fmt.Printf("error in loading line \"%s\": %v", line, err)
+		if err != nil && verbose {
+			fmt.Printf("error in loading line \"%s\": %v\n", line, err)
 		}
 	}
 
@@ -49,34 +53,36 @@ func ParseHTML(lines []string, tagify, verbose, doFiltering bool) ([]string, []*
 		fmt.Printf("%v\n\n", hizer)
 	}
 
-	textLines := make([]string, 0)
-	index := make(map[string]*Tag)
+	collectTags(hizer, tagNames, tagIndex, doTagify, verbose, doFiltering)
 
+	return tagNames, flatten(tagIndex)
+}
+
+func collectTags(hizer htmlizer.Htmlizer, tagNames []string, tagIndex map[string]*Tag,
+	doTagify, verbose, doFiltering bool) {
 	for tag, weight := range tagWeights {
 		tags, err := hizer.GetValues(tag)
-		if err != nil {
-			fmt.Printf("error in getting values of tag %s: %v", tag, err)
+		if err != nil && verbose {
+			fmt.Printf("error in getting values for tag %s: %v\n", tag, err)
 			continue
 		}
 		for _, t := range tags {
-			textLines = append(textLines, t.Value)
+			tagNames = append(tagNames, t.Value)
 
-			if !tagify {
+			if !doTagify {
 				continue
 			}
 
 			tokens := sanitize(strings.Fields(t.Value), doFiltering)
 			for _, token := range tokens {
-				item, ok := index[token]
+				item, ok := tagIndex[token]
 				if !ok {
 					item = &Tag{Value: token}
-					index[token] = item
+					tagIndex[token] = item
 				}
 				item.Score += weight
 				item.Count++
 			}
 		}
 	}
-
-	return textLines, flatten(index)
 }
