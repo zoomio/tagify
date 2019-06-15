@@ -16,10 +16,10 @@ var (
 )
 
 // sanitize ...
-func sanitize(strs []string, filterByStopWords bool) []string {
+func sanitize(strs []string, noStopWords bool) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
-		normilized, ok := Normalize(s, filterByStopWords)
+		normilized, ok := Normalize(s, noStopWords)
 		if !ok {
 			continue
 		}
@@ -86,12 +86,12 @@ func Run(items []*Tag, limit int) []*Tag {
 }
 
 // Normalize sanitizes word and tells whether it is allowed token or not.
-func Normalize(word string, filterByStopWords bool) (string, bool) {
+func Normalize(word string, noStopWords bool) (string, bool) {
 	// All letters to lower and with proper quote
 	word = strings.Replace(strings.ToLower(word), "’", "'", -1)
 
 	// False if it is a stop word
-	if filterByStopWords && stopwords.IsStopWord(word) {
+	if noStopWords && stopwords.IsStopWord(word) {
 		return word, false
 	}
 
