@@ -4,11 +4,11 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/zoomio/tagify)](https://goreportcard.com/report/github.com/zoomio/tagify)
 [![GoDoc](https://godoc.org/github.com/zoomio/tagify?status.svg)](https://godoc.org/github.com/zoomio/tagify)
 
+Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output. Does not support Single Page Apps (browser rendered) at the moment - Work-in-Progress.
+
 Visit playground [here](https://www.zoomio.org/tagify):
 
 ![ZoomIO Tagify](https://storage.googleapis.com/www.zoomio.org/ZoomIO_tagify.png)
-
-Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output. Does not support Single Page Apps (browser rendered) at the moment - Work-in-Progress.
 
 Example, get 10 most frequent words from StackOverflow main page:
 ```bash
