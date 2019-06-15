@@ -30,15 +30,15 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(lines []string, indexTags, verbose, noStopWords bool) ([]string, []*Tag) {
+func ParseHTML(html []string, verbose, noStopWords bool) []*Tag {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil && verbose {
 		fmt.Printf("error in parsing HTML lines: %v\n", err)
-		return []string{}, []*Tag{}
+		return []*Tag{}
 	}
 
-	for _, line := range lines {
+	for _, line := range html {
 		err = hizer.Load(line)
 		if err != nil && verbose {
 			fmt.Printf("error in loading line \"%s\": %v\n", line, err)
@@ -50,11 +50,10 @@ func ParseHTML(lines []string, indexTags, verbose, noStopWords bool) ([]string, 
 		fmt.Printf("%v\n\n", hizer)
 	}
 
-	return collectTags(hizer, indexTags, verbose, noStopWords)
+	return collectTags(hizer, verbose, noStopWords)
 }
 
-func collectTags(hizer htmlizer.Htmlizer, indexTags, verbose, noStopWords bool) ([]string, []*Tag) {
-	tagNames := make([]string, 0)
+func collectTags(hizer htmlizer.Htmlizer, verbose, noStopWords bool) []*Tag {
 	tagIndex := make(map[string]*Tag)
 
 	for tag, weight := range tagWeights {
@@ -64,12 +63,6 @@ func collectTags(hizer htmlizer.Htmlizer, indexTags, verbose, noStopWords bool) 
 			continue
 		}
 		for _, t := range tags {
-			tagNames = append(tagNames, t.Value)
-
-			if !indexTags {
-				continue
-			}
-
 			tokens := sanitize(strings.Fields(t.Value), noStopWords)
 			for _, token := range tokens {
 				item, ok := tagIndex[token]
@@ -83,5 +76,5 @@ func collectTags(hizer htmlizer.Htmlizer, indexTags, verbose, noStopWords bool) 
 		}
 	}
 
-	return tagNames, flatten(tagIndex)
+	return flatten(tagIndex)
 }

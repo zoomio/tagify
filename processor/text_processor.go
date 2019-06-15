@@ -4,11 +4,11 @@ import (
 	"strings"
 )
 
-// ParseText parses given lines of text into a slice of tags.
-func ParseText(lines []string, noStopWords bool) []*Tag {
+// ParseText parses given text lines of text into a slice of tags.
+func ParseText(text []string, noStopWords bool) []*Tag {
 	tokens := make([]string, 0)
-	for _, l := range lines {
-		tokens = append(tokens, sanitize(strings.Fields(l), noStopWords)...)
+	for _, line := range text {
+		tokens = append(tokens, sanitize(strings.Fields(line), noStopWords)...)
 	}
 
 	if len(tokens) == 0 {
