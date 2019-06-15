@@ -1,8 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 0.13.1
- - increased code coverage to 76.6%.
+## 0.14.0
+ - breaking change: signature of `processor#ParseHTML` changed, removed `bool` argument - `doTagify`, previously it returned a tuple `([]string, []*Tag)` and now it is a single result - `[]*Tag`;
+ - increased code coverage.
 
 ## 0.13.0
  - breaking change: signature of `processor#ParseHTML` changed, added extra `bool` argument - `tagify` (if set to true, then output `[]*Tag` slice will be populated, otherwise it will be empty) and return tuple values swapped places - `([]string, []*Tag)` instead of `([]*Tag, []string)`.
