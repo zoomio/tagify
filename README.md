@@ -10,7 +10,7 @@ Visit playground [here](https://www.zoomio.org/tagify):
 
 ![ZoomIO Tagify](https://storage.googleapis.com/www.zoomio.org/ZoomIO_tagify.png)
 
-Example, get 3 tgas from this repository:
+Example, "tagify" this repository (with the limit of 3 tags):
 ```bash
 $ tagify -s=https://github.com/zoomio/tagify -l=3
 frequent address apache
