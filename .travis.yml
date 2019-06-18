@@ -6,11 +6,14 @@ go:
 env:
   - GO111MODULE=on
 
-install:
-  - go get -v ./...
+before_install:
+  - go get -t -v ./...
 
 script: 
-  - ./_bin/test.sh
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
 before_deploy:
   - ./_bin/build.sh darwin ${TRAVIS_TAG}

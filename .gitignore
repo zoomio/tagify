@@ -3,3 +3,4 @@
 /cli
 vendor/
 *.out
+coverage.txt
