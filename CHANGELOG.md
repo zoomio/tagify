@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.15.0
+ - added support for more HTML tags `<h5>`, `<h6>` and `<a>`.
+
 ## 0.14.0
  - breaking change: signature of `processor#ParseHTML` changed, removed `bool` argument - `doTagify`, previously it returned a tuple `([]string, []*Tag)` and now it is a single result - `[]*Tag`;
  - increased code coverage.
