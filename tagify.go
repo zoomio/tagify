@@ -31,10 +31,13 @@ func processInput(in *In, limit int, verbose, noStopWords bool) ([]*processor.Ta
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
-	in, err := NewIn(source)
+func GetTags(source, query string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
+	in, err := NewIn(source, query)
 	if err != nil {
 		return []*processor.Tag{}, err
+	}
+	if query != "" {
+		in.ContentType = Text
 	}
 	if contentType > Unknown {
 		in.ContentType = contentType

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.16.0
+ - bumped `github.com/zoomio/inout` to be able to wait for DOM elements to be visible on the web-pages;
+ - introduced `-q` option, which is short for "query" to allow to provide CSS query.
+
 ## 0.15.0
  - added support for more HTML tags `<h5>`, `<h6>` and `<a>`.
 

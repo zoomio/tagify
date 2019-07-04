@@ -53,14 +53,14 @@ type In struct {
 //
 // name - the filename or web page name, reads from STDIN if name is empty.
 // Panics on errors.
-func NewIn(name string) (In, error) {
+func NewIn(name, query string) (In, error) {
 	in := In{}
-	r, err := inout.New(name)
+	r, err := inout.New(name, query)
 	if err != nil {
 		return in, err
 	}
 
-	in.reader = &r
+	in.reader = r
 
 	_, statErr := os.Stat(name)
 	if name != "" && statErr != nil {
@@ -75,7 +75,7 @@ func NewInFromString(input string, contentType ContentType) In {
 	r := inout.NewFromString(input)
 	return In{
 		ContentType: contentType,
-		reader:      &r,
+		reader:      r,
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetTags(t *testing.T) {
-	tags, err := GetTags("http://stackoverflow.com", HTML, 10, false, false)
+	tags, err := GetTags("http://stackoverflow.com", "", HTML, 10, false, false)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 10)
 }
