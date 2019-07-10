@@ -31,7 +31,13 @@ func processInput(in *In, limit int, verbose, noStopWords bool) ([]*processor.Ta
 }
 
 // GetTags produces slice of tags ordered by frequency and limited by limit.
-func GetTags(source, query string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
+func GetTags(source string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
+	return GetTagsWithQuery(source, "", contentType, limit, verbose, noStopWords)
+}
+
+// GetTagsWithQuery produces slice of tags from "source" narrowed down to a CSS "query" ordered by frequency and limited by limit.
+func GetTagsWithQuery(source, query string, contentType ContentType, limit int,
+	verbose, noStopWords bool) ([]*processor.Tag, error) {
 	in, err := NewIn(source, query)
 	if err != nil {
 		return []*processor.Tag{}, err

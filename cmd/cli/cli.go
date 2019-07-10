@@ -18,7 +18,7 @@ func main() {
 	doFiltering := flag.Bool("no-stop", true, "Filter by stop-words")
 	flag.Parse()
 
-	tags, err := tagify.GetTags(*source, *query, tagify.ContentTypeOf(*contentType), *limit, *verbose, *doFiltering)
+	tags, err := tagify.GetTagsWithQuery(*source, *query, tagify.ContentTypeOf(*contentType), *limit, *verbose, *doFiltering)
 	if err != nil && *verbose {
 		println(err)
 		os.Exit(1)

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.17.0
+ - CSS query (`-q` option): improved overall querying logic, now it retrieves all texts from the matching tags;
+ - bumped `github.com/zoomio/inout` to `0.5.0`.
+
 ## 0.16.0
  - bumped `github.com/zoomio/inout` to be able to wait for DOM elements to be visible on the web-pages;
  - introduced `-q` option, which is short for "query" to allow to provide CSS query.
