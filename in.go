@@ -55,12 +55,12 @@ type In struct {
 // Panics on errors.
 func NewIn(name, query string) (In, error) {
 	in := In{}
-	r, err := inout.New(name, query)
+	r, err := inout.NewInOut(inout.WithSource(name), inout.WithQuery(query))
 	if err != nil {
 		return in, err
 	}
 
-	in.reader = r
+	in.reader = &r
 
 	_, statErr := os.Stat(name)
 	if name != "" && statErr != nil {

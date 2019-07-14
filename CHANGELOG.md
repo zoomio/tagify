@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.18.0
+ - bumped `github.com/zoomio/inout` to `0.6.0`;
+ - re-used "self-referential functions and the design of options" approach by Rob Pike by introducing `Option` and new API method `#Run`.
+
 ## 0.17.0
  - CSS query (`-q` option): improved overall querying logic, now it retrieves all texts from the matching tags;
  - bumped `github.com/zoomio/inout` to `0.5.0`.
