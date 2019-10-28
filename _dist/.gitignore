@@ -2,3 +2,5 @@
 *.out
 coverage.txt
 *.prof
+*.svg
+*.png

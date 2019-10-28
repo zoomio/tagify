@@ -23,14 +23,35 @@ func main() {
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v", err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(3)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error in profiling: %v\n", err)
+			os.Exit(3)
+		}
 		defer pprof.StopCPUProfile()
 	}
 
-	tags, err := tagify.GetTagsWithQuery(*source, *query, tagify.ContentTypeOf(*contentType), *limit, *verbose, *doFiltering)
+	options := []tagify.Option{
+		tagify.TargetType(tagify.ContentTypeOf(*contentType)),
+		tagify.Limit(*limit),
+	}
+	if *source != "" {
+		options = append(options, tagify.Source(*source))
+	}
+	if *query != "" {
+		options = append(options, tagify.Query(*query))
+	}
+	if *verbose {
+		options = append(options, tagify.Verbose(*verbose))
+	}
+	if *doFiltering {
+		options = append(options, tagify.NoStopWords(*doFiltering))
+	}
+
+	tags, err := tagify.Run(options...)
 	if err != nil && *verbose {
 		fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
 		os.Exit(2)

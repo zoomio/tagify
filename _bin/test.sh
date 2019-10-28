@@ -8,8 +8,8 @@ go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 golangci-lint run
 
 # tests & coverage
-go test -coverprofile=coverage.out -v ./...
-go tool cover -func=coverage.out
+go test -coverprofile=_dist/coverage.out -v ./...
+go tool cover -func=_dist/coverage.out
 
 # clean after self
 go mod tidy
