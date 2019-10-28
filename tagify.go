@@ -44,7 +44,7 @@ func Run(options ...Option) ([]*processor.Tag, error) {
 
 	in, err := NewIn(c.source, c.query)
 	if err != nil {
-		return []*processor.Tag{}, err
+		return nil, err
 	}
 	if c.query != "" {
 		in.ContentType = Text

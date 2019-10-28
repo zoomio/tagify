@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.19.0
+ - bumped Go to `1.13.x`;
+ - better error printing/wrapping with `fmt.Fprintf(os.Stderr, ...)` and `fmt.Errorf("...%W...", ...)`;
+ - added benchmark test and profiling;
+ - improved infrastructure scripts for build and install, added `Makefile`;
+ - better help on `--help` option.
+
 ## 0.18.0
  - bumped `github.com/zoomio/inout` to `0.6.0`;
  - re-used "self-referential functions and the design of options" approach by Rob Pike by introducing `Option` and new API method `#Run`.

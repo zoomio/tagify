@@ -83,7 +83,7 @@ func NewInFromString(input string, contentType ContentType) In {
 func (in *In) ReadAllStrings() ([]string, error) {
 	strs, err := in.reader.ReadWords()
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	return strs, nil
 }
@@ -92,7 +92,7 @@ func (in *In) ReadAllStrings() ([]string, error) {
 func (in *In) ReadAllLines() ([]string, error) {
 	lines, err := in.reader.ReadLines()
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	return lines, nil
 }

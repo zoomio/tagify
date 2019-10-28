@@ -1,0 +1,4 @@
+/tagify*
+*.out
+coverage.txt
+*.prof

@@ -2,6 +2,7 @@ package processor
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gpestana/htmlizer"
@@ -15,7 +16,7 @@ var (
 		"<h4>": 1.3,
 		"<h5>": 1.2,
 		"<h6>": 1.1,
-		"<p>":  1,
+		"<p>":  0.9,
 		"<a>":  1,
 	}
 )
@@ -37,14 +38,14 @@ func ParseHTML(html []string, verbose, noStopWords bool) []*Tag {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
 	if err != nil && verbose {
-		fmt.Printf("error in parsing HTML lines: %v\n", err)
+		fmt.Fprintf(os.Stderr, "error in parsing HTML lines: %v\n", err)
 		return []*Tag{}
 	}
 
 	for _, line := range html {
 		err = hizer.Load(line)
 		if err != nil && verbose {
-			fmt.Printf("error in loading line \"%s\": %v\n", line, err)
+			fmt.Fprintf(os.Stderr, "error in loading line \"%s\": %v\n", line, err)
 		}
 	}
 
@@ -62,7 +63,7 @@ func collectTags(hizer htmlizer.Htmlizer, verbose, noStopWords bool) []*Tag {
 	for tag, weight := range tagWeights {
 		tags, err := hizer.GetValues(tag)
 		if err != nil && verbose {
-			fmt.Printf("error in getting values for tag %s: %v\n", tag, err)
+			fmt.Fprintf(os.Stderr, "error in getting values for tag %s: %v\n", tag, err)
 			continue
 		}
 		for _, t := range tags {

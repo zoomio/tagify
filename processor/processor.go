@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	sanitizeRegex         = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
-	notAWord              = regexp.MustCompile(`([^a-z'-]+)`)
-	doubleNotWordySymbols = regexp.MustCompile(`[\W]{2}`)
+	sanitizeRegex              = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
+	notAWordRegex              = regexp.MustCompile(`([^a-z'-]+)`)
+	doubleNotWordySymbolsRegex = regexp.MustCompile(`[\W]{2}`)
 )
 
 // sanitize ...
@@ -104,7 +104,7 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 	word = sanitizeRegex.ReplaceAllString(word, "${2}")
 
 	// Defensive check if sanitized result is still not a word
-	if notAWord.MatchString(word) || doubleNotWordySymbols.MatchString(word) {
+	if notAWordRegex.MatchString(word) || doubleNotWordySymbolsRegex.MatchString(word) {
 		return word, false
 	}
 
