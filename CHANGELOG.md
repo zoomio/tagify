@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.20.0
+ - bumped `github.com/zoomio/inout` to `0.7.0`, to handle bigger lines of text;
+ - made private internal housekkeping struct `in`.
+
 ## 0.19.0
  - bumped Go to `1.13.x`;
  - better error printing/wrapping with `fmt.Fprintf(os.Stderr, ...)` and `fmt.Errorf("...%W...", ...)`;

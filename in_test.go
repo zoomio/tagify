@@ -13,14 +13,14 @@ func TestContentTypeOf(t *testing.T) {
 }
 
 func TestNewInFromString_ReadAllLines(t *testing.T) {
-	in := NewInFromString("Test input reader of type text", Text)
+	in := newInFromString("Test input reader of type text", Text)
 	lns, err := in.ReadAllLines()
 	assert.Nil(t, err)
 	assert.Len(t, lns, 1)
 }
 
 func TestNewInFromString_ReadAllStrings(t *testing.T) {
-	in := NewInFromString("Test input reader of type text", Text)
+	in := newInFromString("Test input reader of type text", Text)
 	strs, err := in.ReadAllStrings()
 	assert.Nil(t, err)
 	assert.Len(t, strs, 6)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +17,7 @@ func main() {
 	limit := flag.Int("l", 5, "number of tags to return")
 	verbose := flag.Bool("v", false, "enables verbose mode")
 	contentType := flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
-	doFiltering := flag.Bool("no-stop", true, "enables filtering out stop-words from results")
+	doFiltering := flag.Bool("no-stop", true, "filters out all stop-words from results (see https://github.com/zoomio/stopwords)")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Parse()
 
@@ -51,10 +52,15 @@ func main() {
 		options = append(options, tagify.NoStopWords(*doFiltering))
 	}
 
-	tags, err := tagify.Run(options...)
+	tags, err := tagify.Run(context.Background(), options...)
 	if err != nil && *verbose {
 		fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
 		os.Exit(2)
+	}
+
+	if tags == nil || len(tags) == 0 {
+		fmt.Println("0 tags found: provide correct source with \"-s\" option or use \"-h\" to see more options")
+		os.Exit(0)
 	}
 
 	fmt.Printf("%s\n", strings.Join(tagify.ToStrings(tags), " "))

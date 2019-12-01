@@ -1,6 +1,7 @@
 package tagify
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/zoomio/tagify/processor"
@@ -18,22 +19,22 @@ type config struct {
 // GetTags produces slice of tags ordered by frequency and limited by limit.
 //
 // Deprecated: use tagify#Run instead.
-func GetTags(source string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
-	return Run(Source(source), TargetType(contentType),
+func GetTags(ctx context.Context, source string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
+	return Run(ctx, Source(source), TargetType(contentType),
 		Limit(limit), Verbose(verbose), NoStopWords(noStopWords))
 }
 
 // GetTagsWithQuery produces slice of tags from "source" narrowed down to a CSS "query" ordered by frequency and limited by limit.
 //
 // Deprecated: use tagify#Run instead.
-func GetTagsWithQuery(source, query string, contentType ContentType, limit int,
+func GetTagsWithQuery(ctx context.Context, source, query string, contentType ContentType, limit int,
 	verbose, noStopWords bool) ([]*processor.Tag, error) {
-	return Run(Source(source), Query(query), TargetType(contentType),
+	return Run(ctx, Source(source), Query(query), TargetType(contentType),
 		Limit(limit), Verbose(verbose), NoStopWords(noStopWords))
 }
 
 // Run produces slice of tags ordered by frequency.
-func Run(options ...Option) ([]*processor.Tag, error) {
+func Run(ctx context.Context, options ...Option) ([]*processor.Tag, error) {
 
 	c := &config{}
 
@@ -42,7 +43,7 @@ func Run(options ...Option) ([]*processor.Tag, error) {
 		option(c)
 	}
 
-	in, err := NewIn(c.source, c.query)
+	in, err := newIn(ctx, c.source, c.query, c.verbose)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func Run(options ...Option) ([]*processor.Tag, error) {
 
 // GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
 func GetTagsFromString(input string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
-	in := NewInFromString(input, contentType)
+	in := newInFromString(input, contentType)
 
 	c := &config{
 		limit:       limit,
@@ -74,21 +75,38 @@ func ToStrings(items []*processor.Tag) []string {
 	return processor.ToStrings(items)
 }
 
-func processInput(in *In, c config) ([]*processor.Tag, error) {
+func processInput(in *in, c config) ([]*processor.Tag, error) {
 	var tags []*processor.Tag
+
+	if c.verbose {
+		fmt.Println("reading lines...")
+	}
 
 	lines, err := in.ReadAllLines()
 	if err != nil {
 		return tags, err
 	}
 
+	if len(lines) == 0 {
+		return tags, nil
+	}
+
 	switch in.ContentType {
 	case HTML:
+		if c.verbose {
+			fmt.Println("parsing HTML...")
+		}
 		tags = processor.ParseHTML(lines, c.verbose, c.noStopWords)
 	default:
+		if c.verbose {
+			fmt.Println("parsing plain text...")
+		}
 		tags = processor.ParseText(lines, c.noStopWords)
 	}
 
+	if c.verbose {
+		fmt.Println("tagifying...")
+	}
 	tags = processor.Run(tags, c.limit)
 	if c.verbose {
 		fmt.Printf("%v\n", tags)

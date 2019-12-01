@@ -12,7 +12,7 @@ import (
 
 func Test_GetTags(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := GetTags(fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
+	tags, err := GetTags(context.TODO(), fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
 	assert.Equal(t, []string{"him", "andread", "befell", "boy", "cakes"}, ToStrings(tags))
@@ -20,7 +20,7 @@ func Test_GetTags(t *testing.T) {
 
 func Test_GetTagsWithQuery(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := GetTagsWithQuery(fmt.Sprintf("http://localhost:%d", port), "#box3 p", HTML, 5, false, true)
+	tags, err := GetTagsWithQuery(context.TODO(), fmt.Sprintf("http://localhost:%d", port), "#box3 p", HTML, 5, false, true)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
 	assert.Equal(t, []string{"able", "away", "began", "boy", "day"}, ToStrings(tags))
@@ -28,7 +28,7 @@ func Test_GetTagsWithQuery(t *testing.T) {
 
 func Test_Run(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := Run(Source(fmt.Sprintf("http://localhost:%d", port)), Query("#box3 p"),
+	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), Query("#box3 p"),
 		TargetType(HTML), Limit(5), Verbose(false), NoStopWords(true))
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)

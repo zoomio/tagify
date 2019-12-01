@@ -1,6 +1,7 @@
 package tagify
 
 import (
+	"context"
 	"os"
 
 	"github.com/zoomio/inout"
@@ -42,20 +43,20 @@ func (contentType ContentType) String() string {
 	return contentTypes[contentType]
 }
 
-// In - Input. This struct provides methods for reading strings
+// in - Input. This struct provides methods for reading strings
 // and numbers from standard input, file input, URLs, and sockets.
-type In struct {
+type in struct {
 	reader *inout.Reader
 	ContentType
 }
 
-// NewIn initializes an input stream from STDIN, file or web page.
+// newIn initializes an input stream from STDIN, file or web page.
 //
 // name - the filename or web page name, reads from STDIN if name is empty.
 // Panics on errors.
-func NewIn(name, query string) (In, error) {
-	in := In{}
-	r, err := inout.NewInOut(inout.WithSource(name), inout.WithQuery(query))
+func newIn(ctx context.Context, name, query string, verbose bool) (in, error) {
+	in := in{}
+	r, err := inout.NewInOut(ctx, inout.Source(name), inout.Query(query), inout.Verbose(verbose))
 	if err != nil {
 		return in, err
 	}
@@ -70,17 +71,17 @@ func NewIn(name, query string) (In, error) {
 	return in, err
 }
 
-// NewInFromString ...
-func NewInFromString(input string, contentType ContentType) In {
+// newInFromString ...
+func newInFromString(input string, contentType ContentType) in {
 	r := inout.NewFromString(input)
-	return In{
+	return in{
 		ContentType: contentType,
 		reader:      r,
 	}
 }
 
 // ReadAllStrings provides slice of strings from input split by white space.
-func (in *In) ReadAllStrings() ([]string, error) {
+func (in *in) ReadAllStrings() ([]string, error) {
 	strs, err := in.reader.ReadWords()
 	if err != nil {
 		return nil, err
@@ -89,7 +90,7 @@ func (in *In) ReadAllStrings() ([]string, error) {
 }
 
 // ReadAllLines provides slice of lines from input.
-func (in *In) ReadAllLines() ([]string, error) {
+func (in *in) ReadAllLines() ([]string, error) {
 	lines, err := in.reader.ReadLines()
 	if err != nil {
 		return nil, err

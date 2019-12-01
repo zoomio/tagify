@@ -37,7 +37,7 @@ var (
 func ParseHTML(html []string, verbose, noStopWords bool) []*Tag {
 	// will trim out all the tabs from text
 	hizer, err := htmlizer.New([]rune{'\t'})
-	if err != nil && verbose {
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "error in parsing HTML lines: %v\n", err)
 		return []*Tag{}
 	}
@@ -65,6 +65,9 @@ func collectTags(hizer htmlizer.Htmlizer, verbose, noStopWords bool) []*Tag {
 		if err != nil && verbose {
 			fmt.Fprintf(os.Stderr, "error in getting values for tag %s: %v\n", tag, err)
 			continue
+		}
+		if verbose && tags != nil && len(tags) > 0 {
+			fmt.Printf("reading tag: %s\n", tag)
 		}
 		for _, t := range tags {
 			tokens := sanitize(strings.Fields(t.Value), noStopWords)
