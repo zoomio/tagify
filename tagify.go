@@ -82,35 +82,40 @@ func processInput(in *in, c config) ([]*processor.Tag, error) {
 		fmt.Println("reading lines...")
 	}
 
-	lines, err := in.ReadAllLines()
-	if err != nil {
-		return tags, err
-	}
-
-	if len(lines) == 0 {
-		return tags, nil
-	}
-
 	switch in.ContentType {
 	case HTML:
 		if c.verbose {
 			fmt.Println("parsing HTML...")
 		}
-		tags = processor.ParseHTML(lines, c.verbose, c.noStopWords)
+		tags = processor.ParseHTML(in.getReader(), c.verbose, c.noStopWords)
 	default:
+		lines, err := in.readAllLines()
+		if err != nil {
+			return tags, err
+		}
+
+		if c.verbose {
+			fmt.Printf("got %d lines\n", len(lines))
+		}
+
+		if len(lines) == 0 {
+			return tags, nil
+		}
+
 		if c.verbose {
 			fmt.Println("parsing plain text...")
 		}
 		tags = processor.ParseText(lines, c.noStopWords)
 	}
 
-	if c.verbose {
-		fmt.Println("tagifying...")
-	}
-	tags = processor.Run(tags, c.limit)
-	if c.verbose {
-		fmt.Printf("%v\n", tags)
-		fmt.Printf("\nsize: %d\n\n", len(tags))
+	if len(tags) > 0 {
+		if c.verbose {
+			fmt.Println("tagifying...")
+		}
+		tags = processor.Run(tags, c.limit)
+		if c.verbose {
+			fmt.Printf("\n%v\n", tags)
+		}
 	}
 
 	return tags, nil

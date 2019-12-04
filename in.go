@@ -2,6 +2,7 @@ package tagify
 
 import (
 	"context"
+	"io"
 	"os"
 
 	"github.com/zoomio/inout"
@@ -23,7 +24,7 @@ var (
 )
 
 // ContentType ...
-type ContentType int
+type ContentType byte
 
 // ContentTypeOf returns ContentType based on string value.
 func ContentTypeOf(contentType string) ContentType {
@@ -80,8 +81,12 @@ func newInFromString(input string, contentType ContentType) in {
 	}
 }
 
-// ReadAllStrings provides slice of strings from input split by white space.
-func (in *in) ReadAllStrings() ([]string, error) {
+func (in *in) getReader() io.Reader {
+	return in.reader
+}
+
+// readAllStrings provides slice of strings from input split by white space.
+func (in *in) readAllStrings() ([]string, error) {
 	strs, err := in.reader.ReadWords()
 	if err != nil {
 		return nil, err
@@ -89,8 +94,8 @@ func (in *in) ReadAllStrings() ([]string, error) {
 	return strs, nil
 }
 
-// ReadAllLines provides slice of lines from input.
-func (in *in) ReadAllLines() ([]string, error) {
+// readAllLines provides slice of lines from input.
+func (in *in) readAllLines() ([]string, error) {
 	lines, err := in.reader.ReadLines()
 	if err != nil {
 		return nil, err

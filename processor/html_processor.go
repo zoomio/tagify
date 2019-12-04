@@ -2,24 +2,30 @@ package processor
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"strings"
 
-	"github.com/gpestana/htmlizer"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 var (
-	tagWeights = map[string]float64{
-		"<h1>": 2,
-		"<h2>": 1.5,
-		"<h3>": 1.4,
-		"<h4>": 1.3,
-		"<h5>": 1.2,
-		"<h6>": 1.1,
-		"<p>":  0.9,
-		"<a>":  1,
+	tagWeights = map[atom.Atom]float64{
+		atom.H1: 2,
+		atom.H2: 1.5,
+		atom.H3: 1.4,
+		atom.H4: 1.3,
+		atom.H5: 1.2,
+		atom.H6: 1.1,
+		atom.P:  0.9,
+		atom.A:  1,
 	}
 )
+
+type contents struct {
+	len int
+	c   map[atom.Atom][]string
+}
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
@@ -34,43 +40,65 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(html []string, verbose, noStopWords bool) []*Tag {
-	// will trim out all the tabs from text
-	hizer, err := htmlizer.New([]rune{'\t'})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error in parsing HTML lines: %v\n", err)
+func ParseHTML(reader io.Reader, verbose, noStopWords bool) []*Tag {
+	contents := crawl(reader)
+
+	if verbose {
+		fmt.Println("parsed: ")
+		fmt.Printf("%v\n", contents.c)
+	}
+
+	if contents.len == 0 {
 		return []*Tag{}
 	}
 
-	for _, line := range html {
-		err = hizer.Load(line)
-		if err != nil && verbose {
-			fmt.Fprintf(os.Stderr, "error in loading line \"%s\": %v\n", line, err)
-		}
-	}
-
-	if verbose {
-		fmt.Println("\nparsed HTML: ")
-		fmt.Printf("%v\n\n", hizer)
-	}
-
-	return collectTags(hizer, verbose, noStopWords)
+	return collectTags(contents, verbose, noStopWords)
 }
 
-func collectTags(hizer htmlizer.Htmlizer, verbose, noStopWords bool) []*Tag {
+func crawl(reader io.Reader) *contents {
+	contents := &contents{c: make(map[atom.Atom][]string), len: 0}
+
+	z := html.NewTokenizer(reader)
+
+	for {
+		tt := z.Next()
+
+		switch {
+		case tt == html.ErrorToken:
+			// End of the document, we're done
+			return contents
+		case tt == html.StartTagToken:
+			t := z.Token()
+
+			if _, ok := tagWeights[t.DataAtom]; ok {
+				tt := z.Next()
+
+				if tt == html.TextToken {
+					next := z.Token()
+					if _, ok := contents.c[t.DataAtom]; !ok {
+						contents.c[t.DataAtom] = make([]string, 0)
+					}
+					contents.c[t.DataAtom] = append(contents.c[t.DataAtom], strings.TrimSpace(next.Data))
+					contents.len++
+				}
+			}
+		}
+	}
+}
+
+func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 	tagIndex := make(map[string]*Tag)
 
 	for tag, weight := range tagWeights {
-		tags, err := hizer.GetValues(tag)
-		if err != nil && verbose {
-			fmt.Fprintf(os.Stderr, "error in getting values for tag %s: %v\n", tag, err)
+		lines, ok := contents.c[tag]
+		if !ok {
 			continue
 		}
-		if verbose && tags != nil && len(tags) > 0 {
-			fmt.Printf("reading tag: %s\n", tag)
+		if verbose && lines != nil && len(lines) > 0 {
+			fmt.Printf("reading tag: %s\n", tag.String())
 		}
-		for _, t := range tags {
-			tokens := sanitize(strings.Fields(t.Value), noStopWords)
+		for _, l := range lines {
+			tokens := sanitize(strings.Fields(l), noStopWords)
 			for _, token := range tokens {
 				item, ok := tagIndex[token]
 				if !ok {

@@ -59,7 +59,7 @@ func main() {
 	}
 
 	if tags == nil || len(tags) == 0 {
-		fmt.Println("0 tags found: provide correct source with \"-s\" option or use \"-h\" to see more options")
+		fmt.Println("found 0 tags")
 		os.Exit(0)
 	}
 

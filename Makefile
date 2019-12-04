@@ -1,7 +1,5 @@
 .PHONY: deps clean build
 
-DEPLOY_TARGET_ENV?=local
-
 deps:
 	go get -u ./...
 
