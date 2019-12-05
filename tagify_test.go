@@ -15,7 +15,7 @@ func Test_GetTags(t *testing.T) {
 	tags, err := GetTags(context.TODO(), fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"him", "andread", "befell", "boy", "cakes"}, ToStrings(tags))
+	assert.Equal(t, []string{"test", "boy", "him", "able", "andread"}, ToStrings(tags))
 }
 
 func Test_GetTagsWithQuery(t *testing.T) {

@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.22.1
+ - fixed test.
+
 ## 0.22.0
  - added `<title>` HTML tag handling;
  - minor code optimizations.
