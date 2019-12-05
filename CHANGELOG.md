@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.22.0
+ - added `<title>` HTML tag handling;
+ - minor code optimizations.
+
 ## 0.21.0
  - bumped `github.com/zoomio/inout` to `0.8.0`;
  - removed dependency on `hizer` so now HTML parser actually works better.

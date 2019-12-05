@@ -78,34 +78,11 @@ func ToStrings(items []*processor.Tag) []string {
 func processInput(in *in, c config) ([]*processor.Tag, error) {
 	var tags []*processor.Tag
 
-	if c.verbose {
-		fmt.Println("reading lines...")
-	}
-
 	switch in.ContentType {
 	case HTML:
-		if c.verbose {
-			fmt.Println("parsing HTML...")
-		}
-		tags = processor.ParseHTML(in.getReader(), c.verbose, c.noStopWords)
+		tags = processor.ParseHTML(in, c.verbose, c.noStopWords)
 	default:
-		lines, err := in.readAllLines()
-		if err != nil {
-			return tags, err
-		}
-
-		if c.verbose {
-			fmt.Printf("got %d lines\n", len(lines))
-		}
-
-		if len(lines) == 0 {
-			return tags, nil
-		}
-
-		if c.verbose {
-			fmt.Println("parsing plain text...")
-		}
-		tags = processor.ParseText(lines, c.noStopWords)
+		tags = processor.ParseText(in, c.verbose, c.noStopWords)
 	}
 
 	if len(tags) > 0 {

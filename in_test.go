@@ -12,16 +12,9 @@ func TestContentTypeOf(t *testing.T) {
 	assert.Equal(t, Text, ContentTypeOf("Text"))
 }
 
-func TestNewInFromString_ReadAllLines(t *testing.T) {
+func TestNewInFromString_ReadLines(t *testing.T) {
 	in := newInFromString("Test input reader of type text", Text)
-	lns, err := in.readAllLines()
+	lns, err := in.ReadLines()
 	assert.Nil(t, err)
 	assert.Len(t, lns, 1)
-}
-
-func TestNewInFromString_ReadAllStrings(t *testing.T) {
-	in := newInFromString("Test input reader of type text", Text)
-	strs, err := in.readAllStrings()
-	assert.Nil(t, err)
-	assert.Len(t, strs, 6)
 }

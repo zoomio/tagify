@@ -1,13 +1,31 @@
 package processor
 
 import (
+	"fmt"
 	"strings"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-func ParseText(text []string, noStopWords bool) []*Tag {
+func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
+	if verbose {
+		fmt.Println("parsing plain text...")
+	}
+
+	lines, err := in.ReadLines()
+	if err != nil {
+		return []*Tag{}
+	}
+
+	if verbose {
+		fmt.Printf("got %d lines\n", len(lines))
+	}
+
+	if len(lines) == 0 {
+		return []*Tag{}
+	}
+
 	tokens := make([]string, 0)
-	for _, line := range text {
+	for _, line := range lines {
 		tokens = append(tokens, sanitize(strings.Fields(line), noStopWords)...)
 	}
 

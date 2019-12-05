@@ -2,7 +2,6 @@ package tagify
 
 import (
 	"context"
-	"io"
 	"os"
 
 	"github.com/zoomio/inout"
@@ -81,21 +80,21 @@ func newInFromString(input string, contentType ContentType) in {
 	}
 }
 
-func (in *in) getReader() io.Reader {
-	return in.reader
+// Read reads into given bytes (does not close reader).
+// Makes `in` to be compatible with `io.Reader`.
+func (in *in) Read(p []byte) (n int, err error) {
+	return in.reader.Read(p)
 }
 
-// readAllStrings provides slice of strings from input split by white space.
-func (in *in) readAllStrings() ([]string, error) {
-	strs, err := in.reader.ReadWords()
-	if err != nil {
-		return nil, err
-	}
-	return strs, nil
+// Close closes internal reader.
+// Makes `in` to be compatible with `io.Closer`.
+func (in *in) Close() error {
+	return in.reader.Close()
 }
 
-// readAllLines provides slice of lines from input.
-func (in *in) readAllLines() ([]string, error) {
+// ReadLines provides slice of lines from input,
+// after method has returned input is closed.
+func (in *in) ReadLines() ([]string, error) {
 	lines, err := in.reader.ReadLines()
 	if err != nil {
 		return nil, err

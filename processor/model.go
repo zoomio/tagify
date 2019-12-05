@@ -1,6 +1,13 @@
 package processor
 
-import "fmt"
+import (
+	"fmt"
+)
+
+// InputReader ...
+type InputReader interface {
+	ReadLines() ([]string, error)
+}
 
 // Tag holds some arbitrary string value (e.g. a word) along with some extra data about it.
 type Tag struct {

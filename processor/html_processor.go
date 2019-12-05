@@ -11,14 +11,15 @@ import (
 
 var (
 	tagWeights = map[atom.Atom]float64{
-		atom.H1: 2,
-		atom.H2: 1.5,
-		atom.H3: 1.4,
-		atom.H4: 1.3,
-		atom.H5: 1.2,
-		atom.H6: 1.1,
-		atom.P:  0.9,
-		atom.A:  1,
+		atom.Title: 3,
+		atom.H1:    2,
+		atom.H2:    1.5,
+		atom.H3:    1.4,
+		atom.H4:    1.3,
+		atom.H5:    1.2,
+		atom.H6:    1.1,
+		atom.P:     0.9,
+		atom.A:     1,
 	}
 )
 
@@ -40,7 +41,12 @@ type contents struct {
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(reader io.Reader, verbose, noStopWords bool) []*Tag {
+func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
+	if verbose {
+		fmt.Println("parsing HTML...")
+	}
+
+	defer reader.Close()
 	contents := crawl(reader)
 
 	if verbose {

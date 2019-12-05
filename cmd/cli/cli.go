@@ -58,7 +58,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	if tags == nil || len(tags) == 0 {
+	if len(tags) == 0 {
 		fmt.Println("found 0 tags")
 		os.Exit(0)
 	}
