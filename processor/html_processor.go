@@ -21,11 +21,39 @@ var (
 		atom.P:     0.9,
 		atom.A:     1,
 	}
+	tagOrder = []atom.Atom{
+		atom.Title,
+		atom.H1,
+		atom.H2,
+		atom.H3,
+		atom.H4,
+		atom.H5,
+		atom.H6,
+		atom.P,
+		atom.A,
+	}
 )
 
 type contents struct {
 	len int
 	c   map[atom.Atom][]string
+}
+
+func (cnt *contents) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for _, tag := range tagOrder {
+		lines, ok := cnt.c[tag]
+		if !ok {
+			continue
+		}
+		sb.WriteString(" ")
+		sb.WriteString(tag.String())
+		sb.WriteString(":")
+		sb.WriteString(fmt.Sprintf("%v", lines))
+	}
+	sb.WriteString(" ]")
+	return sb.String()
 }
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
@@ -51,7 +79,7 @@ func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
 
 	if verbose {
 		fmt.Println("parsed: ")
-		fmt.Printf("%v\n", contents.c)
+		fmt.Printf("%s\n", contents)
 	}
 
 	if contents.len == 0 {
@@ -94,8 +122,13 @@ func crawl(reader io.Reader) *contents {
 
 func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 	tagIndex := make(map[string]*Tag)
+	var pageTitle string
 
-	for tag, weight := range tagWeights {
+	for _, tag := range tagOrder {
+		weight, ok := tagWeights[tag]
+		if !ok {
+			continue
+		}
 		lines, ok := contents.c[tag]
 		if !ok {
 			continue
@@ -104,6 +137,13 @@ func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 			fmt.Printf("reading tag: %s\n", tag.String())
 		}
 		for _, l := range lines {
+			if tag == atom.Title {
+				pageTitle = l
+			}
+			if isHeading(tag) && l == pageTitle {
+				// avoid doubling of scores for duplicated page's title in headings
+				continue
+			}
 			tokens := sanitize(strings.Fields(l), noStopWords)
 			for _, token := range tokens {
 				item, ok := tagIndex[token]
@@ -118,4 +158,13 @@ func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 	}
 
 	return flatten(tagIndex)
+}
+
+func isHeading(t atom.Atom) bool {
+	switch t {
+	case atom.H1, atom.H2, atom.H3:
+		return true
+	default:
+		return false
+	}
 }

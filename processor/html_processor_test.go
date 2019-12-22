@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	htmlSimpleString = `
+const htmlSimpleString = `
 	<html>
 	<body>
 	<p>There was a boy</p>
@@ -17,30 +16,6 @@ var (
 	</body>
 	</html>
 `
-
-	htmlComplexString = `<!DOCTYPE html>
-  <html itemscope itemtype="http://schema.org/QAPage">
-  <head>
-  <title>go - Golang parse HTML, extract all content from certain HTML tags</title>
-    <link rel="shortcut icon" href="//cdn.sstatic.net/Sites/stackoverflow/img/favicon.ico?v=4f32ecc8f43d">
-    <link rel="apple-touch-icon image_src" href="//cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon.png?v=c78bd457575a">
-    <link rel="search" type="application/opensearchdescription+xml" title="Stack Overflow" href="/opensearch.xml">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:domain" content="stackoverflow.com"/>
-    <meta property="og:type" content="website" />
-    </head>
-<body class="template-blog">
-<nav class="navigation">
-<div class="navigation__container container">
-<a class="navigation__logo" href="/">
-<h1>Theme</h1>
-</a>
-<ul class="navigation__menu">
-<li><a href="/help/">Help</a></li>
-<li><a href="/blog">Blog</a></li>
-</ul>
-</div>`
-)
 
 type inputReadCloser struct {
 	io.Reader
@@ -67,6 +42,29 @@ func Test_ParseHTML_ExcludeStopWords(t *testing.T) {
 	assert.Subset(t, ToStrings(tags), []string{"boy", "jim"})
 }
 
+const htmlComplexString = `<!DOCTYPE html>
+  <html itemscope itemtype="http://schema.org/QAPage">
+  <head>
+  	<title>go - Golang parse HTML, extract all content from certain HTML tags</title>
+    <link rel="shortcut icon" href="//cdn.sstatic.net/Sites/stackoverflow/img/favicon.ico?v=4f32ecc8f43d">
+    <link rel="apple-touch-icon image_src" href="//cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon.png?v=c78bd457575a">
+    <link rel="search" type="application/opensearchdescription+xml" title="Stack Overflow" href="/opensearch.xml">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:domain" content="stackoverflow.com"/>
+    <meta property="og:type" content="website" />
+    </head>
+<body class="template-blog">
+<nav class="navigation">
+<div class="navigation__container container">
+<a class="navigation__logo" href="/">
+<h1>Theme</h1>
+</a>
+<ul class="navigation__menu">
+<li><a href="/help/">Help</a></li>
+<li><a href="/blog">Blog</a></li>
+</ul>
+</div>`
+
 func Test_ParseHTML_Complex(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, false)
 	assert.Len(t, tags, 13)
@@ -77,4 +75,22 @@ func Test_ParseHTML_Complex_ExcludeStopWords(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, true)
 	assert.Len(t, tags, 9)
 	assert.Subset(t, ToStrings(tags), []string{"html", "extract", "content", "tags", "blog", "theme", "parse", "help", "golang"})
+}
+
+const htmlDupedString = `
+	<html>
+	<head>
+	<title>A story about a boy</title>
+	</head>
+	<body>
+	<h1>A story about a boy</h1>
+	<p>There was a boy</p>
+	<p>Who's name was Jim.</p>
+	</body>
+	</html>
+`
+
+func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
+	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1})
 }

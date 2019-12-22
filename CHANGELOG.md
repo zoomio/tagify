@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.23.0
+ - HTML: do not count page's title twice, if it is represented in one of the headings.
+
 ## 0.22.1
  - fixed test.
 
