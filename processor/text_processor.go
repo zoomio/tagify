@@ -11,6 +11,8 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 		fmt.Println("parsing plain text...")
 	}
 
+	var docsCount int
+
 	lines, err := in.ReadLines()
 	if err != nil {
 		return []*Tag{}
@@ -24,25 +26,35 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 		return []*Tag{}
 	}
 
+	tokenIndex := make(map[string]*Tag)
 	tokens := make([]string, 0)
-	for _, line := range lines {
-		tokens = append(tokens, sanitize(strings.Fields(line), noStopWords)...)
-	}
-
-	if len(tokens) == 0 {
-		return []*Tag{}
-	}
-
-	index := make(map[string]*Tag)
-
-	for _, token := range tokens {
-		item, ok := index[token]
-		if !ok {
-			item = &Tag{Value: token}
-			index[token] = item
+	for _, l := range lines {
+		sentences := SplitToSentences(l)
+		for _, s := range sentences {
+			docsCount++
+			tokens = append(tokens, sanitize(strings.Fields(s), noStopWords)...)
+			visited := map[string]bool{}
+			for _, token := range tokens {
+				visited[token] = true
+				item, ok := tokenIndex[token]
+				if !ok {
+					item = &Tag{Value: token}
+					tokenIndex[token] = item
+				}
+				item.Score++
+				item.Count++
+			}
+			// increment number of appearances in documents for each visited tag
+			for token := range visited {
+				tokenIndex[token].Docs++
+			}
 		}
-		item.Score++
-		item.Count++
 	}
-	return flatten(index)
+
+	// set total number of dicuments in the text.
+	for _, v := range tokenIndex {
+		v.DocsCount = docsCount
+	}
+
+	return flatten(tokenIndex)
 }

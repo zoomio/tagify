@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.24.0
+ - use TF-IDF for better tags scoring;
+ - bumped `github.com/zoomio/inout` to `0.8.2`;
+ - improved stop words detection by checking after sanitisation;
+ - added `<li>` tag for HTML processor.
+
 ## 0.23.0
  - HTML: do not count page's title twice, if it is represented in one of the headings.
 

@@ -15,7 +15,7 @@ func Test_GetTags(t *testing.T) {
 	tags, err := GetTags(context.TODO(), fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"test", "boy", "him", "able", "andread"}, ToStrings(tags))
+	assert.Equal(t, []string{"test", "boy", "andread", "befell", "began"}, ToStrings(tags))
 }
 
 func Test_GetTagsWithQuery(t *testing.T) {
@@ -23,7 +23,7 @@ func Test_GetTagsWithQuery(t *testing.T) {
 	tags, err := GetTagsWithQuery(context.TODO(), fmt.Sprintf("http://localhost:%d", port), "#box3 p", HTML, 5, false, true)
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"able", "away", "began", "boy", "day"}, ToStrings(tags))
+	assert.Equal(t, []string{"began", "boy", "day", "eat", "especial"}, ToStrings(tags))
 }
 
 func Test_Run(t *testing.T) {
@@ -32,7 +32,7 @@ func Test_Run(t *testing.T) {
 		TargetType(HTML), Limit(5), Verbose(false), NoStopWords(true))
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"able", "away", "began", "boy", "day"}, ToStrings(tags))
+	assert.Equal(t, []string{"began", "boy", "day", "eat", "especial"}, ToStrings(tags))
 }
 
 func Test_GetTagsFromString(t *testing.T) {

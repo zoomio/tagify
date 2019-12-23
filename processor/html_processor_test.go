@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -67,14 +68,14 @@ const htmlComplexString = `<!DOCTYPE html>
 
 func Test_ParseHTML_Complex(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, false)
-	assert.Len(t, tags, 13)
-	assert.Subset(t, ToStrings(tags), []string{"content", "from", "tags", "theme", "go", "golang", "parse", "extract", "help", "blog", "html", "all", "certain"})
+	assert.Len(t, tags, 11)
+	assert.Subset(t, ToStrings(tags), []string{"html", "all", "theme", "parse", "golang", "extract", "content", "from", "certain", "tags", "go"})
 }
 
 func Test_ParseHTML_Complex_ExcludeStopWords(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, true)
-	assert.Len(t, tags, 9)
-	assert.Subset(t, ToStrings(tags), []string{"html", "extract", "content", "tags", "blog", "theme", "parse", "help", "golang"})
+	assert.Len(t, tags, 7)
+	assert.Subset(t, ToStrings(tags), []string{"golang", "parse", "html", "extract", "content", "tags", "theme"})
 }
 
 const htmlDupedString = `
@@ -84,6 +85,7 @@ const htmlDupedString = `
 	</head>
 	<body>
 	<h1>A story about a boy</h1>
+	<h2>Part I</h2>
 	<p>There was a boy</p>
 	<p>Who's name was Jim.</p>
 	</body>
@@ -92,5 +94,11 @@ const htmlDupedString = `
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
-	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1})
+	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 6})
+}
+
+func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
+	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	fmt.Printf("%v\n", tags)
+	assert.NotContains(t, tags, &Tag{Value: "part", Score: 1.4, Count: 1})
 }

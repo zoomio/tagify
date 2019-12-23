@@ -18,8 +18,9 @@ var (
 		atom.H4:    1.3,
 		atom.H5:    1.2,
 		atom.H6:    1.1,
-		atom.P:     0.9,
 		atom.A:     1,
+		atom.P:     0.9,
+		atom.Li:    0.9,
 	}
 	tagOrder = []atom.Atom{
 		atom.Title,
@@ -29,8 +30,9 @@ var (
 		atom.H4,
 		atom.H5,
 		atom.H6,
-		atom.P,
 		atom.A,
+		atom.P,
+		atom.Li,
 	}
 )
 
@@ -71,14 +73,14 @@ func (cnt *contents) String() string {
 //
 func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
 	if verbose {
-		fmt.Println("parsing HTML...")
+		fmt.Println("--> parsing HTML...")
 	}
 
 	defer reader.Close()
 	contents := crawl(reader)
 
 	if verbose {
-		fmt.Println("parsed: ")
+		fmt.Println("--> parsed")
 		fmt.Printf("%s\n", contents)
 	}
 
@@ -121,8 +123,13 @@ func crawl(reader io.Reader) *contents {
 }
 
 func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
-	tagIndex := make(map[string]*Tag)
+	tokenIndex := make(map[string]*Tag)
+	var docsCount int
 	var pageTitle string
+
+	if verbose {
+		fmt.Println("--> tokenized")
+	}
 
 	for _, tag := range tagOrder {
 		weight, ok := tagWeights[tag]
@@ -133,31 +140,50 @@ func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 		if !ok {
 			continue
 		}
-		if verbose && lines != nil && len(lines) > 0 {
-			fmt.Printf("reading tag: %s\n", tag.String())
-		}
 		for _, l := range lines {
-			if tag == atom.Title {
-				pageTitle = l
-			}
-			if isHeading(tag) && l == pageTitle {
-				// avoid doubling of scores for duplicated page's title in headings
-				continue
-			}
-			tokens := sanitize(strings.Fields(l), noStopWords)
-			for _, token := range tokens {
-				item, ok := tagIndex[token]
-				if !ok {
-					item = &Tag{Value: token}
-					tagIndex[token] = item
+			sentences := SplitToSentences(l)
+			for _, s := range sentences {
+				docsCount++
+				if isHeading(tag) && s == pageTitle {
+					// avoid doubling of scores for duplicated page's title in headings
+					if verbose {
+						fmt.Printf("<%s>: skipped equal to <title>\n", tag.String())
+					}
+					continue
 				}
-				item.Score += weight
-				item.Count++
+				if tag == atom.Title {
+					pageTitle = s
+				}
+				tokens := sanitize(strings.Fields(s), noStopWords)
+				if verbose && len(tokens) > 0 {
+					fmt.Printf("<%s>: %v\n", tag.String(), tokens)
+				}
+				visited := map[string]bool{}
+				for _, token := range tokens {
+					visited[token] = true
+					item, ok := tokenIndex[token]
+					if !ok {
+						item = &Tag{Value: token}
+						tokenIndex[token] = item
+					}
+					item.Score += weight
+					item.Count++
+				}
+
+				// increment number of appearances in documents for each visited tag
+				for token := range visited {
+					tokenIndex[token].Docs++
+				}
 			}
 		}
 	}
 
-	return flatten(tagIndex)
+	// set total number of dicuments in the text.
+	for _, v := range tokenIndex {
+		v.DocsCount = docsCount
+	}
+
+	return flatten(tokenIndex)
 }
 
 func isHeading(t atom.Atom) bool {

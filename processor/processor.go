@@ -13,6 +13,7 @@ var (
 	sanitizeRegex              = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 	notAWordRegex              = regexp.MustCompile(`([^a-z'-]+)`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[\W]{2}`)
+	punctuationRegex           = regexp.MustCompile(`[.,\/#!$%\^&\*;:{}=\-_~()]`)
 )
 
 // sanitize ...
@@ -79,6 +80,13 @@ func Run(items []*Tag, limit int) []*Tag {
 		}
 	}
 
+	// Apply TF-IDF
+	for _, t := range uniqueTags {
+		if t.Docs > 0 && t.DocsCount > 0 {
+			t.Score = tfidf(t)
+		}
+	}
+
 	sortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
@@ -90,11 +98,6 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 	// All letters to lower and with proper quote
 	word = strings.Replace(strings.ToLower(word), "’", "'", -1)
 
-	// False if it is a stop word
-	if noStopWords && stopwords.IsStopWord(word) {
-		return word, false
-	}
-
 	// False if doesn't match allowed regex
 	if !sanitizeRegex.MatchString(word) {
 		return word, false
@@ -102,6 +105,11 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 
 	// Remove not allowed symbols (sanitize)
 	word = sanitizeRegex.ReplaceAllString(word, "${2}")
+
+	// False if it is a stop word
+	if noStopWords && stopwords.IsStopWord(word) {
+		return word, false
+	}
 
 	// Defensive check if sanitized result is still not a word
 	if notAWordRegex.MatchString(word) || doubleNotWordySymbolsRegex.MatchString(word) {
@@ -115,4 +123,10 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 
 	// Allowed word
 	return word, true
+}
+
+// SplitToSentences splits given text into slice of sentences.
+func SplitToSentences(text string) []string {
+	splitText := punctuationRegex.ReplaceAllString(strings.TrimSpace(text), "\n")
+	return strings.Split(splitText, "\n")
 }

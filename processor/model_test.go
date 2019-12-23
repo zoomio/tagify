@@ -8,11 +8,13 @@ import (
 
 func Test_String(t *testing.T) {
 	tag := &Tag{
-		Value: "foo",
-		Score: 2.5,
-		Count: 3,
+		Value:     "foo",
+		Score:     2.5,
+		Count:     3,
+		Docs:      2,
+		DocsCount: 7,
 	}
-	assert.Equal(t, "(foo - [score: 2.50, count: 3])", tag.String())
+	assert.Equal(t, "(foo - [score: 2.50, count: 3, docs: 2, docs_count: 7])", tag.String())
 }
 
 func Test_flatten(t *testing.T) {
