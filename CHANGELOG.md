@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.26.0
+ - simplified sentence splitting regex to only split by either of `.,!;:` symbols.
+
 ## 0.25.0
  - improved HTML parser, now it keeps crawling inside the tag even if there are other tags inside;
  - added `<code>` tag for HTML processor;

@@ -12,9 +12,9 @@ import (
 var (
 	sanitizeRegex              = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 	notAWordRegex              = regexp.MustCompile(`([^a-z'-]+)`)
-	notWordRegex               = regexp.MustCompile(`\W`)
+	noLetterWordRegex          = regexp.MustCompile(`\W`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[\W]{2}`)
-	punctuationRegex           = regexp.MustCompile(`[.,\/#!$%\^&\*;:{}=\-_~()]`)
+	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 )
 
 // Run - 1st sorts given list,
@@ -124,7 +124,7 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 		return word, false
 	}
 
-	if len(word) == 1 && notWordRegex.MatchString(word) {
+	if len(word) == 1 && noLetterWordRegex.MatchString(word) {
 		return word, false
 	}
 
