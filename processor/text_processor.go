@@ -25,7 +25,6 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 	if len(lines) == 0 {
 		return []*Tag{}
 	}
-
 	tokenIndex := make(map[string]*Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {

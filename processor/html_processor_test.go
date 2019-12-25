@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -68,14 +67,18 @@ const htmlComplexString = `<!DOCTYPE html>
 
 func Test_ParseHTML_Complex(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, false)
-	assert.Len(t, tags, 11)
-	assert.Subset(t, ToStrings(tags), []string{"html", "all", "theme", "parse", "golang", "extract", "content", "from", "certain", "tags", "go"})
+	assert.Len(t, tags, 13)
+	assert.Subset(t,
+		ToStrings(tags),
+		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all", "theme", "help", "blog"})
 }
 
 func Test_ParseHTML_Complex_ExcludeStopWords(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, true)
-	assert.Len(t, tags, 7)
-	assert.Subset(t, ToStrings(tags), []string{"golang", "parse", "html", "extract", "content", "tags", "theme"})
+	assert.Len(t, tags, 9)
+	assert.Subset(t,
+		ToStrings(tags),
+		[]string{"parse", "content", "tags", "golang", "html", "extract", "theme", "help", "blog"})
 }
 
 const htmlDupedString = `
@@ -94,11 +97,10 @@ const htmlDupedString = `
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
-	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 6})
+	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 5})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
-	fmt.Printf("%v\n", tags)
 	assert.NotContains(t, tags, &Tag{Value: "part", Score: 1.4, Count: 1})
 }

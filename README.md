@@ -6,7 +6,8 @@
 [![GoDoc](https://godoc.org/github.com/zoomio/tagify?status.svg)](https://godoc.org/github.com/zoomio/tagify)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
-Gets STDIN, file or HTTP address as an input and returns ordered list of most frequent words as an output.
+Gets STDIN, file or HTTP address as an input and returns a list of most popular words ordered by popularity as an output.
+Currently only supports plain text and HTML.
 
 Visit playground [here](https://www.zoomio.org/tagify):
 

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNormalize(t *testing.T) {
+func Test_Normalize(t *testing.T) {
 	n, ok := Normalize("(part)", false)
 	assert.True(t, ok)
 	assert.Equal(t, "part", n)
@@ -38,12 +38,12 @@ func TestNormalize(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestSanitize_timestamp(t *testing.T) {
+func Test_Sanitize_timestamp(t *testing.T) {
 	_, ok := Normalize("2018-02-24T12:00:49Z", false)
 	assert.False(t, ok)
 }
 
-func TestRun_Limits(t *testing.T) {
+func Test_Run_Limits(t *testing.T) {
 	items := []*Tag{
 		{Value: "cat", Score: 1},
 		{Value: "dog", Score: 1},
@@ -55,7 +55,7 @@ func TestRun_Limits(t *testing.T) {
 	assert.Len(t, processed, 3)
 }
 
-func TestRun_Sorts(t *testing.T) {
+func Test_Run_Sorts(t *testing.T) {
 	items := []*Tag{
 		{Value: "cat", Score: 1},
 		{Value: "dog", Score: 2},
@@ -72,7 +72,7 @@ func TestRun_Sorts(t *testing.T) {
 	assert.Equal(t, "cat", processed[4].Value)
 }
 
-func TestRun_DeDupes(t *testing.T) {
+func Test_Run_DeDupes(t *testing.T) {
 	items := []*Tag{
 		{Value: "cat", Score: 5},
 		{Value: "person", Score: 2},
@@ -85,4 +85,36 @@ func TestRun_DeDupes(t *testing.T) {
 	assert.Equal(t, "people", processed[0].Value)
 	assert.Equal(t, "cat", processed[1].Value)
 	assert.Equal(t, "bar", processed[2].Value)
+}
+
+func Test_SplitToSentences(t *testing.T) {
+	text := "This sentence has a comma, so it'll be split into two halves. This sentence has nothing. Should it though?"
+	sentences := SplitToSentences(text)
+	assert.Len(t, sentences, 4)
+}
+
+func Test_SplitToSentences_MultipleCommas(t *testing.T) {
+	text := `
+	Natural language processing includes: tokeniziation, term frequency - inverse term frequency, 
+	nearest neighbors, part of speech tagging and many more.
+	`
+	sentences := SplitToSentences(text)
+	assert.Equal(t, "part of speech tagging and many more", sentences[5])
+	assert.Len(t, sentences, 6)
+}
+
+func Test_Run_IgnoresTFIDF_IfNoDocs(t *testing.T) {
+	items := []*Tag{
+		{Value: "cat", Score: 5},
+	}
+	processed := Run(items, 5)
+	assert.Equal(t, 5.0, processed[0].Score)
+}
+
+func Test_Run_AppliesTFIDF_WithDocs(t *testing.T) {
+	items := []*Tag{
+		{Value: "cat", Score: 5, Docs: 1, DocsCount: 3},
+	}
+	processed := Run(items, 5)
+	assert.Equal(t, 1.9684489712313906, processed[0].Score)
 }

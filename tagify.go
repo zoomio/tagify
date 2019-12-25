@@ -16,23 +16,6 @@ type config struct {
 	noStopWords bool
 }
 
-// GetTags produces slice of tags ordered by frequency and limited by limit.
-//
-// Deprecated: use tagify#Run instead.
-func GetTags(ctx context.Context, source string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
-	return Run(ctx, Source(source), TargetType(contentType),
-		Limit(limit), Verbose(verbose), NoStopWords(noStopWords))
-}
-
-// GetTagsWithQuery produces slice of tags from "source" narrowed down to a CSS "query" ordered by frequency and limited by limit.
-//
-// Deprecated: use tagify#Run instead.
-func GetTagsWithQuery(ctx context.Context, source, query string, contentType ContentType, limit int,
-	verbose, noStopWords bool) ([]*processor.Tag, error) {
-	return Run(ctx, Source(source), Query(query), TargetType(contentType),
-		Limit(limit), Verbose(verbose), NoStopWords(noStopWords))
-}
-
 // Run produces slice of tags ordered by frequency.
 func Run(ctx context.Context, options ...Option) ([]*processor.Tag, error) {
 

@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.25.0
+ - improved HTML parser, now it keeps crawling inside the tag even if there are other tags inside;
+ - added `<code>` tag for HTML processor;
+ - TF part of the TF-IDF score caluclation is now logarithmically scaled;
+ - added more tests, plus a bit of a code re-shuffling;
+ - bumped `github.com/zoomio/stopwords` to `0.3.0`.
+
 ## 0.24.0
  - use TF-IDF for better tags scoring;
  - bumped `github.com/zoomio/inout` to `0.8.2`;

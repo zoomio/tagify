@@ -12,22 +12,10 @@ import (
 var (
 	sanitizeRegex              = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
 	notAWordRegex              = regexp.MustCompile(`([^a-z'-]+)`)
+	notWordRegex               = regexp.MustCompile(`\W`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[\W]{2}`)
 	punctuationRegex           = regexp.MustCompile(`[.,\/#!$%\^&\*;:{}=\-_~()]`)
 )
-
-// sanitize ...
-func sanitize(strs []string, noStopWords bool) []string {
-	result := make([]string, 0)
-	for _, s := range strs {
-		normilized, ok := Normalize(s, noStopWords)
-		if !ok {
-			continue
-		}
-		result = append(result, normilized)
-	}
-	return result
-}
 
 // Run - 1st sorts given list,
 // then iterates over it and de-dupes items in the list by merging inflections,
@@ -73,9 +61,11 @@ func Run(items []*Tag, limit int) []*Tag {
 			savedIndex := uniqueTagsMap[singularForm]
 			saved := uniqueTags[savedIndex]
 			uniqueTags[savedIndex] = &Tag{
-				Value: saved.Value,
-				Score: saved.Score + tag.Score,
-				Count: saved.Count + tag.Count,
+				Value:     saved.Value,
+				Score:     saved.Score + tag.Score,
+				Count:     saved.Count + tag.Count,
+				Docs:      saved.Docs + tag.Docs,
+				DocsCount: saved.DocsCount,
 			}
 		}
 	}
@@ -91,6 +81,19 @@ func Run(items []*Tag, limit int) []*Tag {
 
 	// take only requested size (limit) or just everything if result is smaller than limit
 	return uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
+}
+
+// sanitize ...
+func sanitize(strs []string, noStopWords bool) []string {
+	result := make([]string, 0)
+	for _, s := range strs {
+		normilized, ok := Normalize(s, noStopWords)
+		if !ok {
+			continue
+		}
+		result = append(result, normilized)
+	}
+	return result
 }
 
 // Normalize sanitizes word and tells whether it is allowed token or not.
@@ -121,12 +124,25 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 		return word, false
 	}
 
+	if len(word) == 1 && notWordRegex.MatchString(word) {
+		return word, false
+	}
+
 	// Allowed word
 	return word, true
 }
 
 // SplitToSentences splits given text into slice of sentences.
 func SplitToSentences(text string) []string {
-	splitText := punctuationRegex.ReplaceAllString(strings.TrimSpace(text), "\n")
-	return strings.Split(splitText, "\n")
+	split := punctuationRegex.ReplaceAllString(strings.TrimSpace(text), "\n")
+	sents := strings.Split(split, "\n")
+	i := 0
+	for _, s := range sents {
+		trim := strings.TrimSpace(s)
+		if trim != "" {
+			sents[i] = trim
+			i++
+		}
+	}
+	return sents[:i]
 }

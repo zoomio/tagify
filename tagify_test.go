@@ -10,26 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_GetTags(t *testing.T) {
+func Test_Run(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := GetTags(context.TODO(), fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
+	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
+		Limit(5), NoStopWords(true))
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
 	assert.Equal(t, []string{"test", "boy", "andread", "befell", "began"}, ToStrings(tags))
 }
 
-func Test_GetTagsWithQuery(t *testing.T) {
+func Test_RunWithQuery(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := GetTagsWithQuery(context.TODO(), fmt.Sprintf("http://localhost:%d", port), "#box3 p", HTML, 5, false, true)
-	assert.Nil(t, err)
-	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"began", "boy", "day", "eat", "especial"}, ToStrings(tags))
-}
-
-func Test_Run(t *testing.T) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), Query("#box3 p"),
-		TargetType(HTML), Limit(5), Verbose(false), NoStopWords(true))
+	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML), Query("#box3 p"),
+		Limit(5), NoStopWords(true))
 	assert.Nil(t, err)
 	assert.Len(t, tags, 5)
 	assert.Equal(t, []string{"began", "boy", "day", "eat", "especial"}, ToStrings(tags))

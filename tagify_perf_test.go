@@ -12,7 +12,8 @@ func BenchmarkTagify(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := GetTags(context.TODO(), fmt.Sprintf("http://localhost:%d", port), HTML, 5, false, true)
+		_, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true))
 		if err != nil {
 			break
 		}

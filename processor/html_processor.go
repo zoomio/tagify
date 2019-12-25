@@ -18,9 +18,10 @@ var (
 		atom.H4:    1.3,
 		atom.H5:    1.2,
 		atom.H6:    1.1,
-		atom.A:     1,
-		atom.P:     0.9,
-		atom.Li:    0.9,
+		atom.P:     1.0,
+		atom.Li:    1.0,
+		atom.Code:  0.7,
+		atom.A:     0.4,
 	}
 	tagOrder = []atom.Atom{
 		atom.Title,
@@ -30,33 +31,12 @@ var (
 		atom.H4,
 		atom.H5,
 		atom.H6,
-		atom.A,
 		atom.P,
 		atom.Li,
+		atom.Code,
+		atom.A,
 	}
 )
-
-type contents struct {
-	len int
-	c   map[atom.Atom][]string
-}
-
-func (cnt *contents) String() string {
-	var sb strings.Builder
-	sb.WriteString("[")
-	for _, tag := range tagOrder {
-		lines, ok := cnt.c[tag]
-		if !ok {
-			continue
-		}
-		sb.WriteString(" ")
-		sb.WriteString(tag.String())
-		sb.WriteString(":")
-		sb.WriteString(fmt.Sprintf("%v", lines))
-	}
-	sb.WriteString(" ]")
-	return sb.String()
-}
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
@@ -93,9 +73,9 @@ func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
 
 func crawl(reader io.Reader) *contents {
 	contents := &contents{c: make(map[atom.Atom][]string), len: 0}
+	crawler := &crawler{}
 
 	z := html.NewTokenizer(reader)
-
 	for {
 		tt := z.Next()
 
@@ -104,19 +84,24 @@ func crawl(reader io.Reader) *contents {
 			// End of the document, we're done
 			return contents
 		case tt == html.StartTagToken:
-			t := z.Token()
-
-			if _, ok := tagWeights[t.DataAtom]; ok {
-				tt := z.Next()
-
-				if tt == html.TextToken {
-					next := z.Token()
-					if _, ok := contents.c[t.DataAtom]; !ok {
-						contents.c[t.DataAtom] = make([]string, 0)
-					}
-					contents.c[t.DataAtom] = append(contents.c[t.DataAtom], strings.TrimSpace(next.Data))
-					contents.len++
+			token := z.Token()
+			if _, ok := tagWeights[token.DataAtom]; ok {
+				crawler.push(token.DataAtom)
+			}
+		case tt == html.EndTagToken:
+			token := z.Token()
+			if _, ok := tagWeights[token.DataAtom]; ok {
+				crawler.pop()
+			}
+		case tt == html.TextToken:
+			if crawler.isCrawling() {
+				token := z.Token()
+				current := crawler.current()
+				if _, ok := contents.c[current]; !ok {
+					contents.c[current] = make([]string, 0)
 				}
+				contents.c[current] = append(contents.c[current], strings.TrimSpace(token.Data))
+				contents.len++
 			}
 		}
 	}
@@ -193,4 +178,57 @@ func isHeading(t atom.Atom) bool {
 	default:
 		return false
 	}
+}
+
+// contents stores text from target tags.
+type contents struct {
+	len int
+	c   map[atom.Atom][]string
+}
+
+func (cnt *contents) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for _, tag := range tagOrder {
+		lines, ok := cnt.c[tag]
+		if !ok {
+			continue
+		}
+		sb.WriteString(" ")
+		sb.WriteString(tag.String())
+		sb.WriteString(":")
+		sb.WriteString(fmt.Sprintf("%v", lines))
+	}
+	sb.WriteString(" ]")
+	return sb.String()
+}
+
+// crawler keeps rack of the current state of the HTML parser.
+type crawler struct {
+	stack []atom.Atom
+}
+
+func (c *crawler) push(a atom.Atom) {
+	c.stack = append(c.stack, a)
+}
+
+func (c *crawler) current() atom.Atom {
+	if len(c.stack) == 0 {
+		return 0
+	}
+	return c.stack[len(c.stack)-1]
+}
+
+func (c *crawler) pop() atom.Atom {
+	if len(c.stack) == 0 {
+		return 0
+	}
+	last := len(c.stack) - 1
+	v := c.stack[last]
+	c.stack = c.stack[:last]
+	return v
+}
+
+func (c *crawler) isCrawling() bool {
+	return len(c.stack) > 0
 }
