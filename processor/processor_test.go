@@ -42,6 +42,7 @@ var sanitizeTests = []struct {
 	exclude bool
 }{
 	{"splits", []string{"Advertising?Programmes"}, []string{"advertising", "programmes"}, false},
+	{"apostrophe", []string{"I’ve"}, []string{}, true},
 }
 
 func Test_sanitize(t *testing.T) {

@@ -87,7 +87,9 @@ func Run(items []*Tag, limit int) []*Tag {
 func sanitize(strs []string, noStopWords bool) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
-		parts := notAWordRegex.Split(strings.ToLower(s), -1)
+		// all letters to lower and with proper quote
+		s = strings.ToLower(strings.Replace(s, "’", "'", -1))
+		parts := notAWordRegex.Split(s, -1)
 		for _, p := range parts {
 			normilized, ok := normalize(p, noStopWords)
 			if !ok {
@@ -101,9 +103,6 @@ func sanitize(strs []string, noStopWords bool) []string {
 
 // normalize sanitizes word and tells whether it is allowed token or not.
 func normalize(word string, noStopWords bool) (string, bool) {
-	// All letters to lower and with proper quote
-	word = strings.Replace(word, "’", "'", -1)
-
 	// False if doesn't match allowed regex
 	if !sanitizeRegex.MatchString(word) {
 		return word, false
