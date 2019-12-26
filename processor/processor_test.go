@@ -6,41 +6,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Normalize(t *testing.T) {
-	n, ok := Normalize("(part)", false)
-	assert.True(t, ok)
-	assert.Equal(t, "part", n)
-
-	n, ok = Normalize("(part1)", false)
-	assert.True(t, ok)
-	assert.Equal(t, "part", n)
-
-	n, ok = Normalize("part1", false)
-	assert.True(t, ok)
-	assert.Equal(t, "part", n)
-
-	n, ok = Normalize("part}1", false)
-	assert.True(t, ok)
-	assert.Equal(t, "part", n)
-
-	n, ok = Normalize("{part}", false)
-	assert.True(t, ok)
-	assert.Equal(t, "part", n)
-
-	n, ok = Normalize("{d'arko}", false)
-	assert.True(t, ok)
-	assert.Equal(t, "d'arko", n)
-
-	_, ok = Normalize("1)", false)
-	assert.False(t, ok)
-
-	_, ok = Normalize("-no-stop", false)
-	assert.False(t, ok)
+// table driven tests
+var normalizeTests = []struct {
+	in      string
+	expect  string
+	pass    bool
+	exclude bool
+}{
+	{"(part)", "part", true, false},
+	{"(part1)", "part", true, false},
+	{"part1", "part", true, false},
+	{"part}1", "part", true, false},
+	{"{part}", "part", true, false},
+	{"{d'arko}", "d'arko", true, false},
+	{"1)", "1)", false, false},
+	{"-no-stop", "-no-stop", false, false},
+	{"2018-02-24T12:00:49Z", "--", false, false},
 }
 
-func Test_Sanitize_timestamp(t *testing.T) {
-	_, ok := Normalize("2018-02-24T12:00:49Z", false)
-	assert.False(t, ok)
+func Test_normalize(t *testing.T) {
+	for _, tt := range normalizeTests {
+		t.Run(tt.in, func(t *testing.T) {
+			out, ok := normalize(tt.in, tt.exclude)
+			assert.Equal(t, tt.pass, ok)
+			assert.Equal(t, tt.expect, out)
+		})
+	}
+}
+
+// table driven tests
+var sanitizeTests = []struct {
+	name    string
+	in      []string
+	expect  []string
+	exclude bool
+}{
+	{"splits", []string{"Advertising?Programmes"}, []string{"advertising", "programmes"}, false},
+}
+
+func Test_sanitize(t *testing.T) {
+	for _, tt := range sanitizeTests {
+		t.Run(tt.name, func(t *testing.T) {
+			out := sanitize(tt.in, tt.exclude)
+			assert.ElementsMatch(t, tt.expect, out)
+		})
+	}
 }
 
 func Test_Run_Limits(t *testing.T) {

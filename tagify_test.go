@@ -10,22 +10,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Run(t *testing.T) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-		Limit(5), NoStopWords(true))
-	assert.Nil(t, err)
-	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"test", "boy", "andread", "befell", "began"}, ToStrings(tags))
+// table driven tests
+var runTests = []struct {
+	name   string
+	in     []Option
+	expect []string
+}{
+	{
+		"run",
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
+			Limit(5), NoStopWords(true)},
+		[]string{"test", "boy", "jim", "andread", "bang"},
+	},
+	{
+		"run with query",
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
+			Limit(5), NoStopWords(true), Query("#box3 p")},
+		[]string{"bang", "began", "boy", "day", "eat"},
+	},
 }
 
-func Test_RunWithQuery(t *testing.T) {
+func Test_Run(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
-	tags, err := Run(context.TODO(), Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML), Query("#box3 p"),
-		Limit(5), NoStopWords(true))
-	assert.Nil(t, err)
-	assert.Len(t, tags, 5)
-	assert.Equal(t, []string{"began", "boy", "day", "eat", "especial"}, ToStrings(tags))
+	for _, tt := range runTests {
+		t.Run(tt.name, func(t *testing.T) {
+			tags, err := Run(context.TODO(), tt.in...)
+			assert.Nil(t, err)
+			assert.ElementsMatch(t, tt.expect, ToStrings(tags))
+		})
+	}
 }
 
 func Test_GetTagsFromString(t *testing.T) {

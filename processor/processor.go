@@ -87,19 +87,22 @@ func Run(items []*Tag, limit int) []*Tag {
 func sanitize(strs []string, noStopWords bool) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
-		normilized, ok := Normalize(s, noStopWords)
-		if !ok {
-			continue
+		parts := notAWordRegex.Split(strings.ToLower(s), -1)
+		for _, p := range parts {
+			normilized, ok := normalize(p, noStopWords)
+			if !ok {
+				continue
+			}
+			result = append(result, normilized)
 		}
-		result = append(result, normilized)
 	}
 	return result
 }
 
-// Normalize sanitizes word and tells whether it is allowed token or not.
-func Normalize(word string, noStopWords bool) (string, bool) {
+// normalize sanitizes word and tells whether it is allowed token or not.
+func normalize(word string, noStopWords bool) (string, bool) {
 	// All letters to lower and with proper quote
-	word = strings.Replace(strings.ToLower(word), "’", "'", -1)
+	word = strings.Replace(word, "’", "'", -1)
 
 	// False if doesn't match allowed regex
 	if !sanitizeRegex.MatchString(word) {

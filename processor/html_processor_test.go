@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const htmlSimpleString = `
+const (
+	htmlSimpleString = `
 	<html>
 	<body>
 	<p>There was a boy</p>
@@ -17,32 +18,7 @@ const htmlSimpleString = `
 	</html>
 `
 
-type inputReadCloser struct {
-	io.Reader
-}
-
-func (in *inputReadCloser) Close() error {
-	return nil
-}
-
-func Test_ParseHTML_Empty(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader("")}, false, false)
-	assert.Len(t, tags, 0)
-}
-
-func Test_ParseHTML_AllowStopWords(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlSimpleString)}, false, false)
-	assert.Len(t, tags, 7)
-	assert.Subset(t, ToStrings(tags), []string{"there", "was", "a", "boy", "who's", "name", "jim"})
-}
-
-func Test_ParseHTML_ExcludeStopWords(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlSimpleString)}, false, true)
-	assert.Len(t, tags, 2)
-	assert.Subset(t, ToStrings(tags), []string{"boy", "jim"})
-}
-
-const htmlComplexString = `<!DOCTYPE html>
+	htmlComplexString = `<!DOCTYPE html>
   <html itemscope itemtype="http://schema.org/QAPage">
   <head>
   	<title>go - Golang parse HTML, extract all content from certain HTML tags</title>
@@ -65,23 +41,7 @@ const htmlComplexString = `<!DOCTYPE html>
 </ul>
 </div>`
 
-func Test_ParseHTML_Complex(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, false)
-	assert.Len(t, tags, 13)
-	assert.Subset(t,
-		ToStrings(tags),
-		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all", "theme", "help", "blog"})
-}
-
-func Test_ParseHTML_Complex_ExcludeStopWords(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlComplexString)}, false, true)
-	assert.Len(t, tags, 9)
-	assert.Subset(t,
-		ToStrings(tags),
-		[]string{"parse", "content", "tags", "golang", "html", "extract", "theme", "help", "blog"})
-}
-
-const htmlDupedString = `
+	htmlDupedString = `
 	<html>
 	<head>
 	<title>A story about a boy</title>
@@ -94,6 +54,63 @@ const htmlDupedString = `
 	</body>
 	</html>
 `
+)
+
+type inputReadCloser struct {
+	io.Reader
+}
+
+func (in *inputReadCloser) Close() error {
+	return nil
+}
+
+// table driven tests
+var parseTests = []struct {
+	name    string
+	in      string
+	expect  []string
+	exclude bool
+}{
+	{
+		"empty",
+		"",
+		[]string{},
+		false,
+	},
+	{
+		"simple",
+		htmlSimpleString,
+		[]string{"there", "was", "a", "boy", "who's", "name", "jim"},
+		false,
+	},
+	{
+		"simple exclude stopWords",
+		htmlSimpleString,
+		[]string{"boy", "jim"},
+		true,
+	},
+	{
+		"complex",
+		htmlComplexString,
+		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all", "theme", "help", "blog"},
+		false,
+	},
+	{
+		"complex exclude stopWords",
+		htmlComplexString,
+		[]string{"parse", "content", "tags", "golang", "html", "extract", "theme", "help", "blog"},
+		true,
+	},
+}
+
+func Test_ParseHTML(t *testing.T) {
+	for _, tt := range parseTests {
+		t.Run(tt.in, func(t *testing.T) {
+			out := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, false, tt.exclude)
+			assert.ElementsMatch(t, tt.expect, ToStrings(out))
+		})
+	}
+}
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)

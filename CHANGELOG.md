@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.27.0
+ - `#sanitize` now splits word into parts if there are an unallowed symbols in it;
+ - moved onto table-driven tests for same cases.
+
 ## 0.26.0
  - simplified sentence splitting regex to only split by either of `.,!;:` symbols.
 
