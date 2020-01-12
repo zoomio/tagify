@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.29.0
+ - BREAKING CHANGE: `tagify#Run` now returns a struct with an extra data along with tags.
+
 ## 0.28.0
  - better handling for the apostrophe stopwords.
 

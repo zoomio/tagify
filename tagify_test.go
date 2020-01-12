@@ -12,21 +12,24 @@ import (
 
 // table driven tests
 var runTests = []struct {
-	name   string
-	in     []Option
-	expect []string
+	name        string
+	in          []Option
+	expectTags  []string
+	expectTitle string
 }{
 	{
 		"run",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
 			Limit(5), NoStopWords(true)},
-		[]string{"test", "boy", "jim", "andread", "bang"},
+		[]string{"test", "boy", "andread", "bang", "befell"},
+		"Test",
 	},
 	{
 		"run with query",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
 			Limit(5), NoStopWords(true), Query("#box3 p")},
 		[]string{"bang", "began", "boy", "day", "eat"},
+		"",
 	},
 }
 
@@ -34,9 +37,11 @@ func Test_Run(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
 	for _, tt := range runTests {
 		t.Run(tt.name, func(t *testing.T) {
-			tags, err := Run(context.TODO(), tt.in...)
+			res, err := Run(context.TODO(), tt.in...)
 			assert.Nil(t, err)
-			assert.ElementsMatch(t, tt.expect, ToStrings(tags))
+			assert.Equal(t, HTML, res.Meta.ContentType)
+			assert.Equal(t, tt.expectTitle, res.Meta.PageTitle)
+			assert.ElementsMatch(t, tt.expectTags, res.TagsStrings())
 		})
 	}
 }

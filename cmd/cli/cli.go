@@ -52,16 +52,16 @@ func main() {
 		options = append(options, tagify.NoStopWords(*doFiltering))
 	}
 
-	tags, err := tagify.Run(context.Background(), options...)
+	res, err := tagify.Run(context.Background(), options...)
 	if err != nil && *verbose {
 		fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
 		os.Exit(2)
 	}
 
-	if len(tags) == 0 {
+	if res.Len() == 0 {
 		fmt.Println("found 0 tags")
 		os.Exit(0)
 	}
 
-	fmt.Printf("%s\n", strings.Join(tagify.ToStrings(tags), " "))
+	fmt.Printf("%s\n", strings.Join(res.TagsStrings(), " "))
 }

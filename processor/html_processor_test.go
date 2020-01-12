@@ -69,36 +69,42 @@ var parseTests = []struct {
 	name    string
 	in      string
 	expect  []string
+	title   string
 	exclude bool
 }{
 	{
 		"empty",
 		"",
 		[]string{},
+		"",
 		false,
 	},
 	{
 		"simple",
 		htmlSimpleString,
 		[]string{"there", "was", "a", "boy", "who's", "name", "jim"},
+		"",
 		false,
 	},
 	{
 		"simple exclude stopWords",
 		htmlSimpleString,
 		[]string{"boy", "jim"},
+		"",
 		true,
 	},
 	{
 		"complex",
 		htmlComplexString,
 		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all", "theme", "help", "blog"},
+		"Theme",
 		false,
 	},
 	{
 		"complex exclude stopWords",
 		htmlComplexString,
 		[]string{"parse", "content", "tags", "golang", "html", "extract", "theme", "help", "blog"},
+		"Theme",
 		true,
 	},
 }
@@ -106,18 +112,21 @@ var parseTests = []struct {
 func Test_ParseHTML(t *testing.T) {
 	for _, tt := range parseTests {
 		t.Run(tt.in, func(t *testing.T) {
-			out := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, false, tt.exclude)
+			out, title := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, false, tt.exclude)
+			assert.Equal(t, tt.title, title)
 			assert.ElementsMatch(t, tt.expect, ToStrings(out))
 		})
 	}
 }
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	tags, title := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	assert.Equal(t, "A story about a boy", title)
 	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 5})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	tags := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	tags, title := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	assert.Equal(t, "A story about a boy", title)
 	assert.NotContains(t, tags, &Tag{Value: "part", Score: 1.4, Count: 1})
 }

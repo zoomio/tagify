@@ -17,7 +17,7 @@ type config struct {
 }
 
 // Run produces slice of tags ordered by frequency.
-func Run(ctx context.Context, options ...Option) ([]*processor.Tag, error) {
+func Run(ctx context.Context, options ...Option) (*Result, error) {
 
 	c := &config{}
 
@@ -37,7 +37,15 @@ func Run(ctx context.Context, options ...Option) ([]*processor.Tag, error) {
 		in.ContentType = c.contentType
 	}
 
-	return processInput(&in, *c)
+	tags, title, err := processInput(&in, *c)
+
+	return &Result{
+		Meta: &Meta{
+			ContentType: in.ContentType,
+			PageTitle:   title,
+		},
+		Tags: tags,
+	}, err
 }
 
 // GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
@@ -50,7 +58,9 @@ func GetTagsFromString(input string, contentType ContentType, limit int, verbose
 		noStopWords: noStopWords,
 	}
 
-	return processInput(&in, *c)
+	tags, _, err := processInput(&in, *c)
+
+	return tags, err
 }
 
 // ToStrings transforms a list of tags into a list of strings.
@@ -58,12 +68,13 @@ func ToStrings(items []*processor.Tag) []string {
 	return processor.ToStrings(items)
 }
 
-func processInput(in *in, c config) ([]*processor.Tag, error) {
+func processInput(in *in, c config) ([]*processor.Tag, string, error) {
 	var tags []*processor.Tag
+	var pageTitle string
 
 	switch in.ContentType {
 	case HTML:
-		tags = processor.ParseHTML(in, c.verbose, c.noStopWords)
+		tags, pageTitle = processor.ParseHTML(in, c.verbose, c.noStopWords)
 	default:
 		tags = processor.ParseText(in, c.verbose, c.noStopWords)
 	}
@@ -78,5 +89,5 @@ func processInput(in *in, c config) ([]*processor.Tag, error) {
 		}
 	}
 
-	return tags, nil
+	return tags, pageTitle, nil
 }

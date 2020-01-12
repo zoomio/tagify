@@ -51,7 +51,9 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
+// Returns a slice of tags as 1st result and title of the page as 2nd.
+//
+func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string) {
 	if verbose {
 		fmt.Println("--> parsing HTML...")
 	}
@@ -65,7 +67,7 @@ func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) []*Tag {
 	}
 
 	if contents.len == 0 {
-		return []*Tag{}
+		return []*Tag{}, ""
 	}
 
 	return collectTags(contents, verbose, noStopWords)
@@ -107,7 +109,7 @@ func crawl(reader io.Reader) *contents {
 	}
 }
 
-func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
+func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string) {
 	tokenIndex := make(map[string]*Tag)
 	var docsCount int
 	var pageTitle string
@@ -168,7 +170,13 @@ func collectTags(contents *contents, verbose, noStopWords bool) []*Tag {
 		v.DocsCount = docsCount
 	}
 
-	return flatten(tokenIndex)
+	// Assure page title
+	h1s, ok := contents.c[atom.H1]
+	if ok && len(h1s) > 0 {
+		pageTitle = h1s[0]
+	}
+
+	return flatten(tokenIndex), pageTitle
 }
 
 func isHeading(t atom.Atom) bool {
