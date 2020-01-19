@@ -172,7 +172,7 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 
 	// Assure page title
 	h1s, ok := contents.c[atom.H1]
-	if ok && len(h1s) > 0 {
+	if ok && len(h1s) == 1 {
 		pageTitle = h1s[0]
 	}
 

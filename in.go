@@ -2,7 +2,7 @@ package tagify
 
 import (
 	"context"
-	"os"
+	"strings"
 
 	"github.com/zoomio/inout"
 )
@@ -36,11 +36,11 @@ func ContentTypeOf(contentType string) ContentType {
 }
 
 // String ...
-func (contentType ContentType) String() string {
-	if contentType < Text || contentType > HTML {
+func (ct ContentType) String() string {
+	if ct < Text || ct > HTML {
 		return "Unknown"
 	}
-	return contentTypes[contentType]
+	return contentTypes[ct]
 }
 
 // in - Input. This struct provides methods for reading strings
@@ -63,8 +63,7 @@ func newIn(ctx context.Context, name, query string, verbose bool) (in, error) {
 
 	in.reader = &r
 
-	_, statErr := os.Stat(name)
-	if name != "" && statErr != nil {
+	if strings.HasPrefix(name, "http://") || strings.HasPrefix(name, "https://") {
 		in.ContentType = HTML
 	}
 

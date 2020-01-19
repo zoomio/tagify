@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.30.0
+ - BREAKING CHANGE: changed shape of returned struct by `tagify#Run`;
+ - optimized the page title selection.
+
 ## 0.29.0
  - BREAKING CHANGE: `tagify#Run` now returns a struct with an extra data along with tags.
 

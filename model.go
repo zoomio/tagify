@@ -12,16 +12,16 @@ type Result struct {
 
 // Meta extra information.
 type Meta struct {
-	PageTitle   string
 	ContentType ContentType
+	DocTitle    string
 }
 
-// Len ...
+// Len returns count of tags in the result.
 func (r *Result) Len() int {
 	return len(r.Tags)
 }
 
-// TagsStrings ...
+// TagsStrings transforms slice of tags into a slice of strings.
 func (r *Result) TagsStrings() []string {
 	return ToStrings(r.Tags)
 }

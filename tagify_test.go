@@ -40,20 +40,19 @@ func Test_Run(t *testing.T) {
 			res, err := Run(context.TODO(), tt.in...)
 			assert.Nil(t, err)
 			assert.Equal(t, HTML, res.Meta.ContentType)
-			assert.Equal(t, tt.expectTitle, res.Meta.PageTitle)
+			assert.Equal(t, tt.expectTitle, res.Meta.DocTitle)
 			assert.ElementsMatch(t, tt.expectTags, res.TagsStrings())
 		})
 	}
 }
 
 func Test_GetTagsFromString(t *testing.T) {
-	tags, err := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
-	assert.Nil(t, err)
+	tags := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
 	assert.Len(t, tags, 3)
 }
 
 func Test_ToStrings(t *testing.T) {
-	tags, _ := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
+	tags := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
 	strs := ToStrings(tags)
 	assert.Len(t, strs, 3)
 }

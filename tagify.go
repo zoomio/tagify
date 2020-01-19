@@ -37,19 +37,19 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		in.ContentType = c.contentType
 	}
 
-	tags, title, err := processInput(&in, *c)
+	tags, title := processInput(&in, *c)
 
 	return &Result{
 		Meta: &Meta{
 			ContentType: in.ContentType,
-			PageTitle:   title,
+			DocTitle:    title,
 		},
 		Tags: tags,
-	}, err
+	}, nil
 }
 
 // GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
-func GetTagsFromString(input string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, error) {
+func GetTagsFromString(input string, contentType ContentType, limit int, verbose, noStopWords bool) []*processor.Tag {
 	in := newInFromString(input, contentType)
 
 	c := &config{
@@ -58,9 +58,9 @@ func GetTagsFromString(input string, contentType ContentType, limit int, verbose
 		noStopWords: noStopWords,
 	}
 
-	tags, _, err := processInput(&in, *c)
+	tags, _ := processInput(&in, *c)
 
-	return tags, err
+	return tags
 }
 
 // ToStrings transforms a list of tags into a list of strings.
@@ -68,10 +68,7 @@ func ToStrings(items []*processor.Tag) []string {
 	return processor.ToStrings(items)
 }
 
-func processInput(in *in, c config) ([]*processor.Tag, string, error) {
-	var tags []*processor.Tag
-	var pageTitle string
-
+func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string) {
 	switch in.ContentType {
 	case HTML:
 		tags, pageTitle = processor.ParseHTML(in, c.verbose, c.noStopWords)
@@ -89,5 +86,5 @@ func processInput(in *in, c config) ([]*processor.Tag, string, error) {
 		}
 	}
 
-	return tags, pageTitle, nil
+	return
 }
