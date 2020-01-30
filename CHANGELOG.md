@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.31.0
+ - better handling of the page titles for HTML content types;
+ - more informative output in verbose mode in CLI - added "title" and "content-type".
+
 ## 0.30.0
  - BREAKING CHANGE: changed shape of returned struct by `tagify#Run`;
  - optimized the page title selection.

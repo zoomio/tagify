@@ -53,14 +53,21 @@ func main() {
 	}
 
 	res, err := tagify.Run(context.Background(), options...)
-	if err != nil && *verbose {
-		fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
+	if err != nil {
+		if *verbose {
+			fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
+		}
 		os.Exit(2)
 	}
 
 	if res.Len() == 0 {
 		fmt.Println("found 0 tags")
 		os.Exit(0)
+	}
+
+	if *verbose {
+		fmt.Printf("title: %s\n", res.Meta.DocTitle)
+		fmt.Printf("content-type: %s\n", res.Meta.ContentType)
 	}
 
 	fmt.Printf("%s\n", strings.Join(res.TagsStrings(), " "))

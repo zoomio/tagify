@@ -128,19 +128,19 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 			continue
 		}
 		for _, l := range lines {
+			if tag == atom.Title {
+				pageTitle = l
+			}
+			if isHeading(tag) && l == pageTitle {
+				// avoid doubling of scores for duplicated page's title in headings
+				if verbose {
+					fmt.Printf("<%s>: skipped equal to <title>\n", tag.String())
+				}
+				continue
+			}
 			sentences := SplitToSentences(l)
 			for _, s := range sentences {
 				docsCount++
-				if isHeading(tag) && s == pageTitle {
-					// avoid doubling of scores for duplicated page's title in headings
-					if verbose {
-						fmt.Printf("<%s>: skipped equal to <title>\n", tag.String())
-					}
-					continue
-				}
-				if tag == atom.Title {
-					pageTitle = s
-				}
 				tokens := sanitize(strings.Fields(s), noStopWords)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", tag.String(), tokens)
@@ -171,9 +171,11 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 	}
 
 	// Assure page title
-	h1s, ok := contents.c[atom.H1]
-	if ok && len(h1s) == 1 {
-		pageTitle = h1s[0]
+	if pageTitle == "" {
+		h1s, ok := contents.c[atom.H1]
+		if ok && len(h1s) == 1 {
+			pageTitle = h1s[0]
+		}
 	}
 
 	return flatten(tokenIndex), pageTitle
