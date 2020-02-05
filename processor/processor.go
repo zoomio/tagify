@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	sanitizeRegex              = regexp.MustCompile(`([^a-z-']*)([a-z-']+)([^a-z-']*)`)
-	notAWordRegex              = regexp.MustCompile(`([^a-z'-]+)`)
-	noLetterWordRegex          = regexp.MustCompile(`\W`)
-	doubleNotWordySymbolsRegex = regexp.MustCompile(`[\W]{2}`)
+	sanitizeRegex              = regexp.MustCompile(`([^a-zа-я-']*)([a-zа-я-']+)([^a-zа-я-']*)`)
+	notAWordRegex              = regexp.MustCompile(`([^a-zа-я'-]+)`)
+	noLetterWordRegex          = regexp.MustCompile(`[^a-zа-я]`)
+	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^a-zа-я]{2}`)
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 )
 

@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.32.0
+ - added support for Russian tags.
+
 ## 0.31.0
  - better handling of the page titles for HTML content types;
  - more informative output in verbose mode in CLI - added "title" and "content-type".
