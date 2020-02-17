@@ -1,12 +1,13 @@
 package processor
 
 import (
+	"crypto/sha512"
 	"fmt"
 	"strings"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
+func ParseText(in InputReader, verbose, noStopWords bool) ([]*Tag, []byte) {
 	if verbose {
 		fmt.Println("parsing plain text...")
 	}
@@ -15,7 +16,7 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 
 	lines, err := in.ReadLines()
 	if err != nil {
-		return []*Tag{}
+		return []*Tag{}, nil
 	}
 
 	if verbose {
@@ -23,7 +24,7 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 	}
 
 	if len(lines) == 0 {
-		return []*Tag{}
+		return []*Tag{}, nil
 	}
 	tokenIndex := make(map[string]*Tag)
 	tokens := make([]string, 0)
@@ -55,5 +56,13 @@ func ParseText(in InputReader, verbose, noStopWords bool) []*Tag {
 		v.DocsCount = docsCount
 	}
 
-	return flatten(tokenIndex)
+	return flatten(tokenIndex), hashTokens(tokens)
+}
+
+func hashTokens(ts []string) []byte {
+	h := sha512.New()
+	for _, t := range ts {
+		_, _ = h.Write([]byte(t))
+	}
+	return h.Sum(nil)
 }

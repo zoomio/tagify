@@ -14,6 +14,7 @@ type Result struct {
 type Meta struct {
 	ContentType ContentType
 	DocTitle    string
+	DocVersion  string
 }
 
 // Len returns count of tags in the result.

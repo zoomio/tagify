@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"crypto/sha512"
 	"fmt"
 	"io"
 	"strings"
@@ -51,9 +52,11 @@ var (
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-// Returns a slice of tags as 1st result and title of the page as 2nd.
+// Returns a slice of tags as 1st result,
+// a title of the page as 2nd and
+// a version of the document based on the hashed contents as 3rd.
 //
-func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string) {
+func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string, []byte) {
 	if verbose {
 		fmt.Println("--> parsing HTML...")
 	}
@@ -67,10 +70,12 @@ func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string)
 	}
 
 	if contents.len == 0 {
-		return []*Tag{}, ""
+		return []*Tag{}, "", nil
 	}
 
-	return collectTags(contents, verbose, noStopWords)
+	tags, title := collectTags(contents, verbose, noStopWords)
+
+	return tags, title, contents.Hash()
 }
 
 func crawl(reader io.Reader) *contents {
@@ -196,24 +201,38 @@ type contents struct {
 	c   map[atom.Atom][]string
 }
 
-func (cnt *contents) String() string {
-	var sb strings.Builder
-	sb.WriteString("[")
-	for _, tag := range tagOrder {
+func (cnt *contents) forEach(it func(i int, tag atom.Atom, lines []string)) {
+	for i, tag := range tagOrder {
 		lines, ok := cnt.c[tag]
 		if !ok {
 			continue
 		}
+		it(i, tag, lines)
+	}
+}
+
+func (cnt *contents) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	cnt.forEach(func(i int, tag atom.Atom, lines []string) {
 		sb.WriteString(" ")
 		sb.WriteString(tag.String())
 		sb.WriteString(":")
 		sb.WriteString(fmt.Sprintf("%v", lines))
-	}
+	})
 	sb.WriteString(" ]")
 	return sb.String()
 }
 
-// crawler keeps rack of the current state of the HTML parser.
+func (cnt *contents) Hash() []byte {
+	h := sha512.New()
+	cnt.forEach(func(i int, tag atom.Atom, lines []string) {
+		_, _ = h.Write([]byte(fmt.Sprintf("%s:%v", tag.String(), lines)))
+	})
+	return h.Sum(nil)
+}
+
+// crawler keeps track of the current state of the HTML parser.
 type crawler struct {
 	stack []atom.Atom
 }

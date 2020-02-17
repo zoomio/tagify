@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.33.0
+ - added hash value, which represents the version of the document in `Result.Meta.DocVersion`.
+
 ## 0.32.0
  - added support for Russian tags.
 

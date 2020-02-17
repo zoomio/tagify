@@ -34,8 +34,7 @@ func Test_flatten(t *testing.T) {
 	tags := flatten(dict)
 
 	assert.Len(t, tags, 2)
-	assert.Equal(t, "foo", tags[0].Value)
-	assert.Equal(t, "bar", tags[1].Value)
+	assert.ElementsMatch(t, ToStrings(tags), []string{"foo", "bar"})
 }
 
 func Test_ToStrings(t *testing.T) {
