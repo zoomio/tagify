@@ -10,6 +10,7 @@ import (
 type config struct {
 	source      string
 	query       string
+	content     string
 	contentType ContentType
 	limit       int
 	verbose     bool
@@ -26,15 +27,22 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		option(c)
 	}
 
-	in, err := newIn(ctx, c.source, c.query, c.verbose)
+	var in in
+	var err error
+
+	if c.content != "" {
+		in = newInFromString(c.content, c.contentType)
+	} else {
+		in, err = newIn(ctx, c.source, c.query, c.verbose)
+		if c.contentType > Unknown {
+			in.ContentType = c.contentType
+		} else if c.query != "" {
+			in.ContentType = HTML
+		}
+	}
+
 	if err != nil {
 		return nil, err
-	}
-	if c.query != "" {
-		in.ContentType = Text
-	}
-	if c.contentType > Unknown {
-		in.ContentType = c.contentType
 	}
 
 	tags, title, version := processInput(&in, *c)
@@ -47,21 +55,6 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		},
 		Tags: tags,
 	}, nil
-}
-
-// GetTagsFromString produces slice of tags ordered by frequency and limited by limit.
-func GetTagsFromString(input string, contentType ContentType, limit int, verbose, noStopWords bool) ([]*processor.Tag, []byte) {
-	in := newInFromString(input, contentType)
-
-	c := &config{
-		limit:       limit,
-		verbose:     verbose,
-		noStopWords: noStopWords,
-	}
-
-	tags, _, version := processInput(&in, *c)
-
-	return tags, version
 }
 
 // ToStrings transforms a list of tags into a list of strings.

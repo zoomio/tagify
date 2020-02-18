@@ -18,6 +18,13 @@ var (
 		}
 	}
 
+	// Content sets content of the target.
+	Content = func(content string) Option {
+		return func(c *config) {
+			c.content = content
+		}
+	}
+
 	// TargetType sets content type of the target.
 	TargetType = func(contentType ContentType) Option {
 		return func(c *config) {

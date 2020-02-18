@@ -75,7 +75,7 @@ func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string,
 
 	tags, title := collectTags(contents, verbose, noStopWords)
 
-	return tags, title, contents.Hash()
+	return tags, title, contents.hash()
 }
 
 func crawl(reader io.Reader) *contents {
@@ -224,7 +224,7 @@ func (cnt *contents) String() string {
 	return sb.String()
 }
 
-func (cnt *contents) Hash() []byte {
+func (cnt *contents) hash() []byte {
 	h := sha512.New()
 	cnt.forEach(func(i int, tag atom.Atom, lines []string) {
 		_, _ = h.Write([]byte(fmt.Sprintf("%s:%v", tag.String(), lines)))

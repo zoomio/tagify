@@ -47,20 +47,20 @@ func Test_Run(t *testing.T) {
 }
 
 func Test_GetTagsFromString(t *testing.T) {
-	tags, version := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
-	assert.Len(t, tags, 3)
+	res, err := Run(context.TODO(), Content("Test input reader of type text"), TargetType(Text), Limit(3), NoStopWords(true))
+	assert.Nil(t, err)
+	assert.Len(t, res.Tags, 3)
 	assert.Equal(t,
 		"7d95ed3e8436c978f3e7f19f1645f89091f9fdb0439c15547f0a6f82bc4a0babebd06ff6285d9dff8db77861edf2cc8e6919ea5613bec0f30dba24bace839dda",
-		fmt.Sprintf("%x", version))
+		res.Meta.DocVersion)
 }
 
 func Test_ToStrings(t *testing.T) {
-	tags, version := GetTagsFromString("Test input reader of type text", Text, 3, false, true)
-	strs := ToStrings(tags)
+	res, err := Run(context.TODO(), Content("Test input reader of type text"), TargetType(Text), Limit(3), NoStopWords(true))
+	assert.Nil(t, err)
+
+	strs := ToStrings(res.Tags)
 	assert.Len(t, strs, 3)
-	assert.Equal(t,
-		"7d95ed3e8436c978f3e7f19f1645f89091f9fdb0439c15547f0a6f82bc4a0babebd06ff6285d9dff8db77861edf2cc8e6919ea5613bec0f30dba24bace839dda",
-		fmt.Sprintf("%x", version))
 }
 
 // startServer is a simple HTTP server that displays the passed headers in the html.

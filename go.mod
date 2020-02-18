@@ -8,7 +8,7 @@ require (
 	github.com/zoomio/inout v0.8.2
 	github.com/zoomio/stopwords v0.4.0
 	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
-	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4 // indirect
+	golang.org/x/sys v0.0.0-20200217220822-9197077df867 // indirect
 )
 
 go 1.13

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.34.0
+ - unified `#GetTagsFromString` with `#Run` so it is now a single API call - `#Run`;
+ - fixed logic with `Query` option when it was wrongly setting `ContentType` to `Text` instead of `HTML`, when `Query` was not empty.
+
 ## 0.33.0
  - added hash value, which represents the version of the document in `Result.Meta.DocVersion`.
 
