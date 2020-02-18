@@ -52,7 +52,7 @@ func Test_GetTagsFromString(t *testing.T) {
 	assert.Len(t, res.Tags, 3)
 	assert.Equal(t,
 		"7d95ed3e8436c978f3e7f19f1645f89091f9fdb0439c15547f0a6f82bc4a0babebd06ff6285d9dff8db77861edf2cc8e6919ea5613bec0f30dba24bace839dda",
-		res.Meta.DocVersion)
+		res.Meta.DocHash)
 }
 
 func Test_ToStrings(t *testing.T) {

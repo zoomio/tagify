@@ -67,7 +67,7 @@ func main() {
 
 	if *verbose {
 		fmt.Printf("title: %s\n", res.Meta.DocTitle)
-		fmt.Printf("version: %s\n", res.Meta.DocVersion)
+		fmt.Printf("hash: %s\n", res.Meta.DocHash)
 		fmt.Printf("content-type: %s\n", res.Meta.ContentType)
 		fmt.Print("tags: ")
 	}

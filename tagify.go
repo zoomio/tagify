@@ -45,13 +45,13 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		return nil, err
 	}
 
-	tags, title, version := processInput(&in, *c)
+	tags, title, hash := processInput(&in, *c)
 
 	return &Result{
 		Meta: &Meta{
 			ContentType: in.ContentType,
 			DocTitle:    title,
-			DocVersion:  fmt.Sprintf("%x", version),
+			DocHash:     fmt.Sprintf("%x", hash),
 		},
 		Tags: tags,
 	}, nil
@@ -62,12 +62,12 @@ func ToStrings(items []*processor.Tag) []string {
 	return processor.ToStrings(items)
 }
 
-func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, version []byte) {
+func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, hash []byte) {
 	switch in.ContentType {
 	case HTML:
-		tags, pageTitle, version = processor.ParseHTML(in, c.verbose, c.noStopWords)
+		tags, pageTitle, hash = processor.ParseHTML(in, c.verbose, c.noStopWords)
 	default:
-		tags, version = processor.ParseText(in, c.verbose, c.noStopWords)
+		tags, hash = processor.ParseText(in, c.verbose, c.noStopWords)
 	}
 
 	if len(tags) > 0 {

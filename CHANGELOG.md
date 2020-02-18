@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.35.0
+ - BREAKING CHANGE (with `v0.33.0`): renamed `Result.Meta.DocVersion` to `Result.Meta.DocHash`.
+
 ## 0.34.0
  - unified `#GetTagsFromString` with `#Run` so it is now a single API call - `#Run`;
  - fixed logic with `Query` option when it was wrongly setting `ContentType` to `Text` instead of `HTML`, when `Query` was not empty.

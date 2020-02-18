@@ -71,7 +71,7 @@ var parseTests = []struct {
 	in      string
 	expect  []string
 	title   string
-	version string
+	hash    string
 	exclude bool
 }{
 	{
@@ -119,28 +119,28 @@ var parseTests = []struct {
 func Test_ParseHTML(t *testing.T) {
 	for _, tt := range parseTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, title, version := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, false, tt.exclude)
+			out, title, hash := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, false, tt.exclude)
 			assert.Equal(t, tt.title, title)
-			assert.Equal(t, tt.version, fmt.Sprintf("%x", version))
+			assert.Equal(t, tt.hash, fmt.Sprintf("%x", hash))
 			assert.ElementsMatch(t, tt.expect, ToStrings(out))
 		})
 	}
 }
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	tags, title, version := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	tags, title, hash := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
 	assert.Equal(t, "A story about a boy", title)
 	assert.Equal(t,
 		"0027df9158090fbd840bf4fe432af56b15ae3d2c460a9b5e2671ed54cbbd8ca75ff803ebbbba7cc2784c18beca10466f3d3a1a954c3f22fcbf66ccc18c751c7b",
-		fmt.Sprintf("%x", version))
+		fmt.Sprintf("%x", hash))
 	assert.Contains(t, tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 4})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	tags, title, version := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
+	tags, title, hash := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, false, true)
 	assert.Equal(t, "A story about a boy", title)
 	assert.Equal(t,
 		"0027df9158090fbd840bf4fe432af56b15ae3d2c460a9b5e2671ed54cbbd8ca75ff803ebbbba7cc2784c18beca10466f3d3a1a954c3f22fcbf66ccc18c751c7b",
-		fmt.Sprintf("%x", version))
+		fmt.Sprintf("%x", hash))
 	assert.NotContains(t, tags, &Tag{Value: "part", Score: 1.4, Count: 1})
 }
