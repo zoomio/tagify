@@ -16,6 +16,7 @@ var runTests = []struct {
 	in          []Option
 	expectTags  []string
 	expectTitle string
+	expectHash  string
 }{
 	{
 		"run",
@@ -23,6 +24,7 @@ var runTests = []struct {
 			Limit(5), NoStopWords(true)},
 		[]string{"test", "boy", "andread", "bang", "befell"},
 		"Test",
+		"9ccc5b5f88d69c6a4ebe5998c407d681f6f2e950bbc2f2fbc5505fb95a5bc9209e739311915c49d5bd68c615be463b4c5dee96e95297c8406b5b6bd518eaab43",
 	},
 	{
 		"run with query",
@@ -30,6 +32,7 @@ var runTests = []struct {
 			Limit(5), NoStopWords(true), Query("#box3 p")},
 		[]string{"bang", "began", "boy", "day", "eat"},
 		"",
+		"44e4ea6b7c484e724263b86b86249af18aaeca45b6eae12333a983b86234581eef8266da8485963a5a6bf1d6fb534f3982ade0ae216090bc181c64062a06cdc6",
 	},
 }
 
@@ -41,6 +44,7 @@ func Test_Run(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, HTML, res.Meta.ContentType)
 			assert.Equal(t, tt.expectTitle, res.Meta.DocTitle)
+			assert.Equal(t, tt.expectHash, res.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expectTags, res.TagsStrings())
 		})
 	}

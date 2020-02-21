@@ -2,6 +2,7 @@ package tagify
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
 	"github.com/zoomio/inout"
@@ -12,6 +13,7 @@ const (
 	Unknown ContentType = iota
 	Text
 	HTML
+	Markdown
 )
 
 var (
@@ -19,6 +21,7 @@ var (
 		"Unknown",
 		"Text",
 		"HTML",
+		"Markdown",
 	}
 )
 
@@ -37,7 +40,7 @@ func ContentTypeOf(contentType string) ContentType {
 
 // String ...
 func (ct ContentType) String() string {
-	if ct < Text || ct > HTML {
+	if ct < Text || ct > Markdown {
 		return "Unknown"
 	}
 	return contentTypes[ct]
@@ -65,6 +68,8 @@ func newIn(ctx context.Context, name, query string, verbose bool) (in, error) {
 
 	if strings.HasPrefix(name, "http://") || strings.HasPrefix(name, "https://") {
 		in.ContentType = HTML
+	} else if strings.ToLower(filepath.Ext(name)) == ".md" {
+		in.ContentType = Markdown
 	}
 
 	return in, err

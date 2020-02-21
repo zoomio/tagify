@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.36.0
+ - added `Result#ForEach` for easier iteration through the tags.
+
 ## 0.35.0
  - BREAKING CHANGE (with `v0.33.0`): renamed `Result.Meta.DocVersion` to `Result.Meta.DocHash`.
 

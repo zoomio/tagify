@@ -63,18 +63,24 @@ func ToStrings(items []*processor.Tag) []string {
 }
 
 func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, hash []byte) {
+	var out *processor.ParseOutput
 	switch in.ContentType {
 	case HTML:
-		tags, pageTitle, hash = processor.ParseHTML(in, c.verbose, c.noStopWords)
+		out = processor.ParseHTML(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
+	case Markdown:
+		out = processor.ParseMD(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
 	default:
-		tags, hash = processor.ParseText(in, c.verbose, c.noStopWords)
+		out = processor.ParseText(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
 	}
 
-	if len(tags) > 0 {
+	pageTitle = out.DocTitle
+	hash = out.DocHash
+
+	if len(out.Tags) > 0 {
 		if c.verbose {
 			fmt.Println("tagifying...")
 		}
-		tags = processor.Run(tags, c.limit)
+		tags = processor.Run(out.Tags, c.limit)
 		if c.verbose {
 			fmt.Printf("\n%v\n", tags)
 		}

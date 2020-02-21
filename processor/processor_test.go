@@ -37,12 +37,12 @@ func Test_normalize(t *testing.T) {
 // table driven tests
 var sanitizeTests = []struct {
 	name    string
-	in      []string
+	in      [][]byte
 	expect  []string
 	exclude bool
 }{
-	{"splits", []string{"Advertising?Programmes"}, []string{"advertising", "programmes"}, false},
-	{"apostrophe", []string{"I’ve"}, []string{}, true},
+	{"splits", [][]byte{[]byte("Advertising?Programmes")}, []string{"advertising", "programmes"}, false},
+	{"apostrophe", [][]byte{[]byte("I’ve")}, []string{}, true},
 }
 
 func Test_sanitize(t *testing.T) {
@@ -100,7 +100,7 @@ func Test_Run_DeDupes(t *testing.T) {
 
 func Test_SplitToSentences(t *testing.T) {
 	text := "This sentence has a comma, so it'll be split into two halves. This sentence has nothing. Should it though?"
-	sentences := SplitToSentences(text)
+	sentences := SplitToSentences([]byte(text))
 	assert.Len(t, sentences, 4)
 }
 
@@ -109,7 +109,7 @@ func Test_SplitToSentences_MultipleCommas(t *testing.T) {
 	Natural language processing includes: tokeniziation, term frequency - inverse term frequency, 
 	nearest neighbors, part of speech tagging and many more.
 	`
-	sentences := SplitToSentences(text)
+	sentences := SplitToSentences([]byte(text))
 	assert.Len(t, sentences, 5)
 	assert.Equal(t, "part of speech tagging and many more", sentences[4])
 }

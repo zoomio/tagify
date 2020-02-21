@@ -2,11 +2,13 @@ package processor
 
 import (
 	"fmt"
+	"io"
 )
 
 // InputReader ...
 type InputReader interface {
 	ReadLines() ([]string, error)
+	io.ReadCloser
 }
 
 // Tag holds some arbitrary string value (e.g. a word) along with some extra data about it.
@@ -27,6 +29,23 @@ func (t *Tag) String() string {
 	return fmt.Sprintf("(%s - [score: %.2f, count: %d, docs: %d, docs_count: %d])",
 		t.Value, t.Score, t.Count, t.Docs, t.DocsCount)
 }
+
+// ParseOutput is a result of the `ParseFunc`.
+type ParseOutput struct {
+	Tags     []*Tag
+	DocTitle string
+	DocHash  []byte
+	Err      error
+}
+
+type parseConfig struct {
+	verbose     bool
+	noStopWords bool
+}
+
+// ParseFunc represents an arbitrary handler,
+// which goes through given reader and produces tags.
+type ParseFunc func(reader io.ReadCloser, options ...ParseOption) *ParseOutput
 
 func flatten(dict map[string]*Tag) []*Tag {
 	flat := make([]*Tag, len(dict))
