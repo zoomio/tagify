@@ -134,7 +134,7 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		fmt.Sprintf("%x", out.DocHash))
-	assert.Contains(t, out.Tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 5})
+	assert.Contains(t, out.Tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 4})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {

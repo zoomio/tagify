@@ -20,6 +20,19 @@ Whose name was Jim.
 There was a boy whose name was **Jim**.	His Friends were very good to him.
 They gave him Tea, and Cakes, and Jam, And slices of delicious Ham...
 `
+
+	mdComplexText = `
+# Complex text for Test
+	
+This text will contain a **few** things. It will have a [link to the example](https://example.com).
+
+## Very important section
+
+Few words here and __there__. Maybe also worth adding **a list**, right?
+Said list:
+- Foo, bar
+- Bee and dog - or a cat with **stripes**
+`
 )
 
 // table driven tests
@@ -47,6 +60,14 @@ var parseMDTests = []struct {
 		"A story about Jim",
 		"ff73e809ba68765670d32ddbb3b1dad8a75bfee83bd30dfce311a16eda9069f08a07b118d17086a3830b6db3bb1be36f059dffada6bb1c2e9eb0e24c34f2d220",
 	},
+	{
+		"complex",
+		mdComplexText,
+		true,
+		[]string{"things", "example", "worth", "bar", "stripes", "https", "list", "test", "adding", "dog", "cat", "complex", "text", "link", "foo", "bee"},
+		"Complex text for Test",
+		"c1d5d1b299313bc7a44102cd92f4160edc734a32d580890a1a6b9682ac5ee8bbba3d9c226db454b748ec9923045553a115c22eb9be378da5d42c68ef365122c6",
+	},
 }
 
 func Test_ParseMD(t *testing.T) {
@@ -71,8 +92,25 @@ func Test_mdContents_sentences(t *testing.T) {
 	l1 := contents.lines[0]
 	ss1 := l1.sentences()
 	assert.Len(t, ss1, 1)
+	assert.Equal(t, "There was a boy", string(ss1[0].data()))
 
 	l2 := contents.lines[1]
 	ss2 := l2.sentences()
 	assert.Len(t, ss2, 2)
+	assert.Equal(t, "Whose name was Jim", string(ss2[0].data()))
+	assert.Equal(t, "", string(ss2[1].data()))
+}
+
+func Test_mdContents_sentences2(t *testing.T) {
+	line := &mdLine{
+		tag: paragraph,
+		parts: []*mdPart{
+			{tag: bold, data: []byte("**Sentence number one. And then, number two.***")},
+			{tag: paragraph, data: []byte(" And finally, three.")},
+		},
+	}
+
+	sents := line.sentences()
+	assert.Len(t, sents, 6)
+	assert.Equal(t, "", string(sents[5].data()))
 }

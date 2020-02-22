@@ -151,6 +151,10 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 				continue
 			}
 
+			if len(snt.data()) == 0 {
+				continue
+			}
+
 			docsCount++
 			visited := map[string]bool{}
 

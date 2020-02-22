@@ -211,6 +211,10 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 
 		sentences := line.sentences()
 		for _, snt := range sentences {
+			if len(snt.data()) == 0 {
+				continue
+			}
+
 			docsCount++
 			visited := map[string]bool{}
 

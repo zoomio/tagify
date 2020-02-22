@@ -106,12 +106,11 @@ func Test_SplitToSentences(t *testing.T) {
 
 func Test_SplitToSentences_MultipleCommas(t *testing.T) {
 	text := `
-	Natural language processing includes: tokeniziation, term frequency - inverse term frequency, 
-	nearest neighbors, part of speech tagging and many more.
+	Natural language processing includes: tokeniziation, term frequency - inverse term frequency, nearest neighbors, part of speech tagging and many more.
 	`
 	sentences := SplitToSentences([]byte(text))
-	assert.Len(t, sentences, 7)
-	assert.Equal(t, "\tnearest neighbors", string(sentences[4]))
+	assert.Len(t, sentences, 6)
+	assert.Equal(t, " part of speech tagging and many more", string(sentences[4]))
 }
 
 func Test_Run_IgnoresTFIDF_IfNoDocs(t *testing.T) {
