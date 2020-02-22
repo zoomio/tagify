@@ -10,15 +10,15 @@ import (
 
 const (
 	mdSmallText = `
-	There was a boy
-	Whose name was Jim.
+There was a boy
+Whose name was Jim.
 `
 
 	mdMediumText = `
-	# A story about Jim
+# A story about Jim
 	
-	There was a boy whose name was **Jim**.	His Friends were very good to him.
-	They gave him Tea, and Cakes, and Jam, And slices of delicious Ham...
+There was a boy whose name was **Jim**.	His Friends were very good to him.
+They gave him Tea, and Cakes, and Jam, And slices of delicious Ham...
 `
 )
 
@@ -37,7 +37,7 @@ var parseMDTests = []struct {
 		false,
 		[]string{"was", "there", "a", "boy", "whose", "name", "jim"},
 		"",
-		"cd75ea8c309f25c6774d4d7cebbf22932de578ffdd0e48afe30f658613745440e48e91c671ab23a019dc6d0d54f9048c7920f94014061be09c6b10590c937b1b",
+		"3604d570a9face3d21333b9e15818fb24cb3d5b142b18ad6cb41164798638e758607a06a042739c74873850b8043f8715759740b8a1f2c886ccf9d85d0f159c0",
 	},
 	{
 		"medium",
@@ -45,7 +45,7 @@ var parseMDTests = []struct {
 		true,
 		[]string{"boy", "friends", "tea", "ham", "story", "jim", "good", "cakes", "jam", "slices", "delicious"},
 		"A story about Jim",
-		"4b07663d525c70edf6a6519e05869c2e0d45c93ef4f397f8026c98408c2ff607ddec1cd0a6f104eff90317ec1dc34b7a9be8580f3ebc2d8892fc50ed755f478d",
+		"ff73e809ba68765670d32ddbb3b1dad8a75bfee83bd30dfce311a16eda9069f08a07b118d17086a3830b6db3bb1be36f059dffada6bb1c2e9eb0e24c34f2d220",
 	},
 }
 
@@ -58,4 +58,21 @@ func Test_ParseMD(t *testing.T) {
 			assert.ElementsMatch(t, tt.tags, ToStrings(out.Tags))
 		})
 	}
+}
+
+func Test_mdContents_sentences(t *testing.T) {
+	contents := &mdContents{
+		lines: []*mdLine{
+			{tag: paragraph, parts: []*mdPart{{tag: paragraph, data: []byte("There was a boy")}}},
+			{tag: paragraph, parts: []*mdPart{{tag: paragraph, data: []byte("Whose name was Jim.	")}}},
+		},
+	}
+
+	l1 := contents.lines[0]
+	ss1 := l1.sentences()
+	assert.Len(t, ss1, 1)
+
+	l2 := contents.lines[1]
+	ss2 := l2.sentences()
+	assert.Len(t, ss2, 2)
 }

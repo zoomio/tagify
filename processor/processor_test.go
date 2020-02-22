@@ -110,8 +110,8 @@ func Test_SplitToSentences_MultipleCommas(t *testing.T) {
 	nearest neighbors, part of speech tagging and many more.
 	`
 	sentences := SplitToSentences([]byte(text))
-	assert.Len(t, sentences, 5)
-	assert.Equal(t, "part of speech tagging and many more", sentences[4])
+	assert.Len(t, sentences, 7)
+	assert.Equal(t, "\tnearest neighbors", string(sentences[4]))
 }
 
 func Test_Run_IgnoresTFIDF_IfNoDocs(t *testing.T) {

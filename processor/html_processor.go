@@ -29,23 +29,6 @@ var (
 		atom.Code:   0.7,
 		atom.A:      0.6,
 	}
-	htmlTagOrder = []atom.Atom{
-		atom.Title,
-		atom.H1,
-		atom.H2,
-		atom.H3,
-		atom.H4,
-		atom.H5,
-		atom.H6,
-		atom.P,
-		atom.B,
-		atom.U,
-		atom.Strong,
-		atom.I,
-		atom.Li,
-		atom.Code,
-		atom.A,
-	}
 )
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
@@ -123,7 +106,7 @@ func parseHTML(reader io.Reader) *htmlContents {
 		case tt == html.TextToken:
 			if parser.isNotEmpty() {
 				token := z.Token()
-				data := bytes.TrimSpace([]byte(token.Data))
+				data := []byte(token.Data)
 				cur := parser.current()
 
 				// skip empty or unknown lines
@@ -162,16 +145,16 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 		}
 
 		sentences := l.sentences()
-		for _, s := range sentences {
+		for _, snt := range sentences {
 			// skip random non-text related tags
-			if !isHTMLContent(s.tag) {
+			if !isHTMLContent(snt.tag) {
 				continue
 			}
 
 			docsCount++
 			visited := map[string]bool{}
 
-			s.forEach(func(i int, p *htmlPart) {
+			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag]
 				tokens := sanitize(bytes.Fields(p.data), noStopWords)
 				if verbose && len(tokens) > 0 {
@@ -228,12 +211,12 @@ type htmlContents struct {
 	lines []*htmlLine
 }
 
-func (cnt *htmlContents) append(lineIndex int, k atom.Atom, v []byte) {
+func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
 	for len(cnt.lines) <= lineIndex {
-		cnt.lines = append(cnt.lines, &htmlLine{tag: k, parts: make([]*htmlPart, 0)})
+		cnt.lines = append(cnt.lines, &htmlLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
 	line := cnt.lines[lineIndex]
-	line.parts = append(line.parts, &htmlPart{tag: k, data: v})
+	line.parts = append(line.parts, &htmlPart{tag: tag, data: data})
 }
 
 func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
@@ -276,7 +259,7 @@ type htmlPart struct {
 }
 
 func (d *htmlPart) String() string {
-	return fmt.Sprintf("<%s>: %s", d.tag.String(), string(d.data))
+	return fmt.Sprintf("<%s>: \"%s\"", d.tag.String(), string(d.data))
 }
 
 type htmlLine struct {
@@ -310,24 +293,47 @@ func (l *htmlLine) data() []byte {
 	return bs
 }
 
+// breaksdown an HTML line into a slice of HTML sentences.
 func (l *htmlLine) sentences() []*htmlLine {
 	ret := []*htmlLine{}
-	data := l.data()
-	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(data), newLine)
-	sents := bytes.Split(split, newLine)
-	var sentArea, partsOffset, pi int
-	for _, s := range sents {
-		sentArea += len(s)
-		snt := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
-		ret = append(ret, snt)
-		for pi < len(l.parts) {
-			partSize := len(l.parts[pi].data)
-			if partsOffset+partSize > sentArea {
-				break
+	var offset, diff, pDiff, i, j int
+	sents := SplitToSentences(l.data())
+	for i < len(l.parts) && j < len(sents) {
+		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
+		ret = append(ret, s)
+
+		sent := sents[j]
+		sentSize := len(sent)
+
+		part := l.parts[i]
+		partSize := len(part.data)
+
+		diff = (offset + partSize) - (offset + sentSize)
+
+		if diff > 0 {
+			// MD part is bigger than sentence, splitting MD part
+			s.parts = append(s.parts, &htmlPart{tag: part.tag, data: sent})
+			offset += sentSize
+			pDiff = diff
+			j++ // increment index for the next sentence
+		} else if diff < 0 {
+			// sentence is bigger than MD part, appending MD part included into sentence
+			if pDiff > 0 {
+				s.parts = append(s.parts, &htmlPart{tag: part.tag, data: part.data[pDiff:]})
+				offset += (partSize - pDiff)
+				pDiff = 0
+			} else {
+				s.parts = append(s.parts, part)
+				offset += partSize
 			}
-			snt.parts = append(snt.parts, l.parts[pi])
-			partsOffset += partSize
-			pi++
+			i++ // increment index for the next part
+		} else {
+			// MD part is equal to sentence
+			s.parts = append(s.parts, part)
+			offset += partSize
+			pDiff = 0
+			i++
+			j++
 		}
 	}
 	return ret
@@ -337,13 +343,6 @@ func (l *htmlLine) sentences() []*htmlLine {
 type htmlParser struct {
 	lineIndex int
 	stack     []atom.Atom
-}
-
-func (p *htmlParser) head() atom.Atom {
-	if len(p.stack) == 0 {
-		return 0
-	}
-	return p.stack[0]
 }
 
 func (p *htmlParser) current() atom.Atom {

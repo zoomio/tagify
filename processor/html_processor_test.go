@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/html/atom"
 )
 
 const (
@@ -85,9 +86,9 @@ var parseHTMLTests = []struct {
 	{
 		"simple",
 		htmlSimpleString,
-		[]string{"there", "was", "a", "boy", "who's", "name", "jim"},
+		[]string{"there", "was", "a", "boy", "whose", "name", "jim"},
 		"",
-		"d6cdf4700991a6c2db3bb8bb5d2fb57f15e5f0dbe1fcb893781a2d4782b73b43a2232beff70f2ba293599c0d6c8729c4db8a693fdc5dcabb6c10dadca2e31044",
+		"1f4911e9a610990862bbdf6fe1196a4d4003f12896ab0ed20ece0b97fae54bd798ee349bde89e2fd23ccca0063feccd109a4d0d6514f2f0839ff6ac76489bc87",
 		false,
 	},
 	{
@@ -95,23 +96,23 @@ var parseHTMLTests = []struct {
 		htmlSimpleString,
 		[]string{"boy", "jim"},
 		"",
-		"d6cdf4700991a6c2db3bb8bb5d2fb57f15e5f0dbe1fcb893781a2d4782b73b43a2232beff70f2ba293599c0d6c8729c4db8a693fdc5dcabb6c10dadca2e31044",
+		"1f4911e9a610990862bbdf6fe1196a4d4003f12896ab0ed20ece0b97fae54bd798ee349bde89e2fd23ccca0063feccd109a4d0d6514f2f0839ff6ac76489bc87",
 		true,
 	},
 	{
 		"complex",
 		htmlComplexString,
-		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all", "theme", "help", "blog"},
+		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
-		"5eef93885dd249586a5f0ae5b03ba02dccfebd18bab9cf0896f891e7b351f62329a13bc5559f8210290f5327d1b5173502437d76eadbed31c3cd7a6e24391958",
+		"e58f7951dca123391bcae296ccbde6abb814a2ef581225caf2f2c6765d39f7da77082a3a1870b6231fcd59e35863dff45e65cd732e1c46911c15269ac021f857",
 		false,
 	},
 	{
 		"complex exclude stopWords",
 		htmlComplexString,
-		[]string{"parse", "content", "tags", "golang", "html", "extract", "theme", "help", "blog"},
+		[]string{"parse", "content", "tags", "golang", "html", "extract"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
-		"5eef93885dd249586a5f0ae5b03ba02dccfebd18bab9cf0896f891e7b351f62329a13bc5559f8210290f5327d1b5173502437d76eadbed31c3cd7a6e24391958",
+		"e58f7951dca123391bcae296ccbde6abb814a2ef581225caf2f2c6765d39f7da77082a3a1870b6231fcd59e35863dff45e65cd732e1c46911c15269ac021f857",
 		true,
 	},
 }
@@ -131,16 +132,16 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, NoStopWords(true))
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
-		"0027df9158090fbd840bf4fe432af56b15ae3d2c460a9b5e2671ed54cbbd8ca75ff803ebbbba7cc2784c18beca10466f3d3a1a954c3f22fcbf66ccc18c751c7b",
+		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		fmt.Sprintf("%x", out.DocHash))
-	assert.Contains(t, out.Tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 4})
+	assert.Contains(t, out.Tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 5})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, NoStopWords(true))
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
-		"0027df9158090fbd840bf4fe432af56b15ae3d2c460a9b5e2671ed54cbbd8ca75ff803ebbbba7cc2784c18beca10466f3d3a1a954c3f22fcbf66ccc18c751c7b",
+		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		fmt.Sprintf("%x", out.DocHash))
 	assert.NotContains(t, out.Tags, &Tag{Value: "part", Score: 1.4, Count: 1})
 }
@@ -153,6 +154,20 @@ func Test_parseHTML(t *testing.T) {
 	</body>
 	</html>
 `
-	contents := parseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)})
+	contents := parseHTML(&inputReadCloser{strings.NewReader(htmlPage)})
+	assert.NotNil(t, contents)
 
+	assert.Len(t, contents.lines, 1)
+
+	line := contents.lines[0]
+	assert.Len(t, line.parts, 3)
+
+	assert.Equal(t, atom.P, line.parts[0].tag)
+	assert.Equal(t, "There was a boy ", string(line.parts[0].data))
+
+	assert.Equal(t, atom.B, line.parts[1].tag)
+	assert.Equal(t, "whose", string(line.parts[1].data))
+
+	assert.Equal(t, atom.P, line.parts[2].tag)
+	assert.Equal(t, " name was Jim.", string(line.parts[2].data))
 }

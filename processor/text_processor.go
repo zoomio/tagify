@@ -26,7 +26,7 @@ var ParseText ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseO
 
 	defer in.Close()
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(in)
+	_, _ = buf.ReadFrom(in)
 	inStr := buf.String()
 	lines := strings.FieldsFunc(inStr, func(r rune) bool {
 		return r == '\n'

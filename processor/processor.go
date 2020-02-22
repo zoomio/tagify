@@ -140,18 +140,5 @@ func normalize(word string, noStopWords bool) (string, bool) {
 // SplitToSentences splits given text into slice of sentences.
 func SplitToSentences(text []byte) [][]byte {
 	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(text), newLine)
-	sents := bytes.Split(split, newLine)
-	i := 0
-
-	// Itearate and modify in-place
-	// to save on allocations.
-	for _, s := range sents {
-		trim := bytes.TrimSpace(s)
-		if len(trim) > 0 {
-			sents[i] = trim
-			i++
-		}
-	}
-
-	return sents[:i]
+	return bytes.Split(split, newLine)
 }

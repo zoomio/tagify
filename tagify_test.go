@@ -24,7 +24,7 @@ var runTests = []struct {
 			Limit(5), NoStopWords(true)},
 		[]string{"test", "boy", "andread", "bang", "befell"},
 		"Test",
-		"9ccc5b5f88d69c6a4ebe5998c407d681f6f2e950bbc2f2fbc5505fb95a5bc9209e739311915c49d5bd68c615be463b4c5dee96e95297c8406b5b6bd518eaab43",
+		"edc78fab44d96235c4a84d8130ce2ca272062ea67a3c2e75ee4dede4037e971498b3d5b474462e5786dfb7135f010a4fd3a724f9b8608c9551204619e96ec11f",
 	},
 	{
 		"run with query",
@@ -32,7 +32,7 @@ var runTests = []struct {
 			Limit(5), NoStopWords(true), Query("#box3 p")},
 		[]string{"bang", "began", "boy", "day", "eat"},
 		"",
-		"44e4ea6b7c484e724263b86b86249af18aaeca45b6eae12333a983b86234581eef8266da8485963a5a6bf1d6fb534f3982ade0ae216090bc181c64062a06cdc6",
+		"e5e0aef65e77e87a3e23a3f157357444910f94f5dccd5d0fe185da73cb72a8b7bff6ac80d71cfca1da27e9d1b7a3e810a348ceeee52c2e4b68393c8ba5d92cc4",
 	},
 }
 

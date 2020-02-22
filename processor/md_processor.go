@@ -125,40 +125,39 @@ func parseMD(reader io.Reader) *mdContents {
 	contents := &mdContents{lines: make([]*mdLine, 0)}
 	scanner := bufio.NewScanner(reader)
 
-	i := -1
+	index := -1
 
 	for scanner.Scan() {
 
 		line := bytes.TrimSpace(scanner.Bytes())
-
-		// skip empty lines
+		// skip empty line
 		if len(line) == 0 {
 			continue
 		}
 
-		i++
+		index++
 
 		// 1. handle headings
 		if line[0] == '#' {
 			count := bytes.Count(line, []byte(`#`))
 			switch count {
 			case 1:
-				contents.append(i, heading1, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading1, h1Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			case 2:
-				contents.append(i, heading2, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading2, h2Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			case 3:
-				contents.append(i, heading3, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading3, h3Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			case 4:
-				contents.append(i, heading4, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading4, h4Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			case 5:
-				contents.append(i, heading5, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading5, h5Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			case 6:
-				contents.append(i, heading6, h1Reg.ReplaceAll(line, []byte(`$2`)))
+				contents.append(index, heading6, h6Reg.ReplaceAll(line, []byte(`$2`)))
 				continue
 			}
 		}
@@ -167,34 +166,25 @@ func parseMD(reader io.Reader) *mdContents {
 		// escape and wrap blockquotes in "<blockquote>" tags
 		line = escapeReg.ReplaceAll(line, []byte(`&gt;`))
 		if blockquoteReg.Match(line) {
-			contents.append(i, blockquote, blockquoteReg.ReplaceAll(line, []byte(`$1`)))
+			contents.append(index, blockquote, blockquoteReg.ReplaceAll(line, []byte(`$1`)))
 			continue
 		}
 
 		// 3. handle paragraph
 		handlers := map[int]*mdPartHandler{}
 		// wrap bold and italic text in "<b>" and "<i>" elements
-		// line = appendLine(i, line, boldItalicReg, paragraph, boldItalic, contents)
 		appendHandlers(handlers, line, boldItalic, boldItalicReg)
-		// line = appendLine(i, line, boldReg, paragraph, bold, contents)
 		appendHandlers(handlers, line, bold, boldReg)
-		// line = appendLine(i, line, italicReg, paragraph, italic, contents)
 		appendHandlers(handlers, line, italic, italicReg)
 		// wrap strikethrough text in "<s>" tags
-		// line = appendLine(i, line, strikeReg, paragraph, strikethrough, contents)
 		appendHandlers(handlers, line, strikethrough, strikeReg)
 		// wrap underscored text in "<u>" tags
-		// line = appendLine(i, line, underscoreReg, paragraph, underscore, contents)
 		appendHandlers(handlers, line, underscore, underscoreReg)
 		// convert links to anchor tags
-		// line = appendLine(i, line, anchorReg, paragraph, anchor, contents)
 		appendHandlers(handlers, line, anchor, anchorReg)
 		// wrap the content of backticks inside of "<code>" tags
-		// line = appendLine(i, line, backtipReg, paragraph, code, contents)
 		appendHandlers(handlers, line, code, backtipReg)
-		println("enter the matrix")
-		appendLine(i, line, handlers, contents)
-		println("exit the matrix")
+		appendLine(index, line, handlers, contents)
 	}
 
 	return contents
@@ -209,23 +199,26 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 		fmt.Println("--> tokenized")
 	}
 
-	for _, l := range contents.lines {
-		s := string(l.data())
-
-		if isMDHeading(l.tag) && pageTitle == "" {
-			pageTitle = s
+	for _, line := range contents.lines {
+		// skip empty lines
+		if len(line.parts) == 0 {
+			continue
 		}
 
-		sentences := l.sentences()
-		for _, s := range sentences {
+		if isMDHeading(line.tag) && pageTitle == "" {
+			pageTitle = string(line.data())
+		}
+
+		sentences := line.sentences()
+		for _, snt := range sentences {
 			docsCount++
 			visited := map[string]bool{}
 
-			s.forEach(func(i int, p *mdPart) {
+			snt.forEach(func(i int, p *mdPart) {
 				weight := mdWeights[p.tag]
 				tokens := sanitize(bytes.Fields(p.data), noStopWords)
 				if verbose && len(tokens) > 0 {
-					fmt.Printf("<%s>: %v\n", l.tag.String(), tokens)
+					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
 
 				for _, token := range tokens {
@@ -268,22 +261,23 @@ func appendLine(lineIndex int, line []byte, handlers map[int]*mdPartHandler, cnt
 	i := 0
 	p := []byte{}
 	for i < len(line) {
-		var ok bool
-		var h *mdPartHandler
-
-		if h, ok = handlers[i]; !ok {
+		h, ok := handlers[i]
+		if !ok {
 			p = append(p, line[i])
 			i++
 			continue
 		}
-
 		if len(p) > 0 {
 			cnt.append(lineIndex, paragraph, p)
 			p = []byte{}
 		}
-
 		cnt.append(lineIndex, h.tag, h.re.ReplaceAll(line[h.start:h.end], []byte(`$1`)))
 		i = h.end
+	}
+
+	// take care of simple text line cases
+	if len(p) > 0 {
+		cnt.append(lineIndex, paragraph, p)
 	}
 }
 
@@ -306,17 +300,11 @@ type mdContents struct {
 	lines []*mdLine
 }
 
-func (cnt *mdContents) append(lineIndex int, tag mdType, data []byte) {
-	if len(cnt.lines) <= lineIndex {
+func (cnt *mdContents) append(index int, tag mdType, data []byte) {
+	for len(cnt.lines) <= index {
 		cnt.lines = append(cnt.lines, &mdLine{tag: tag, parts: make([]*mdPart, 0)})
 	}
-
-	// skip empty data
-	if len(data) == 0 {
-		return
-	}
-
-	line := cnt.lines[lineIndex]
+	line := cnt.lines[index]
 	line.parts = append(line.parts, &mdPart{tag: tag, data: data})
 }
 
@@ -350,7 +338,7 @@ type mdPart struct {
 }
 
 func (p *mdPart) String() string {
-	return fmt.Sprintf("<%s>: %s", p.tag.String(), string(p.data))
+	return fmt.Sprintf("<%s>: \"%s\"", p.tag.String(), string(p.data))
 }
 
 func (p *mdPart) bytes() []byte {
@@ -396,24 +384,47 @@ func (l *mdLine) data() []byte {
 	return bs
 }
 
+// breaksdown a markdown line into a slice of markdown sentences.
 func (l *mdLine) sentences() []*mdLine {
 	ret := []*mdLine{}
-	data := l.data()
-	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(data), newLine)
-	sents := bytes.Split(split, newLine)
-	var sentArea, partsOffset, pi int
-	for _, s := range sents {
-		sentArea += len(s)
-		snt := &mdLine{tag: l.tag, parts: []*mdPart{}}
-		ret = append(ret, snt)
-		for pi < len(l.parts) {
-			partSize := len(l.parts[pi].data)
-			if partsOffset+partSize > sentArea {
-				break
+	var offset, diff, pDiff, i, j int
+	sents := SplitToSentences(l.data())
+	for i < len(l.parts) && j < len(sents) {
+		s := &mdLine{tag: l.tag, parts: []*mdPart{}}
+		ret = append(ret, s)
+
+		sent := sents[j]
+		sentSize := len(sent)
+
+		part := l.parts[i]
+		partSize := len(part.data)
+
+		diff = (offset + partSize) - (offset + sentSize)
+
+		if diff > 0 {
+			// MD part is bigger than sentence, splitting MD part
+			s.parts = append(s.parts, &mdPart{tag: part.tag, data: sent})
+			offset += sentSize
+			pDiff = diff
+			j++ // increment index for the next sentence
+		} else if diff < 0 {
+			// sentence is bigger than MD part, appending MD part included into sentence
+			if pDiff > 0 {
+				s.parts = append(s.parts, &mdPart{tag: part.tag, data: part.data[pDiff:]})
+				offset += (partSize - pDiff)
+				pDiff = 0
+			} else {
+				s.parts = append(s.parts, part)
+				offset += partSize
 			}
-			snt.parts = append(snt.parts, l.parts[pi])
-			partsOffset += partSize
-			pi++
+			i++ // increment index for the next part
+		} else {
+			// MD part is equal to sentence
+			s.parts = append(s.parts, part)
+			offset += partSize
+			pDiff = 0
+			i++
+			j++
 		}
 	}
 	return ret
