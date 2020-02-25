@@ -31,6 +31,24 @@ var (
 	}
 )
 
+func isHTMLHeading(t atom.Atom) bool {
+	switch t {
+	case atom.H1, atom.H2, atom.H3:
+		return true
+	default:
+		return false
+	}
+}
+
+func isHTMLContent(t atom.Atom) bool {
+	switch t {
+	case atom.Title, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
+		return true
+	default:
+		return false
+	}
+}
+
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
 // based on the importance of HTML tags which wrap sentences.
@@ -50,6 +68,8 @@ var (
 //
 var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *ParseOutput {
 
+	defer reader.Close()
+
 	c := &parseConfig{}
 
 	// apply custom configuration
@@ -61,27 +81,44 @@ var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *Pa
 		fmt.Println("--> parsing HTML...")
 	}
 
-	defer reader.Close()
-	contents := parseHTML(reader)
+	var err error
+	var contents *htmlContents
+	var parseFn parseFunc = parseHTML
+
+	if c.fullSite && c.source != "" {
+		var crawler *webCrawler
+		crawler, err = newWebCrawler(parseFn, c.source, c.verbose)
+		if err != nil {
+			return &ParseOutput{Err: err}
+		}
+		contents = crawler.run(reader)
+	} else {
+		contents = parseFn(reader, nil)
+	}
 
 	if c.verbose {
 		fmt.Println("--> parsed")
 		fmt.Printf("%s\n", contents)
 	}
 
+	if err != nil {
+		return &ParseOutput{Err: err}
+	}
+
 	if len(contents.lines) == 0 {
 		return &ParseOutput{}
 	}
 
-	tags, title := tagifyHTML(contents, c.verbose, c.noStopWords)
+	tags, title := tagifyHTML(contents, c.verbose, c.noStopWords, c.contentOnly)
 
 	return &ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
 
-func parseHTML(reader io.Reader) *htmlContents {
+func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 	contents := &htmlContents{lines: make([]*htmlLine, 0)}
 	parser := &htmlParser{}
 
+	var cur atom.Atom
 	z := html.NewTokenizer(reader)
 	for {
 		tt := z.Next()
@@ -92,25 +129,35 @@ func parseHTML(reader io.Reader) *htmlContents {
 			return contents
 		case tt == html.StartTagToken:
 			token := z.Token()
-			if _, ok := htmlTagWeights[token.DataAtom]; ok {
-				parser.push(token.DataAtom)
+			cur = token.DataAtom
+			if _, ok := htmlTagWeights[cur]; ok {
+				parser.push(cur)
+				if c != nil && cur == atom.A {
+					for _, a := range token.Attr {
+						if a.Key == "href" {
+							c.crawl(a.Val)
+							break
+						}
+					}
+				}
 			}
 		case tt == html.EndTagToken:
 			token := z.Token()
 			if _, ok := htmlTagWeights[token.DataAtom]; ok {
 				parser.pop()
-				if isHTMLContent(token.DataAtom) || parser.isEmpty() {
+				cur = parser.current()
+				if parser.isEmpty() {
 					parser.lineIndex++
 				}
 			}
 		case tt == html.TextToken:
-			if parser.isNotEmpty() {
+			_, ok := htmlTagWeights[cur]
+			if parser.isNotEmpty() && ok {
 				token := z.Token()
 				data := []byte(token.Data)
-				cur := parser.current()
 
 				// skip empty or unknown lines
-				if len(data) == 0 || cur == 0 {
+				if len(data) == 0 {
 					continue
 				}
 
@@ -120,7 +167,7 @@ func parseHTML(reader io.Reader) *htmlContents {
 	}
 }
 
-func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, string) {
+func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) ([]*Tag, string) {
 	tokenIndex := make(map[string]*Tag)
 	var docsCount int
 	var pageTitle string
@@ -130,7 +177,7 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 	}
 
 	for _, l := range contents.lines {
-		s := string(l.data())
+		s := string(l.data)
 
 		if l.tag == atom.Title {
 			pageTitle = s
@@ -147,11 +194,11 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 		sentences := l.sentences()
 		for _, snt := range sentences {
 			// skip random non-text related tags
-			if !isHTMLContent(snt.tag) {
+			if contetOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
 
-			if len(snt.data()) == 0 {
+			if len(snt.data) == 0 {
 				continue
 			}
 
@@ -160,7 +207,7 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 
 			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag]
-				tokens := sanitize(bytes.Fields(p.data), noStopWords)
+				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", l.tag.String(), tokens)
 				}
@@ -192,24 +239,6 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords bool) ([]*Tag, stri
 	return flatten(tokenIndex), pageTitle
 }
 
-func isHTMLHeading(t atom.Atom) bool {
-	switch t {
-	case atom.H1, atom.H2, atom.H3:
-		return true
-	default:
-		return false
-	}
-}
-
-func isHTMLContent(t atom.Atom) bool {
-	switch t {
-	case atom.Title, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
-		return true
-	default:
-		return false
-	}
-}
-
 // htmlContents stores text from target tags.
 type htmlContents struct {
 	lines []*htmlLine
@@ -220,7 +249,7 @@ func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
 		cnt.lines = append(cnt.lines, &htmlLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
 	line := cnt.lines[lineIndex]
-	line.parts = append(line.parts, &htmlPart{tag: tag, data: data})
+	line.add(tag, data)
 }
 
 func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
@@ -251,24 +280,26 @@ func (cnt *htmlContents) hash() []byte {
 		line.forEach(func(i int, p *htmlPart) {
 			_, _ = h.Write([]byte(p.tag.String()))
 			_, _ = h.Write([]byte(":"))
-			_, _ = h.Write(p.data)
+			_, _ = h.Write(line.pData(p))
 		})
 	})
 	return h.Sum(nil)
 }
 
 type htmlPart struct {
-	tag  atom.Atom
-	data []byte
+	tag atom.Atom
+	pos int
+	len int
 }
 
 func (d *htmlPart) String() string {
-	return fmt.Sprintf("<%s>: \"%s\"", d.tag.String(), string(d.data))
+	return fmt.Sprintf("<%s>: pos - %d, len - %d", d.tag.String(), d.pos, d.len)
 }
 
 type htmlLine struct {
 	tag   atom.Atom
 	parts []*htmlPart
+	data  []byte
 }
 
 func (l *htmlLine) String() string {
@@ -276,7 +307,10 @@ func (l *htmlLine) String() string {
 	sb.WriteString(fmt.Sprintf("<%s> - %d parts: [ ", l.tag.String(), len(l.parts)))
 	l.forEach(func(i int, p *htmlPart) {
 		sb.WriteString("'")
-		sb.WriteString(p.String())
+		sb.WriteString("<")
+		sb.WriteString(p.tag.String())
+		sb.WriteString(">: ")
+		sb.WriteString(string(l.pData(p)))
 		sb.WriteString("' ")
 	})
 	sb.WriteString("]")
@@ -289,19 +323,20 @@ func (l *htmlLine) forEach(it func(i int, p *htmlPart)) {
 	}
 }
 
-func (l *htmlLine) data() []byte {
-	bs := []byte{}
-	l.forEach(func(i int, p *htmlPart) {
-		bs = append(bs, p.data...)
-	})
-	return bs
+func (l *htmlLine) add(tag atom.Atom, data []byte) {
+	l.parts = append(l.parts, &htmlPart{tag: tag, pos: len(l.data), len: len(data)})
+	l.data = append(l.data, data...)
+}
+
+func (l *htmlLine) pData(part *htmlPart) []byte {
+	return l.data[part.pos : part.pos+part.len]
 }
 
 // breaksdown an HTML line into a slice of HTML sentences.
 func (l *htmlLine) sentences() []*htmlLine {
 	ret := []*htmlLine{}
 	var offset, diff, pDiff, i, j int
-	sents := SplitToSentences(l.data())
+	sents := SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
 		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
 		ret = append(ret, s)
@@ -310,30 +345,30 @@ func (l *htmlLine) sentences() []*htmlLine {
 		sentSize := len(sent)
 
 		part := l.parts[i]
-		partSize := len(part.data)
+		partSize := part.len
 
 		diff = (offset + partSize) - (offset + sentSize)
 
 		if diff > 0 {
-			// MD part is bigger than sentence, splitting MD part
-			s.parts = append(s.parts, &htmlPart{tag: part.tag, data: sent})
+			// part is bigger than sentence, splitting part
+			s.add(part.tag, sent)
 			offset += sentSize
 			pDiff = diff
 			j++ // increment index for the next sentence
 		} else if diff < 0 {
-			// sentence is bigger than MD part, appending MD part included into sentence
+			// sentence is bigger than part, appending part included into sentence
 			if pDiff > 0 {
-				s.parts = append(s.parts, &htmlPart{tag: part.tag, data: part.data[pDiff:]})
+				s.add(part.tag, l.data[part.pos+pDiff:part.pos+part.len])
 				offset += (partSize - pDiff)
 				pDiff = 0
 			} else {
-				s.parts = append(s.parts, part)
+				s.add(part.tag, l.pData(part))
 				offset += partSize
 			}
 			i++ // increment index for the next part
 		} else {
-			// MD part is equal to sentence
-			s.parts = append(s.parts, part)
+			// part is equal to sentence
+			s.add(part.tag, l.pData(part))
 			offset += partSize
 			pDiff = 0
 			i++

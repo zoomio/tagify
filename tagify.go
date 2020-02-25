@@ -15,6 +15,8 @@ type config struct {
 	limit       int
 	verbose     bool
 	noStopWords bool
+	contentOnly bool
+	fullSite    bool
 }
 
 // Run produces slice of tags ordered by frequency.
@@ -36,8 +38,6 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		in, err = newIn(ctx, c.source, c.query, c.verbose)
 		if c.contentType > Unknown {
 			in.ContentType = c.contentType
-		} else if c.query != "" {
-			in.ContentType = HTML
 		}
 	}
 
@@ -66,11 +66,20 @@ func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, ha
 	var out *processor.ParseOutput
 	switch in.ContentType {
 	case HTML:
-		out = processor.ParseHTML(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
+		out = processor.ParseHTML(in,
+			processor.Verbose(c.verbose),
+			processor.NoStopWords(c.noStopWords),
+			processor.ContentOnly(c.contentOnly),
+			processor.FullSite(c.fullSite),
+			processor.Source(in.source))
 	case Markdown:
-		out = processor.ParseMD(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
+		out = processor.ParseMD(in,
+			processor.Verbose(c.verbose),
+			processor.NoStopWords(c.noStopWords))
 	default:
-		out = processor.ParseText(in, processor.Verbose(c.verbose), processor.NoStopWords(c.noStopWords))
+		out = processor.ParseText(in,
+			processor.Verbose(c.verbose),
+			processor.NoStopWords(c.noStopWords))
 	}
 
 	pageTitle = out.DocTitle

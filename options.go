@@ -5,51 +5,65 @@ type Option func(*config)
 
 var (
 	// Source sets target source.
-	Source = func(source string) Option {
+	Source = func(v string) Option {
 		return func(c *config) {
-			c.source = source
+			c.source = v
 		}
 	}
 
 	// Query sets CSS query for the target.
-	Query = func(query string) Option {
+	Query = func(v string) Option {
 		return func(c *config) {
-			c.query = query
+			c.query = v
 		}
 	}
 
 	// Content sets content of the target.
-	Content = func(content string) Option {
+	Content = func(v string) Option {
 		return func(c *config) {
-			c.content = content
+			c.content = v
 		}
 	}
 
 	// TargetType sets content type of the target.
-	TargetType = func(contentType ContentType) Option {
+	TargetType = func(v ContentType) Option {
 		return func(c *config) {
-			c.contentType = contentType
+			c.contentType = v
 		}
 	}
 
 	// Limit sets cthe limit of tags for the target.
-	Limit = func(limit int) Option {
+	Limit = func(v int) Option {
 		return func(c *config) {
-			c.limit = limit
+			c.limit = v
 		}
 	}
 
 	// Verbose enables high verbosity.
-	Verbose = func(verbose bool) Option {
+	Verbose = func(v bool) Option {
 		return func(c *config) {
-			c.verbose = verbose
+			c.verbose = v
 		}
 	}
 
 	// NoStopWords enables stop-words exclusion from the output.
-	NoStopWords = func(noStopWords bool) Option {
+	NoStopWords = func(v bool) Option {
 		return func(c *config) {
-			c.noStopWords = noStopWords
+			c.noStopWords = v
+		}
+	}
+
+	// ContentOnly ignores all none content related parts of the HTML page.
+	ContentOnly = func(v bool) Option {
+		return func(c *config) {
+			c.contentOnly = v
+		}
+	}
+
+	// FullSite tells parser to process full site (HTML only).
+	FullSite = func(v bool) Option {
+		return func(c *config) {
+			c.fullSite = v
 		}
 	}
 )

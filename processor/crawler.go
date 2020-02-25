@@ -1,0 +1,248 @@
+package processor
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/url"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/zoomio/inout"
+)
+
+const (
+	crwlBadThreshold         = 1.0
+	crwlBadThresholdInterval = 1500
+)
+
+type parseFunc func(io.Reader, *webCrawler) *htmlContents
+
+// type procFunc func(*htmlContents, bool, bool, bool) ([]*Tag, string)
+
+type parseOut struct {
+	cnt *htmlContents
+	err error
+}
+
+type crwlStats struct {
+	start   time.Time
+	total   float64
+	bad     float64
+	stopped bool
+}
+
+type webCrawler struct {
+	parseFunc
+	dataCh  chan *parseOut
+	stopCh  chan struct{}
+	stats   atomic.Value
+	wg      *sync.WaitGroup
+	links   *sync.Map
+	docs    *sync.Map
+	domain  string
+	verbose bool
+}
+
+func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, error) {
+	u, err := url.Parse(source)
+	if err != nil {
+		return nil, err
+	}
+	var wg sync.WaitGroup
+	var links sync.Map
+	var docs sync.Map
+	return &webCrawler{
+		parseFunc: parse,
+		dataCh:    make(chan *parseOut, 5),
+		stopCh:    make(chan struct{}),
+		wg:        &wg,
+		links:     &links,
+		docs:      &docs,
+		domain:    toDomain(u),
+		verbose:   verbose,
+	}, nil
+}
+
+func (c *webCrawler) run(r io.Reader) *htmlContents {
+	defer close(c.dataCh)
+
+	c.stats.Store(&crwlStats{
+		start: time.Now(),
+	})
+
+	result := c.parseFunc(r, c)
+
+	// waiter
+	go func(stopCh chan struct{}, wg *sync.WaitGroup) {
+		wg.Wait()
+		select {
+		case <-c.stopCh:
+			return
+		default:
+			close(stopCh)
+		}
+	}(c.stopCh, c.wg)
+
+	wgReceiver := sync.WaitGroup{}
+	wgReceiver.Add(1)
+
+	// the receiver
+	go func(crwl *webCrawler) {
+		defer wgReceiver.Done()
+
+		for {
+			// try to exit the receiver goroutine
+			// as early as possible.
+			select {
+			case <-crwl.stopCh:
+				return
+			default:
+			}
+
+			// even if stopCh is closed, the first
+			// branch in this select block might be
+			// still not selected for some loops.
+			select {
+			case <-crwl.stopCh:
+				return
+			case value := <-crwl.dataCh:
+				if value.err == nil {
+					result.lines = append(result.lines, value.cnt.lines...)
+				} else if crwl.verbose {
+					fmt.Printf("error parsing lines: %v\n", value.err)
+				}
+				crwl.wg.Done()
+			}
+		}
+	}(c)
+
+	wgReceiver.Wait()
+
+	return result
+}
+
+func (c *webCrawler) crawl(href string) {
+	c.wg.Add(1)
+	go c.schedule(href)
+}
+
+func (c *webCrawler) schedule(href string) {
+	// add domain if relative link
+	if strings.HasPrefix(href, "/") {
+		href = c.domain + href
+	}
+
+	// skip wrong address
+	u, err := url.Parse(href)
+	if err != nil {
+		c.trySend(&parseOut{err: err})
+		return
+	}
+
+	// skip if different domain
+	if c.domain != toDomain(u) {
+		c.trySend(&parseOut{err: fmt.Errorf("different domain: %s", u.Host)})
+		return
+	}
+
+	src := u.String()
+
+	// skip visited links
+	if _, ok := c.links.Load(src); ok {
+		c.trySend(&parseOut{err: fmt.Errorf("already visisted: %s", src)})
+		return
+	}
+	c.links.Store(src, true)
+
+	r, err := inout.NewInOut(context.TODO(), inout.Source(src), inout.Verbose(c.verbose))
+	if err != nil {
+		c.trySend(&parseOut{err: err})
+		return
+	}
+
+	cnt := c.parseFunc(&r, c)
+	h := fmt.Sprintf("%x", cnt.hash())
+
+	// skip visited docs
+	if _, ok := c.docs.Load(h); ok {
+		c.trySend(&parseOut{err: fmt.Errorf("already visisted: %s", src)})
+		return
+	}
+	c.docs.Store(h, true)
+
+	if c.verbose {
+		fmt.Printf("visit: %s\n", src)
+	}
+
+	c.trySend(&parseOut{cnt: cnt})
+}
+
+func (c *webCrawler) trySend(out *parseOut) {
+	// try to exit the sender goroutine
+	// as early as possible.
+	select {
+	case <-c.stopCh:
+		c.wg.Done()
+		return
+	default:
+		sts := c.stats.Load().(*crwlStats)
+
+		if sts.stopped {
+			c.wg.Done()
+			return
+		}
+
+		total := sts.total + 1
+		bad := sts.bad
+		if out.err != nil {
+			bad++
+		}
+
+		// check bad vs good rate every "crawlerBadThresholdInterval" and stop
+		// if it is above the the "crawlerBadThreshold".
+		if time.Since(sts.start).Milliseconds() >= crwlBadThresholdInterval {
+			r := bad / total
+			if r >= crwlBadThreshold {
+				c.stats.Store(&crwlStats{stopped: true})
+				c.wg.Done()
+				return
+			}
+			c.stats.Store(&crwlStats{
+				start: time.Now(),
+				total: 0.0,
+				bad:   0.0,
+			})
+		} else {
+			c.stats.Store(&crwlStats{
+				start: sts.start,
+				total: total,
+				bad:   bad,
+			})
+		}
+
+		c.dataCh <- out
+	}
+}
+
+// func (c *webCrawler) release() {
+// 	c.lock.Lock()
+// 	defer c.lock.Unlock()
+// 	c.active--
+// 	fmt.Printf("active: %d\n", c.active)
+// }
+
+// func (c *webCrawler) done() {
+// 	c.wg.Done()
+// 	c.release()
+// }
+
+func toDomain(u *url.URL) string {
+	var sb strings.Builder
+	sb.WriteString(u.Scheme)
+	sb.WriteString("://")
+	sb.WriteString(u.Host)
+	return sb.String()
+}

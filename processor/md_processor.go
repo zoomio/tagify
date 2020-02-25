@@ -206,12 +206,12 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 		}
 
 		if isMDHeading(line.tag) && pageTitle == "" {
-			pageTitle = string(line.data())
+			pageTitle = string(line.data)
 		}
 
 		sentences := line.sentences()
 		for _, snt := range sentences {
-			if len(snt.data()) == 0 {
+			if len(snt.data) == 0 {
 				continue
 			}
 
@@ -220,7 +220,7 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := mdWeights[p.tag]
-				tokens := sanitize(bytes.Fields(p.data), noStopWords)
+				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
@@ -309,7 +309,7 @@ func (cnt *mdContents) append(index int, tag mdType, data []byte) {
 		cnt.lines = append(cnt.lines, &mdLine{tag: tag, parts: make([]*mdPart, 0)})
 	}
 	line := cnt.lines[index]
-	line.parts = append(line.parts, &mdPart{tag: tag, data: data})
+	line.add(tag, data)
 }
 
 func (cnt *mdContents) forEach(it func(i int, line *mdLine)) {
@@ -331,27 +331,40 @@ func (cnt *mdContents) String() string {
 func (cnt *mdContents) hash() []byte {
 	h := sha512.New()
 	cnt.forEach(func(i int, line *mdLine) {
-		_, _ = h.Write(line.bytes())
+		_, _ = h.Write([]byte(line.tag.String()))
+		_, _ = h.Write([]byte(":"))
+		line.forEach(func(i int, p *mdPart) {
+			_, _ = h.Write([]byte(p.tag.String()))
+			_, _ = h.Write([]byte(":"))
+			_, _ = h.Write(line.pData(p))
+		})
 	})
 	return h.Sum(nil)
 }
 
 type mdPart struct {
-	tag  mdType
-	data []byte
+	tag mdType
+	pos int
+	len int
 }
 
 func (p *mdPart) String() string {
-	return fmt.Sprintf("<%s>: \"%s\"", p.tag.String(), string(p.data))
-}
-
-func (p *mdPart) bytes() []byte {
-	return append(p.data, byte(p.tag))
+	return fmt.Sprintf("<%s>: pos - %d, len - %d", p.tag.String(), p.pos, p.len)
 }
 
 type mdLine struct {
 	tag   mdType
 	parts []*mdPart
+	data  []byte
+}
+
+func (l *mdLine) add(tag mdType, data []byte) {
+	l.parts = append(l.parts, &mdPart{tag: tag, pos: len(l.data), len: len(data)})
+	l.data = append(l.data, data...)
+}
+
+func (l *mdLine) pData(part *mdPart) []byte {
+	return l.data[part.pos : part.pos+part.len]
 }
 
 func (l *mdLine) String() string {
@@ -372,27 +385,11 @@ func (l *mdLine) forEach(it func(i int, p *mdPart)) {
 	}
 }
 
-func (l *mdLine) bytes() []byte {
-	bs := []byte{byte(l.tag)}
-	for _, elm := range l.parts {
-		bs = append(bs, elm.bytes()...)
-	}
-	return bs
-}
-
-func (l *mdLine) data() []byte {
-	bs := []byte{}
-	for _, p := range l.parts {
-		bs = append(bs, p.data...)
-	}
-	return bs
-}
-
 // breaksdown a markdown line into a slice of markdown sentences.
 func (l *mdLine) sentences() []*mdLine {
 	ret := []*mdLine{}
 	var offset, diff, pDiff, i, j int
-	sents := SplitToSentences(l.data())
+	sents := SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
 		s := &mdLine{tag: l.tag, parts: []*mdPart{}}
 		ret = append(ret, s)
@@ -401,30 +398,30 @@ func (l *mdLine) sentences() []*mdLine {
 		sentSize := len(sent)
 
 		part := l.parts[i]
-		partSize := len(part.data)
+		partSize := part.len
 
 		diff = (offset + partSize) - (offset + sentSize)
 
 		if diff > 0 {
 			// MD part is bigger than sentence, splitting MD part
-			s.parts = append(s.parts, &mdPart{tag: part.tag, data: sent})
+			s.add(part.tag, sent)
 			offset += sentSize
 			pDiff = diff
 			j++ // increment index for the next sentence
 		} else if diff < 0 {
 			// sentence is bigger than MD part, appending MD part included into sentence
 			if pDiff > 0 {
-				s.parts = append(s.parts, &mdPart{tag: part.tag, data: part.data[pDiff:]})
+				s.add(part.tag, l.data[part.pos+pDiff:part.pos+part.len])
 				offset += (partSize - pDiff)
 				pDiff = 0
 			} else {
-				s.parts = append(s.parts, part)
+				s.add(part.tag, l.pData(part))
 				offset += partSize
 			}
 			i++ // increment index for the next part
 		} else {
 			// MD part is equal to sentence
-			s.parts = append(s.parts, part)
+			s.add(part.tag, l.pData(part))
 			offset += partSize
 			pDiff = 0
 			i++

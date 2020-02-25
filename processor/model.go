@@ -41,6 +41,9 @@ type ParseOutput struct {
 type parseConfig struct {
 	verbose     bool
 	noStopWords bool
+	contentOnly bool
+	fullSite    bool
+	source      string
 }
 
 // ParseFunc represents an arbitrary handler,

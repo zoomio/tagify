@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.40.0
+ - a milestone release (hence the jump in the version number), part of the "Faster Stronger Better" initiative;
+ - added support for Markdown content type;
+ - improved performance and accuracy of HTML tagifier;
+ - added **experiemntal** `-content` option - it allows to target "content" only tags (such as headings and paragraphs);
+ - added **experiemntal** `-site` option - it allows to Tagify full site;
+ - for more details about the release and about what is "Faster Stronger Better" initiative read [""]().
+
 ## 0.36.0
  - added `Result#ForEach` for easier iteration through the tags.
 

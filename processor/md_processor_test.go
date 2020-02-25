@@ -50,7 +50,7 @@ var parseMDTests = []struct {
 		false,
 		[]string{"was", "there", "a", "boy", "whose", "name", "jim"},
 		"",
-		"3604d570a9face3d21333b9e15818fb24cb3d5b142b18ad6cb41164798638e758607a06a042739c74873850b8043f8715759740b8a1f2c886ccf9d85d0f159c0",
+		"befd44d2460f1fafe42c37b35f69db984cda479bc51873c9ba94e534c4729a34791822ee76a2aaf40f09d0d4245f3cfd955ddf6f32e146f14fdaf2918ccf2d72",
 	},
 	{
 		"medium",
@@ -58,7 +58,7 @@ var parseMDTests = []struct {
 		true,
 		[]string{"boy", "friends", "tea", "ham", "story", "jim", "good", "cakes", "jam", "slices", "delicious"},
 		"A story about Jim",
-		"ff73e809ba68765670d32ddbb3b1dad8a75bfee83bd30dfce311a16eda9069f08a07b118d17086a3830b6db3bb1be36f059dffada6bb1c2e9eb0e24c34f2d220",
+		"f2a797a37071e103a228a53f7c6f040bb6e3615331519b9d63371138d30947010fbb0d67f33fcfac90abcda17891d7e6d241f611c4b9ef0e4721c51a92551976",
 	},
 	{
 		"complex",
@@ -66,7 +66,7 @@ var parseMDTests = []struct {
 		true,
 		[]string{"things", "example", "worth", "bar", "stripes", "https", "list", "test", "adding", "dog", "cat", "complex", "text", "link", "foo", "bee"},
 		"Complex text for Test",
-		"c1d5d1b299313bc7a44102cd92f4160edc734a32d580890a1a6b9682ac5ee8bbba3d9c226db454b748ec9923045553a115c22eb9be378da5d42c68ef365122c6",
+		"57ab424375a4dbb974e7b2a7af76b71aa10f04db8b8aca9f048519ef0057a581fd3675289d8e567423a37e32854819965e5088d1557cfd72f1c4d5a8c826e732",
 	},
 }
 
@@ -84,33 +84,34 @@ func Test_ParseMD(t *testing.T) {
 func Test_mdContents_sentences(t *testing.T) {
 	contents := &mdContents{
 		lines: []*mdLine{
-			{tag: paragraph, parts: []*mdPart{{tag: paragraph, data: []byte("There was a boy")}}},
-			{tag: paragraph, parts: []*mdPart{{tag: paragraph, data: []byte("Whose name was Jim.	")}}},
+			{tag: paragraph, data: []byte("There was a boy"), parts: []*mdPart{{tag: paragraph, pos: 0, len: 18}}},
+			{tag: paragraph, data: []byte("Whose name was Jim.	"), parts: []*mdPart{{tag: paragraph, pos: 0, len: 21}}},
 		},
 	}
 
 	l1 := contents.lines[0]
 	ss1 := l1.sentences()
 	assert.Len(t, ss1, 1)
-	assert.Equal(t, "There was a boy", string(ss1[0].data()))
+	assert.Equal(t, "There was a boy", string(ss1[0].data))
 
 	l2 := contents.lines[1]
 	ss2 := l2.sentences()
 	assert.Len(t, ss2, 2)
-	assert.Equal(t, "Whose name was Jim", string(ss2[0].data()))
-	assert.Equal(t, "", string(ss2[1].data()))
+	assert.Equal(t, "Whose name was Jim", string(ss2[0].data))
+	assert.Equal(t, "", string(ss2[1].data))
 }
 
 func Test_mdContents_sentences2(t *testing.T) {
 	line := &mdLine{
 		tag: paragraph,
 		parts: []*mdPart{
-			{tag: bold, data: []byte("**Sentence number one. And then, number two.***")},
-			{tag: paragraph, data: []byte(" And finally, three.")},
+			{tag: bold, pos: 0, len: 48},
+			{tag: paragraph, pos: 48, len: 20},
 		},
+		data: []byte("**Sentence number one. And then, number two.*** And finally, three."),
 	}
 
 	sents := line.sentences()
 	assert.Len(t, sents, 6)
-	assert.Equal(t, "", string(sents[5].data()))
+	assert.Equal(t, "", string(sents[5].data))
 }

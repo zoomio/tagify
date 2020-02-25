@@ -21,22 +21,22 @@ var runTests = []struct {
 	{
 		"run",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true)},
-		[]string{"test", "boy", "andread", "bang", "befell"},
+			Limit(5), NoStopWords(true), ContentOnly(true)},
+		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
-		"edc78fab44d96235c4a84d8130ce2ca272062ea67a3c2e75ee4dede4037e971498b3d5b474462e5786dfb7135f010a4fd3a724f9b8608c9551204619e96ec11f",
+		"63c947e550b921392703ec704bb84480349757b53660aa464269faf66b124a1c7c63a5631870bc4b7ddcd248072ffb069721752892d9c68755db136c72a7802c",
 	},
 	{
 		"run with query",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true), Query("#box3 p")},
-		[]string{"bang", "began", "boy", "day", "eat"},
+			Limit(5), NoStopWords(true), Query("#box3 p"), ContentOnly(true)},
+		[]string{"especial", "foible", "jim's"},
 		"",
-		"e5e0aef65e77e87a3e23a3f157357444910f94f5dccd5d0fe185da73cb72a8b7bff6ac80d71cfca1da27e9d1b7a3e810a348ceeee52c2e4b68393c8ba5d92cc4",
+		"a92c1295e69b481b2d627af0d89855c33f082f458c5bcc7354c5b545ec8fe3f1ada300937f858632ac613d129342d3b4e2527358ba91b3aa2ed7b9b5f1bc7600",
 	},
 }
 
-func Test_Run(t *testing.T) {
+func Test_Run_HTML(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
 	for _, tt := range runTests {
 		t.Run(tt.name, func(t *testing.T) {
