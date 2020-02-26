@@ -6,9 +6,7 @@ All notable changes to this project will be documented in this file.
  - added support for Markdown content type;
  - improved performance and accuracy of HTML tagifier;
  - added **experiemntal** `-content` option - it allows to target "content" only tags (such as headings and paragraphs);
- - added **experiemntal** `-site` option - it allows to Tagify full site.
-
-## 0.36.0
+ - added **experiemntal** `-site` option - it allows to Tagify full site;
  - added `Result#ForEach` for easier iteration through the tags.
 
 ## 0.35.0
