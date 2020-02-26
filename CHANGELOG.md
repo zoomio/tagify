@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.40.0
+ - a milestone release (hence the jump in the version number), part of the ["Faster Stronger Better"](https://zoomio.org/blog/post/faster_stronger_better-5708658021236736) initiative;
+ - added support for Markdown content type;
+ - improved performance and accuracy of HTML tagifier;
+ - added **experiemntal** `-content` option - it allows to target "content" only tags (such as headings and paragraphs);
+ - added **experiemntal** `-site` option - it allows to Tagify full site;
+ - added `Result#ForEach` for easier iteration through the tags.
+
 ## 0.35.0
  - BREAKING CHANGE (with `v0.33.0`): renamed `Result.Meta.DocVersion` to `Result.Meta.DocHash`.
 

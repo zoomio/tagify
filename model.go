@@ -22,6 +22,14 @@ func (r *Result) Len() int {
 	return len(r.Tags)
 }
 
+// ForEach iterates through the slice of Tags
+// and calls provided "fn" on every iteration.
+func (r *Result) ForEach(fn func(i int, tag *processor.Tag)) {
+	for k, v := range r.Tags {
+		fn(k, v)
+	}
+}
+
 // TagsStrings transforms slice of tags into a slice of strings.
 func (r *Result) TagsStrings() []string {
 	return ToStrings(r.Tags)

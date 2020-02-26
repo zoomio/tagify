@@ -17,7 +17,9 @@ func main() {
 	limit := flag.Int("l", 5, "number of tags to return")
 	verbose := flag.Bool("v", false, "enables verbose mode")
 	contentType := flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
-	doFiltering := flag.Bool("no-stop", true, "filters out all stop-words from results (see https://github.com/zoomio/stopwords)")
+	noStopWords := flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
+	contentOnly := flag.Bool("content", false, "experimental option, might not be included in following releases: ignore all none content related parts of the page (HTML only)")
+	fullSite := flag.Bool("site", false, "experimental option, might not be included in following releases: allows to tagify full site (HTML only)")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Parse()
 
@@ -48,8 +50,14 @@ func main() {
 	if *verbose {
 		options = append(options, tagify.Verbose(*verbose))
 	}
-	if *doFiltering {
-		options = append(options, tagify.NoStopWords(*doFiltering))
+	if *noStopWords {
+		options = append(options, tagify.NoStopWords(*noStopWords))
+	}
+	if *contentOnly {
+		options = append(options, tagify.ContentOnly(*contentOnly))
+	}
+	if *fullSite {
+		options = append(options, tagify.FullSite(*fullSite))
 	}
 
 	res, err := tagify.Run(context.Background(), options...)

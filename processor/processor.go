@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bytes"
 	"math"
 	"regexp"
 	"strings"
@@ -15,6 +16,8 @@ var (
 	noLetterWordRegex          = regexp.MustCompile(`[^a-zа-я]`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^a-zа-я]{2}`)
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
+
+	newLine = []byte("\n")
 )
 
 // Run - 1st sorts given list,
@@ -84,12 +87,12 @@ func Run(items []*Tag, limit int) []*Tag {
 }
 
 // sanitize ...
-func sanitize(strs []string, noStopWords bool) []string {
+func sanitize(strs [][]byte, noStopWords bool) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
 		// all letters to lower and with proper quote
-		s = strings.ToLower(strings.Replace(s, "’", "'", -1))
-		parts := notAWordRegex.Split(s, -1)
+		s = bytes.ToLower(bytes.Replace(s, []byte("’"), []byte("'"), -1))
+		parts := notAWordRegex.Split(string(s), -1)
 		for _, p := range parts {
 			normilized, ok := normalize(p, noStopWords)
 			if !ok {
@@ -135,16 +138,7 @@ func normalize(word string, noStopWords bool) (string, bool) {
 }
 
 // SplitToSentences splits given text into slice of sentences.
-func SplitToSentences(text string) []string {
-	split := punctuationRegex.ReplaceAllString(strings.TrimSpace(text), "\n")
-	sents := strings.Split(split, "\n")
-	i := 0
-	for _, s := range sents {
-		trim := strings.TrimSpace(s)
-		if trim != "" {
-			sents[i] = trim
-			i++
-		}
-	}
-	return sents[:i]
+func SplitToSentences(text []byte) [][]byte {
+	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(text), newLine)
+	return bytes.Split(split, newLine)
 }

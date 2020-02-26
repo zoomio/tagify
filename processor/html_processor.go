@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"bytes"
 	"crypto/sha512"
 	"fmt"
 	"io"
@@ -11,33 +12,42 @@ import (
 )
 
 var (
-	tagWeights = map[atom.Atom]float64{
-		atom.Title: 3,
-		atom.H1:    2,
-		atom.H2:    1.5,
-		atom.H3:    1.4,
-		atom.H4:    1.3,
-		atom.H5:    1.2,
-		atom.H6:    1.1,
-		atom.P:     1.0,
-		atom.Li:    1.0,
-		atom.Code:  0.7,
-		atom.A:     0.4,
-	}
-	tagOrder = []atom.Atom{
-		atom.Title,
-		atom.H1,
-		atom.H2,
-		atom.H3,
-		atom.H4,
-		atom.H5,
-		atom.H6,
-		atom.P,
-		atom.Li,
-		atom.Code,
-		atom.A,
+	htmlTagWeights = map[atom.Atom]float64{
+		atom.Title:  3,
+		atom.H1:     2,
+		atom.H2:     1.5,
+		atom.H3:     1.4,
+		atom.H4:     1.3,
+		atom.H5:     1.2,
+		atom.H6:     1.1,
+		atom.P:      1.0,
+		atom.B:      1.2,
+		atom.U:      1.2,
+		atom.Strong: 1.2,
+		atom.I:      1.1,
+		atom.Li:     1.0,
+		atom.Code:   0.7,
+		atom.A:      0.6,
 	}
 )
+
+func isHTMLHeading(t atom.Atom) bool {
+	switch t {
+	case atom.H1, atom.H2, atom.H3:
+		return true
+	default:
+		return false
+	}
+}
+
+func isHTMLContent(t atom.Atom) bool {
+	switch t {
+	case atom.Title, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
+		return true
+	default:
+		return false
+	}
+}
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
@@ -56,65 +66,108 @@ var (
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-func ParseHTML(reader io.ReadCloser, verbose, noStopWords bool) ([]*Tag, string, []byte) {
-	if verbose {
+var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *ParseOutput {
+
+	defer reader.Close()
+
+	c := &parseConfig{}
+
+	// apply custom configuration
+	for _, option := range options {
+		option(c)
+	}
+
+	if c.verbose {
 		fmt.Println("--> parsing HTML...")
 	}
 
-	defer reader.Close()
-	contents := crawl(reader)
+	var err error
+	var contents *htmlContents
+	var parseFn parseFunc = parseHTML
 
-	if verbose {
+	if c.fullSite && c.source != "" {
+		var crawler *webCrawler
+		crawler, err = newWebCrawler(parseFn, c.source, c.verbose)
+		if err != nil {
+			return &ParseOutput{Err: err}
+		}
+		contents = crawler.run(reader)
+	} else {
+		contents = parseFn(reader, nil)
+	}
+
+	if c.verbose {
 		fmt.Println("--> parsed")
 		fmt.Printf("%s\n", contents)
 	}
 
-	if contents.len == 0 {
-		return []*Tag{}, "", nil
+	if err != nil {
+		return &ParseOutput{Err: err}
 	}
 
-	tags, title := collectTags(contents, verbose, noStopWords)
+	if len(contents.lines) == 0 {
+		return &ParseOutput{}
+	}
 
-	return tags, title, contents.hash()
+	tags, title := tagifyHTML(contents, c.verbose, c.noStopWords, c.contentOnly)
+
+	return &ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
 
-func crawl(reader io.Reader) *contents {
-	contents := &contents{c: make(map[atom.Atom][]string), len: 0}
-	crawler := &crawler{}
+func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
+	contents := &htmlContents{lines: make([]*htmlLine, 0)}
+	parser := &htmlParser{}
 
+	var cur atom.Atom
 	z := html.NewTokenizer(reader)
 	for {
 		tt := z.Next()
 
 		switch {
 		case tt == html.ErrorToken:
-			// End of the document, we're done
+			// end of the document, we're done
 			return contents
 		case tt == html.StartTagToken:
 			token := z.Token()
-			if _, ok := tagWeights[token.DataAtom]; ok {
-				crawler.push(token.DataAtom)
+			cur = token.DataAtom
+			if _, ok := htmlTagWeights[cur]; ok {
+				parser.push(cur)
+				if c != nil && cur == atom.A {
+					for _, a := range token.Attr {
+						if a.Key == "href" {
+							c.crawl(a.Val)
+							break
+						}
+					}
+				}
 			}
 		case tt == html.EndTagToken:
 			token := z.Token()
-			if _, ok := tagWeights[token.DataAtom]; ok {
-				crawler.pop()
+			if _, ok := htmlTagWeights[token.DataAtom]; ok {
+				parser.pop()
+				cur = parser.current()
+				if parser.isEmpty() {
+					parser.lineIndex++
+				}
 			}
 		case tt == html.TextToken:
-			if crawler.isCrawling() {
+			_, ok := htmlTagWeights[cur]
+			if parser.isNotEmpty() && ok {
 				token := z.Token()
-				current := crawler.current()
-				if _, ok := contents.c[current]; !ok {
-					contents.c[current] = make([]string, 0)
+				data := []byte(token.Data)
+
+				// skip empty or unknown lines
+				if len(data) == 0 {
+					continue
 				}
-				contents.c[current] = append(contents.c[current], strings.TrimSpace(token.Data))
-				contents.len++
+
+				contents.append(parser.lineIndex, cur, data)
 			}
 		}
 	}
 }
 
-func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string) {
+func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) ([]*Tag, string) {
 	tokenIndex := make(map[string]*Tag)
 	var docsCount int
 	var pageTitle string
@@ -123,34 +176,42 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 		fmt.Println("--> tokenized")
 	}
 
-	for _, tag := range tagOrder {
-		weight, ok := tagWeights[tag]
-		if !ok {
-			continue
-		}
-		lines, ok := contents.c[tag]
-		if !ok {
-			continue
-		}
-		for _, l := range lines {
-			if tag == atom.Title {
-				pageTitle = l
+	for _, l := range contents.lines {
+		s := string(l.data)
+
+		if l.tag == atom.Title {
+			pageTitle = s
+		} else if l.tag == atom.H1 && pageTitle == "" {
+			pageTitle = s
+		} else if isHTMLHeading(l.tag) && s == pageTitle {
+			// avoid doubling of scores for duplicated page's title in headings
+			if verbose {
+				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
 			}
-			if isHeading(tag) && l == pageTitle {
-				// avoid doubling of scores for duplicated page's title in headings
-				if verbose {
-					fmt.Printf("<%s>: skipped equal to <title>\n", tag.String())
-				}
+			continue
+		}
+
+		sentences := l.sentences()
+		for _, snt := range sentences {
+			// skip random non-text related tags
+			if contetOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
-			sentences := SplitToSentences(l)
-			for _, s := range sentences {
-				docsCount++
-				tokens := sanitize(strings.Fields(s), noStopWords)
+
+			if len(snt.data) == 0 {
+				continue
+			}
+
+			docsCount++
+			visited := map[string]bool{}
+
+			snt.forEach(func(i int, p *htmlPart) {
+				weight := htmlTagWeights[p.tag]
+				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 				if verbose && len(tokens) > 0 {
-					fmt.Printf("<%s>: %v\n", tag.String(), tokens)
+					fmt.Printf("<%s>: %v\n", l.tag.String(), tokens)
 				}
-				visited := map[string]bool{}
+
 				for _, token := range tokens {
 					visited[token] = true
 					item, ok := tokenIndex[token]
@@ -161,11 +222,11 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 					item.Score += weight
 					item.Count++
 				}
+			})
 
-				// increment number of appearances in documents for each visited tag
-				for token := range visited {
-					tokenIndex[token].Docs++
-				}
+			// increment number of appearances in documents for each visited tag
+			for token := range visited {
+				tokenIndex[token].Docs++
 			}
 		}
 	}
@@ -175,89 +236,179 @@ func collectTags(contents *contents, verbose, noStopWords bool) ([]*Tag, string)
 		v.DocsCount = docsCount
 	}
 
-	// Assure page title
-	if pageTitle == "" {
-		h1s, ok := contents.c[atom.H1]
-		if ok && len(h1s) == 1 {
-			pageTitle = h1s[0]
-		}
-	}
-
 	return flatten(tokenIndex), pageTitle
 }
 
-func isHeading(t atom.Atom) bool {
-	switch t {
-	case atom.H1, atom.H2, atom.H3:
-		return true
-	default:
-		return false
+// htmlContents stores text from target tags.
+type htmlContents struct {
+	lines []*htmlLine
+}
+
+func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
+	for len(cnt.lines) <= lineIndex {
+		cnt.lines = append(cnt.lines, &htmlLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
+	line := cnt.lines[lineIndex]
+	line.add(tag, data)
 }
 
-// contents stores text from target tags.
-type contents struct {
-	len int
-	c   map[atom.Atom][]string
-}
-
-func (cnt *contents) forEach(it func(i int, tag atom.Atom, lines []string)) {
-	for i, tag := range tagOrder {
-		lines, ok := cnt.c[tag]
-		if !ok {
+func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
+	for i, l := range cnt.lines {
+		// skip unsupported tags
+		if _, ok := htmlTagWeights[l.tag]; !ok {
 			continue
 		}
-		it(i, tag, lines)
+		it(i, l)
 	}
 }
 
-func (cnt *contents) String() string {
+func (cnt *htmlContents) String() string {
 	var sb strings.Builder
-	sb.WriteString("[")
-	cnt.forEach(func(i int, tag atom.Atom, lines []string) {
-		sb.WriteString(" ")
-		sb.WriteString(tag.String())
-		sb.WriteString(":")
-		sb.WriteString(fmt.Sprintf("%v", lines))
+	cnt.forEach(func(i int, line *htmlLine) {
+		sb.WriteString(fmt.Sprintf("[%d] ", i))
+		sb.WriteString(line.String())
+		sb.WriteString("\n")
 	})
-	sb.WriteString(" ]")
 	return sb.String()
 }
 
-func (cnt *contents) hash() []byte {
+func (cnt *htmlContents) hash() []byte {
 	h := sha512.New()
-	cnt.forEach(func(i int, tag atom.Atom, lines []string) {
-		_, _ = h.Write([]byte(fmt.Sprintf("%s:%v", tag.String(), lines)))
+	cnt.forEach(func(i int, line *htmlLine) {
+		_, _ = h.Write([]byte(line.tag.String()))
+		_, _ = h.Write([]byte(":"))
+		line.forEach(func(i int, p *htmlPart) {
+			_, _ = h.Write([]byte(p.tag.String()))
+			_, _ = h.Write([]byte(":"))
+			_, _ = h.Write(line.pData(p))
+		})
 	})
 	return h.Sum(nil)
 }
 
-// crawler keeps track of the current state of the HTML parser.
-type crawler struct {
-	stack []atom.Atom
+type htmlPart struct {
+	tag atom.Atom
+	pos int
+	len int
 }
 
-func (c *crawler) push(a atom.Atom) {
-	c.stack = append(c.stack, a)
+func (d *htmlPart) String() string {
+	return fmt.Sprintf("<%s>: pos - %d, len - %d", d.tag.String(), d.pos, d.len)
 }
 
-func (c *crawler) current() atom.Atom {
-	if len(c.stack) == 0 {
+type htmlLine struct {
+	tag   atom.Atom
+	parts []*htmlPart
+	data  []byte
+}
+
+func (l *htmlLine) String() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("<%s> - %d parts: [ ", l.tag.String(), len(l.parts)))
+	l.forEach(func(i int, p *htmlPart) {
+		sb.WriteString("'")
+		sb.WriteString("<")
+		sb.WriteString(p.tag.String())
+		sb.WriteString(">: ")
+		sb.WriteString(string(l.pData(p)))
+		sb.WriteString("' ")
+	})
+	sb.WriteString("]")
+	return sb.String()
+}
+
+func (l *htmlLine) forEach(it func(i int, p *htmlPart)) {
+	for i, p := range l.parts {
+		it(i, p)
+	}
+}
+
+func (l *htmlLine) add(tag atom.Atom, data []byte) {
+	l.parts = append(l.parts, &htmlPart{tag: tag, pos: len(l.data), len: len(data)})
+	l.data = append(l.data, data...)
+}
+
+func (l *htmlLine) pData(part *htmlPart) []byte {
+	return l.data[part.pos : part.pos+part.len]
+}
+
+// breaksdown an HTML line into a slice of HTML sentences.
+func (l *htmlLine) sentences() []*htmlLine {
+	ret := []*htmlLine{}
+	var offset, diff, pDiff, i, j int
+	sents := SplitToSentences(l.data)
+	for i < len(l.parts) && j < len(sents) {
+		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
+		ret = append(ret, s)
+
+		sent := sents[j]
+		sentSize := len(sent)
+
+		part := l.parts[i]
+		partSize := part.len
+
+		diff = (offset + partSize) - (offset + sentSize)
+
+		if diff > 0 {
+			// part is bigger than sentence, splitting part
+			s.add(part.tag, sent)
+			offset += sentSize
+			pDiff = diff
+			j++ // increment index for the next sentence
+		} else if diff < 0 {
+			// sentence is bigger than part, appending part included into sentence
+			if pDiff > 0 {
+				s.add(part.tag, l.data[part.pos+pDiff:part.pos+part.len])
+				offset += (partSize - pDiff)
+				pDiff = 0
+			} else {
+				s.add(part.tag, l.pData(part))
+				offset += partSize
+			}
+			i++ // increment index for the next part
+		} else {
+			// part is equal to sentence
+			s.add(part.tag, l.pData(part))
+			offset += partSize
+			pDiff = 0
+			i++
+			j++
+		}
+	}
+	return ret
+}
+
+// htmlParser keeps track of the current state of the HTML parser.
+type htmlParser struct {
+	lineIndex int
+	stack     []atom.Atom
+}
+
+func (p *htmlParser) current() atom.Atom {
+	if len(p.stack) == 0 {
 		return 0
 	}
-	return c.stack[len(c.stack)-1]
+	return p.stack[len(p.stack)-1]
 }
 
-func (c *crawler) pop() atom.Atom {
-	if len(c.stack) == 0 {
+func (p *htmlParser) push(a atom.Atom) {
+	p.stack = append(p.stack, a)
+}
+
+func (p *htmlParser) pop() atom.Atom {
+	if len(p.stack) == 0 {
 		return 0
 	}
-	last := len(c.stack) - 1
-	v := c.stack[last]
-	c.stack = c.stack[:last]
+	last := len(p.stack) - 1
+	v := p.stack[last]
+	p.stack = p.stack[:last]
 	return v
 }
 
-func (c *crawler) isCrawling() bool {
-	return len(c.stack) > 0
+func (p *htmlParser) isEmpty() bool {
+	return len(p.stack) == 0
+}
+
+func (p *htmlParser) isNotEmpty() bool {
+	return len(p.stack) > 0
 }

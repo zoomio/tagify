@@ -16,24 +16,27 @@ var runTests = []struct {
 	in          []Option
 	expectTags  []string
 	expectTitle string
+	expectHash  string
 }{
 	{
 		"run",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true)},
-		[]string{"test", "boy", "andread", "bang", "befell"},
+			Limit(5), NoStopWords(true), ContentOnly(true)},
+		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
+		"63c947e550b921392703ec704bb84480349757b53660aa464269faf66b124a1c7c63a5631870bc4b7ddcd248072ffb069721752892d9c68755db136c72a7802c",
 	},
 	{
 		"run with query",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true), Query("#box3 p")},
-		[]string{"bang", "began", "boy", "day", "eat"},
+			Limit(5), NoStopWords(true), Query("#box3 p"), ContentOnly(true)},
+		[]string{"especial", "foible", "jim's"},
 		"",
+		"a92c1295e69b481b2d627af0d89855c33f082f458c5bcc7354c5b545ec8fe3f1ada300937f858632ac613d129342d3b4e2527358ba91b3aa2ed7b9b5f1bc7600",
 	},
 }
 
-func Test_Run(t *testing.T) {
+func Test_Run_HTML(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
 	for _, tt := range runTests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -41,6 +44,7 @@ func Test_Run(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, HTML, res.Meta.ContentType)
 			assert.Equal(t, tt.expectTitle, res.Meta.DocTitle)
+			assert.Equal(t, tt.expectHash, res.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expectTags, res.TagsStrings())
 		})
 	}

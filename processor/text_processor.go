@@ -1,38 +1,52 @@
 package processor
 
 import (
+	"bytes"
 	"crypto/sha512"
 	"fmt"
+	"io"
 	"strings"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-func ParseText(in InputReader, verbose, noStopWords bool) ([]*Tag, []byte) {
-	if verbose {
+var ParseText ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseOutput {
+
+	c := &parseConfig{}
+
+	// apply custom configuration
+	for _, option := range options {
+		option(c)
+	}
+
+	if c.verbose {
 		fmt.Println("parsing plain text...")
 	}
 
 	var docsCount int
 
-	lines, err := in.ReadLines()
-	if err != nil {
-		return []*Tag{}, nil
-	}
+	defer in.Close()
+	buf := new(bytes.Buffer)
+	_, _ = buf.ReadFrom(in)
+	inStr := buf.String()
+	lines := strings.FieldsFunc(inStr, func(r rune) bool {
+		return r == '\n'
+	})
 
-	if verbose {
+	if c.verbose {
 		fmt.Printf("got %d lines\n", len(lines))
 	}
 
 	if len(lines) == 0 {
-		return []*Tag{}, nil
+		return &ParseOutput{}
 	}
+
 	tokenIndex := make(map[string]*Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {
-		sentences := SplitToSentences(l)
+		sentences := SplitToSentences([]byte(l))
 		for _, s := range sentences {
 			docsCount++
-			tokens = append(tokens, sanitize(strings.Fields(s), noStopWords)...)
+			tokens = append(tokens, sanitize(bytes.Fields(s), c.noStopWords)...)
 			visited := map[string]bool{}
 			for _, token := range tokens {
 				visited[token] = true
@@ -56,7 +70,7 @@ func ParseText(in InputReader, verbose, noStopWords bool) ([]*Tag, []byte) {
 		v.DocsCount = docsCount
 	}
 
-	return flatten(tokenIndex), hashTokens(tokens)
+	return &ParseOutput{Tags: flatten(tokenIndex), DocHash: hashTokens(tokens)}
 }
 
 func hashTokens(ts []string) []byte {
