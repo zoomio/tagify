@@ -18,8 +18,8 @@ func main() {
 	verbose := flag.Bool("v", false, "enables verbose mode")
 	contentType := flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
 	noStopWords := flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
-	contentOnly := flag.Bool("content", false, "ignore all none content related parts of the page (HTML only)")
-	fullSite := flag.Bool("site", false, "experimental option, might not be included in following releases, allows to tagify full site (HTML only)")
+	contentOnly := flag.Bool("content", false, "experimental option, might not be included in following releases: ignore all none content related parts of the page (HTML only)")
+	fullSite := flag.Bool("site", false, "experimental option, might not be included in following releases: allows to tagify full site (HTML only)")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	flag.Parse()
 
