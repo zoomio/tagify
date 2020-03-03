@@ -5,7 +5,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/zoomio/inout v0.10.0
 	github.com/zoomio/stopwords v0.4.0
-	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 )
 
 go 1.14
