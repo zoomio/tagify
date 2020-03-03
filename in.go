@@ -60,7 +60,11 @@ type in struct {
 // Panics on errors.
 func newIn(ctx context.Context, source, query string, verbose bool) (in, error) {
 	in := in{source: source}
-	r, err := inout.NewInOut(ctx, inout.Source(source), inout.Query(query), inout.Verbose(verbose))
+	r, err := inout.NewInOut(ctx,
+		inout.Source(source),
+		inout.Query(query),
+		inout.Timeout(0),
+		inout.Verbose(verbose))
 	if err != nil {
 		return in, err
 	}

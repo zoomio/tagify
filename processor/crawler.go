@@ -20,8 +20,6 @@ const (
 
 type parseFunc func(io.Reader, *webCrawler) *htmlContents
 
-// type procFunc func(*htmlContents, bool, bool, bool) ([]*Tag, string)
-
 type parseOut struct {
 	cnt *htmlContents
 	err error
@@ -38,7 +36,7 @@ type webCrawler struct {
 	parseFunc
 	dataCh  chan *parseOut
 	stopCh  chan struct{}
-	stats   atomic.Value
+	stats   *atomic.Value
 	wg      *sync.WaitGroup
 	links   *sync.Map
 	docs    *sync.Map
@@ -54,10 +52,12 @@ func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, e
 	var wg sync.WaitGroup
 	var links sync.Map
 	var docs sync.Map
+	var av atomic.Value
 	return &webCrawler{
 		parseFunc: parse,
 		dataCh:    make(chan *parseOut, 5),
 		stopCh:    make(chan struct{}),
+		stats:     &av,
 		wg:        &wg,
 		links:     &links,
 		docs:      &docs,
@@ -66,10 +66,18 @@ func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, e
 	}, nil
 }
 
+func (c *webCrawler) getStats() *crwlStats {
+	return c.stats.Load().(*crwlStats)
+}
+
+func (c *webCrawler) setStats(sts *crwlStats) {
+	c.stats.Store(sts)
+}
+
 func (c *webCrawler) run(r io.Reader) *htmlContents {
 	defer close(c.dataCh)
 
-	c.stats.Store(&crwlStats{
+	c.setStats(&crwlStats{
 		start: time.Now(),
 	})
 
@@ -112,7 +120,7 @@ func (c *webCrawler) run(r io.Reader) *htmlContents {
 				if value.err == nil {
 					result.lines = append(result.lines, value.cnt.lines...)
 				} else if crwl.verbose {
-					fmt.Printf("error parsing lines: %v\n", value.err)
+					fmt.Printf("%v\n", value.err)
 				}
 				crwl.wg.Done()
 			}
@@ -188,7 +196,7 @@ func (c *webCrawler) trySend(out *parseOut) {
 		c.wg.Done()
 		return
 	default:
-		sts := c.stats.Load().(*crwlStats)
+		sts := c.getStats()
 
 		if sts.stopped {
 			c.wg.Done()
@@ -206,17 +214,17 @@ func (c *webCrawler) trySend(out *parseOut) {
 		if time.Since(sts.start).Milliseconds() >= crwlBadThresholdInterval {
 			r := bad / total
 			if r >= crwlBadThreshold {
-				c.stats.Store(&crwlStats{stopped: true})
+				c.setStats(&crwlStats{stopped: true})
 				c.wg.Done()
 				return
 			}
-			c.stats.Store(&crwlStats{
+			c.setStats(&crwlStats{
 				start: time.Now(),
 				total: 0.0,
 				bad:   0.0,
 			})
 		} else {
-			c.stats.Store(&crwlStats{
+			c.setStats(&crwlStats{
 				start: sts.start,
 				total: total,
 				bad:   bad,
@@ -226,18 +234,6 @@ func (c *webCrawler) trySend(out *parseOut) {
 		c.dataCh <- out
 	}
 }
-
-// func (c *webCrawler) release() {
-// 	c.lock.Lock()
-// 	defer c.lock.Unlock()
-// 	c.active--
-// 	fmt.Printf("active: %d\n", c.active)
-// }
-
-// func (c *webCrawler) done() {
-// 	c.wg.Done()
-// 	c.release()
-// }
 
 func toDomain(u *url.URL) string {
 	var sb strings.Builder

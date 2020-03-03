@@ -9,8 +9,8 @@ env:
 before_install:
   - go get -t -v ./...
 
-script: 
-  - go test -race -coverprofile=coverage.txt -covermode=atomic
+script:
+  - go test -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
@@ -23,9 +23,9 @@ deploy:
   provider: releases
   api_key:
     secure: E4h5J9g2TTTRriAw9LqwTodPxDL4gP6bEa/u/7o7B1n8t2675P8l9VlGOnCUFh1ioMHIQDbEYyD7d//idScbZTMzN54y0wTzdbfG6kYGf5/dyFdtt2lY6usRTK4AGF0NEXBl03HytgY7zTElpCeULMAhlKXo9e16WXL/TD5+gWfzymln7CQzVv2zvM4LDLw0Dsd+ecW7+iKVHAjab7slstkw5M62avU+hLL4/W3aDcxXFLsn5nA92WcVWtFyAItGyBkpuELeqXzv2tVTwhGTFJOy3yGdqnTcnLWcSAjlE6F4R+DZEUMyRUsWbYDZSatlima+xPSmx00xTG65bYIduureSYc8KX9Mgi43JKXn6pVRhESq7V1HFTQbuwWsstldi0cVmxNm9UPfTxlmlYU0W7JKb3dcet66VHor5rEWqZ6gKNYM40HxRsFPRihce0CQ8IKXtD/vxiWY7+ZPbshSJZtuJvzwRtOG9Q5RA1Tr8DMH5Yq5XPFQl4DhJwtOvZpIhY60guppQZ12i4wp6RJ/lQtOXq+Iqi8KFE+WfVVSYXZ136NB/rPKUKZcecx6i4QjJskg8p3hXc3ZKjeGycDZeQlLcAt9b4OQYPEQlMEQgGTO0hZrInYbmzGToPkNUa9eq11UbaanEln408HOeCFxjMmylzd3NHjSeZCUOJr470I=
-  file: 
+  file:
     - "_dist/tagify_darwin_$TRAVIS_TAG"
     - "_dist/tagify_linux_$TRAVIS_TAG"
-  skip_cleanup: true
   on:
     tags: true
+    repo: zoomio/inout

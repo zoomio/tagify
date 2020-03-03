@@ -30,9 +30,9 @@ var runTests = []struct {
 		"run with query",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
 			Limit(5), NoStopWords(true), Query("#box3 p"), ContentOnly(true)},
-		[]string{"especial", "foible", "jim's"},
+		[]string{"bang", "began", "boy", "day", "eat"},
 		"",
-		"a92c1295e69b481b2d627af0d89855c33f082f458c5bcc7354c5b545ec8fe3f1ada300937f858632ac613d129342d3b4e2527358ba91b3aa2ed7b9b5f1bc7600",
+		"e5e0aef65e77e87a3e23a3f157357444910f94f5dccd5d0fe185da73cb72a8b7bff6ac80d71cfca1da27e9d1b7a3e810a348ceeee52c2e4b68393c8ba5d92cc4",
 	},
 }
 
