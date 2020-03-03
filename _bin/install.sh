@@ -14,13 +14,14 @@ if [ ! -z "$VERSION" ]; then
     VERSION="_$VERSION"
 fi
 
-PATH=${DIST_DIR}/${BINARY}_${OS}${VERSION}
+file="${VERSION}/${BINARY}_${OS}_${VERSION}"
 
-chmod +x ${PATH}
+curl -O "https://github.com/zoomio/tagify/releases/download/${file}"
+chmod +x ${file}
 
 if [ ! -d "$USER_BIN" ]; then
   mkdir -p ${USER_BIN}
   echo "created $USER_BIN directory, don't forget to add it to PATH environment variable"
 fi
 
-mv ${PATH} ${USER_BIN}/${BINARY}
+mv ${file} ${USER_BIN}/${BINARY}

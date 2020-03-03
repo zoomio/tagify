@@ -25,5 +25,6 @@ Prior to accepting your contributions we ask that you please follow the appropri
 ## Release
 
 * All notable changes comming with the new version should be documented in [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md).
-* Use `./_bin/test.sh` to run tests. 
-* Use `./_bin/tag.sh <x.y.z>` to tag, push and trigger new release. 
+* Run tests with `./_bin/test.sh`, make sure everything is passing.
+* Tag, push and trigger new binary release on GitHub `./_bin/tag.sh [version]`.
+* To perform Brew release, use `./_bin/brew_release.sh v[version]`, then submit a PR to Homebrew repo with the file from `./_templates/tagify.rb`.

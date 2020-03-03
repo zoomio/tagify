@@ -4,3 +4,4 @@ coverage.txt
 *.prof
 *.svg
 *.png
+*.rb

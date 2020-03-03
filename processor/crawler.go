@@ -119,8 +119,6 @@ func (c *webCrawler) run(r io.Reader) *htmlContents {
 			case value := <-crwl.dataCh:
 				if value.err == nil {
 					result.lines = append(result.lines, value.cnt.lines...)
-				} else if crwl.verbose {
-					fmt.Printf("%v\n", value.err)
 				}
 				crwl.wg.Done()
 			}

@@ -96,11 +96,6 @@ var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *Pa
 		contents = parseFn(reader, nil)
 	}
 
-	// if c.verbose {
-	// 	fmt.Println("--> parsed")
-	// 	fmt.Printf("%s\n", contents)
-	// }
-
 	if err != nil {
 		return &ParseOutput{Err: err}
 	}
@@ -208,9 +203,6 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag]
 				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
-				// if verbose && len(tokens) > 0 {
-				// 	fmt.Printf("<%s>: %v\n", l.tag.String(), tokens)
-				// }
 
 				for _, token := range tokens {
 					visited[token] = true

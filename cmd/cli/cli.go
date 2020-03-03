@@ -14,19 +14,27 @@ import (
 )
 
 var (
+	version = "tip"
+
 	source      = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
 	query       = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
 	limit       = flag.Int("l", 5, "number of tags to return")
 	verbose     = flag.Bool("v", false, "enables verbose mode")
 	contentType = flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
 	noStopWords = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
-	contentOnly = flag.Bool("content", false, "experimental option, might not be included in following releases: ignore all none content related parts of the page (HTML only)")
-	fullSite    = flag.Bool("site", false, "experimental option, might not be included in following releases: allows to tagify full site (HTML only)")
+	contentOnly = flag.Bool("content", false, "experimental, might not be included in next releases: ignore all none content related parts of the page (HTML only)")
+	fullSite    = flag.Bool("site", false, "experimental, might not be included in next releases: allows to tagify full site (HTML only)")
 	cpuprofile  = flag.String("cpuprofile", "", "write cpu profile to file")
+	ver         = flag.Bool("version", false, "prints version of Tagify")
 )
 
 func main() {
 	flag.Parse()
+
+	if *ver {
+		fmt.Println(version)
+		return
+	}
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -85,7 +93,7 @@ func main() {
 
 	if res.Len() == 0 {
 		fmt.Println("found 0 tags")
-		os.Exit(0)
+		return
 	}
 
 	if *verbose {

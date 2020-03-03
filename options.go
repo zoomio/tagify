@@ -32,7 +32,7 @@ var (
 		}
 	}
 
-	// Limit sets cthe limit of tags for the target.
+	// Limit sets the limit of tags for the target.
 	Limit = func(v int) Option {
 		return func(c *config) {
 			c.limit = v
