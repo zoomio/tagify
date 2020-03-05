@@ -29,9 +29,15 @@ Use `-no-stop` flag to disable stop-words filtering ([github.com/zoomio/stopword
 
 ### Binary
 
-* download latest release for corrseponding OS (Darwin or Linux) from [Releases](https://github.com/zoomio/tagify/releases/latest)
-* make binary executable: `chmod +x <binary>`
-* put executable binary under your bin directory, e.g. (assuming `~/bin` is in your PATH): `mv <binary> $HOME/bin/<binary>`.
+For MacOS:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)"
+```
+
+For Linux:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh linux)"
+```
 
 ### Go dependency
 
