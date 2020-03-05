@@ -28,4 +28,3 @@ deploy:
     - "_dist/tagify_linux_$TRAVIS_TAG"
   on:
     tags: true
-    repo: zoomio/tagify
