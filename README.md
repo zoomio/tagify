@@ -17,13 +17,13 @@ Visit playground [here](https://www.zoomio.org/tagify):
 
 Example, "tagify" this repository (with the limit of 3 tags):
 ```bash
-$ tagify -s=https://github.com/zoomio/tagify -l=3
-github code tag
+$ tagify -s=https://github.com/zoomio/tagify -l=5
+source html plain supports tags
 ```
 
 In code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
 
-Use `-no-stop` flag to disable stop-words filtering ([github.com/zoomio/stopwords](https://github.com/zoomio/stopwords/blob/master/stopwords.go)).
+Use `-no-stop` flag to disable filtering out of the [stop-words](https://github.com/zoomio/stopwords/blob/master/stopwords.go).
 
 ## Installation
 
