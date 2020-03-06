@@ -26,5 +26,6 @@ deploy:
   file:
     - "_dist/tagify_darwin_$TRAVIS_TAG"
     - "_dist/tagify_linux_$TRAVIS_TAG"
+  skip_cleanup: true
   on:
     tags: true
