@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 0.41.1
+## 0.41.2
  - a milestone release (hence the jump in the version number), part of the ["Faster Stronger Better"](https://zoomio.org/blog/post/faster_stronger_better-5708658021236736) initiative;
  - added support for Markdown content type;
  - improved performance and accuracy of HTML tagifier;
