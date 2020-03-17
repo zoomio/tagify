@@ -7,9 +7,26 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 Gets STDIN, file or HTTP address as an input and returns a list of most popular words ordered by popularity as an output.
-Currently only supports plain text and HTML.
 
 More info about what is "Tagify" and the reasons behind it can be found [here](https://zoomio.org/blog/post/tags_as_a_service-5712840111423488).
+
+Supported formats:
+- Plain text
+- HTML
+- Markdown
+
+Supported languages:
+- English
+- Russian
+- Chinese
+- Hindi
+- Hebrew
+- Spanish
+- Arabic
+- Japanese
+- German
+- French
+- Korean
 
 Visit playground [here](https://www.zoomio.org/tagify):
 
