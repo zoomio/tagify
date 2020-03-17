@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.42.0
+ - added support for Chinese, Hindi, Spanish, Arabic, Japanese, German, Hebrew, French and Korean tags.
+
 ## 0.41.2
  - a milestone release (hence the jump in the version number), part of the ["Faster Stronger Better"](https://zoomio.org/blog/post/faster_stronger_better-5708658021236736) initiative;
  - added support for Markdown content type;

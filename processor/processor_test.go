@@ -21,7 +21,7 @@ var normalizeTests = []struct {
 	{"{d'arko}", "d'arko", true, false},
 	{"1)", "1)", false, false},
 	{"-no-stop", "-no-stop", false, false},
-	{"2018-02-24T12:00:49Z", "--", false, false},
+	{"2018-02-24T12:00:49Z", "--TZ", false, false},
 }
 
 func Test_normalize(t *testing.T) {

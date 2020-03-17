@@ -11,14 +11,29 @@ import (
 )
 
 var (
-	sanitizeRegex              = regexp.MustCompile(`([^a-zа-я-']*)([a-zа-я-']+)([^a-zа-я-']*)`)
-	notAWordRegex              = regexp.MustCompile(`([^a-zа-я'-]+)`)
-	noLetterWordRegex          = regexp.MustCompile(`[^a-zа-я]`)
-	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^a-zа-я]{2}`)
+	sanitizeRegex              = regexp.MustCompile(`([^\p{L}-']*)([\p{L}-']+)([^\p{L}-']*)`)
+	notAWordRegex              = regexp.MustCompile(`([^\p{L}'-]+)`)
+	noLetterWordRegex          = regexp.MustCompile(`[^\p{L}]`)
+	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^\p{L}]{2}`)
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 
 	newLine = []byte("\n")
 )
+
+func init() {
+	stopwords.Setup(
+		stopwords.Words(stopwords.StopWordsRu),
+		stopwords.Words(stopwords.StopWordsZh),
+		stopwords.Words(stopwords.StopWordsJa),
+		stopwords.Words(stopwords.StopWordsKo),
+		stopwords.Words(stopwords.StopWordsHi),
+		stopwords.Words(stopwords.StopWordsHe),
+		stopwords.Words(stopwords.StopWordsAr),
+		stopwords.Words(stopwords.StopWordsDe),
+		stopwords.Words(stopwords.StopWordsEs),
+		stopwords.Words(stopwords.StopWordsFr),
+	)
+}
 
 // Run - 1st sorts given list,
 // then iterates over it and de-dupes items in the list by merging inflections,
