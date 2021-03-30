@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 0.43.0
+ - HTML: prioritize longer page titles over the shorter ones;
+ - bumped Go version to 1.16.
+
 ## 0.42.1
  - added support for Chinese, Hindi, Spanish, Arabic, Japanese, German, Hebrew, French and Korean tags.
 

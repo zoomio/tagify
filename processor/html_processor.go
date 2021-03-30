@@ -174,7 +174,7 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 	for _, l := range contents.lines {
 		s := string(l.data)
 
-		if l.tag == atom.Title {
+		if l.tag == atom.Title && len(pageTitle) < len(s) {
 			pageTitle = s
 		} else if l.tag == atom.H1 && pageTitle == "" {
 			pageTitle = s
