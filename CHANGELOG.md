@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 0.43.0
+## 0.43.1
  - HTML: prioritize longer page titles over the shorter ones;
  - bumped Go version to 1.16.
 
