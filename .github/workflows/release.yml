@@ -77,6 +77,10 @@ jobs:
         created_tag: ${{ steps.get_version.outputs.VERSION }}
         changelog_file: CHANGELOG.md
 
+    - name: Echo Outputs
+      run: echo ${{ steps.create_release.outputs }}
+      shell: bash
+
     - name: Upload Linux Release
       id: upload-linux-release
       uses: actions/upload-release-asset@v1
