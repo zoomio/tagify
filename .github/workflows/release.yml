@@ -56,25 +56,26 @@ jobs:
         name: code-coverage-report
         path: _dist/coverage.out
 
-    # - name: Create Release
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-    #   with:
-    #     tag_name: ${VERSION}
-    #     release_name: Release ${VERSION}
-    #     draft: false
-    #     prerelease: false
-
-    - name: Upload release notes
+    - name: Create Release
       id: create_release
-      uses: Roang-zero1/github-create-release-action@master
+      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        created_tag: ${VERSION}
-        changelog_file: CHANGELOG.md
+        tag_name: ${VERSION}
+        release_name: Release ${VERSION}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false
+
+    # - name: Upload release notes
+    #   id: create_release
+    #   uses: Roang-zero1/github-create-release-action@master
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     created_tag: ${VERSION}
+    #     changelog_file: CHANGELOG.md
 
     - name: Upload Linux Release
       id: upload-linux-release
