@@ -17,8 +17,15 @@ jobs:
       with:
         go-version: 1.16
 
-    - name: Set tag to env
-      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Get the version 
+      id: get_version 
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Build base image
+      run:
+        echo $VERSION
+      env:
+        VERSION: ${{ steps.get_version.outputs.VERSION }}
 
     - name: Cache Go modules
       uses: actions/cache@v2
@@ -32,15 +39,15 @@ jobs:
       run: go get -t -v ./...
 
     - name: Build Linux
-      run: ./_bin/build.sh linux ${RELEASE_VERSION}
+      run: ./_bin/build.sh linux ${VERSION}
       shell: bash
 
     - name: Build MacOS
-      run: ./_bin/build.sh darwin ${RELEASE_VERSION}
+      run: ./_bin/build.sh darwin ${VERSION}
       shell: bash
 
     - name: Build Windows
-      run: ./_bin/build.sh windows ${RELEASE_VERSION}
+      run: ./_bin/build.sh windows ${VERSION}
       shell: bash
 
     - name: Archive code coverage results
@@ -55,8 +62,8 @@ jobs:
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
     #   with:
-    #     tag_name: ${RELEASE_VERSION}
-    #     release_name: Release ${RELEASE_VERSION}
+    #     tag_name: ${VERSION}
+    #     release_name: Release ${VERSION}
     #     draft: false
     #     prerelease: false
 
@@ -66,7 +73,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        created_tag: ${RELEASE_VERSION}
+        created_tag: ${VERSION}
         changelog_file: CHANGELOG.md
 
     - name: Upload Linux Release
@@ -76,8 +83,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: _dist/tagify_linux_${RELEASE_VERSION}
-        asset_name: tagify_linux_${RELEASE_VERSION}
+        asset_path: _dist/tagify_linux_${VERSION}
+        asset_name: tagify_linux_${VERSION}
         asset_content_type: application/octet-stream
 
     - name: Upload Darwin Release
@@ -87,8 +94,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: _dist/tagify_darwin_${RELEASE_VERSION}
-        asset_name: tagify_darwin_${RELEASE_VERSION}
+        asset_path: _dist/tagify_darwin_${VERSION}
+        asset_name: tagify_darwin_${VERSION}
         asset_content_type: application/octet-stream
 
     - name: Upload Windows Release
@@ -98,6 +105,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: _dist/tagify_windows_${RELEASE_VERSION}
-        asset_name: tagify_windows_${RELEASE_VERSION}
+        asset_path: _dist/tagify_windows_${VERSION}
+        asset_name: tagify_windows_${VERSION}
         asset_content_type: application/octet-stream
