@@ -50,18 +50,6 @@ jobs:
       run: ./_bin/build.sh windows ${{ steps.get_version.outputs.VERSION }}
       shell: bash
 
-    # - name: Create Release
-    #   id: create_release
-    #   uses: actions/create-release@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-    #   with:
-    #     tag_name: ${{ steps.get_version.outputs.VERSION }}
-    #     release_name: Release ${{ steps.get_version.outputs.VERSION }}
-    #     body_path: CHANGELOG.md
-    #     draft: false
-    #     prerelease: false
-
     - name: Create Release
       id: create_release
       uses: Roang-zero1/github-create-release-action@master
@@ -71,14 +59,7 @@ jobs:
         created_tag: ${{ steps.get_version.outputs.VERSION }}
         changelog_file: CHANGELOG.md
 
-    - name: Echo Outputs
-      run: |
-        echo ${{ steps.create_release.outputs.output }}
-        echo ${{ steps.create_release.outputs.value }}
-        echo ${{ join(steps.create_release.outputs.*, '\n') }}
-      shell: bash
-
-    - name: Upload binaries to release
+    - name: Upload Linux binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,35 +68,20 @@ jobs:
         tag: ${{ github.ref }}
         overwrite: true
 
-    - name: Upload Linux Release
-      id: upload-linux-release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Darwin binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ steps.create_release.outputs }}
-        asset_path: _dist/tagify_linux_${{ steps.get_version.outputs.VERSION }}
-        asset_name: tagify_linux_${{ steps.get_version.outputs.VERSION }}
-        asset_content_type: application/octet-stream
-
-    - name: Upload Darwin Release
-      id: upload-darwin-release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: https://github.com/zoomio/tagify/releases/tag/${{ steps.get_version.outputs.VERSION }}
-        asset_path: _dist/tagify_darwin_${{ steps.get_version.outputs.VERSION }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: _dist/tagify_darwin_${{ steps.get_version.outputs.VERSION }}
         asset_name: tagify_darwin_${{ steps.get_version.outputs.VERSION }}
-        asset_content_type: application/octet-stream
+        tag: ${{ github.ref }}
+        overwrite: true
 
-    - name: Upload Windows Release
-      id: upload-windows-release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Windows binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: https://github.com/zoomio/tagify/releases/tag/${{ steps.get_version.outputs.VERSION }}
-        asset_path: _dist/tagify_windows_${{ steps.get_version.outputs.VERSION }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: _dist/tagify_windows_${{ steps.get_version.outputs.VERSION }}
         asset_name: tagify_windows_${{ steps.get_version.outputs.VERSION }}
-        asset_content_type: application/octet-stream
+        tag: ${{ github.ref }}
+        overwrite: true

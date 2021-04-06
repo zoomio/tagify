@@ -1,12 +1,10 @@
 # Changelog
 
-## v0.44.0-test-13
+## v0.44.0
 
-- Nothing new, just transition to the GitHub Actions.
-
-## 0.43.1
- - HTML: prioritize longer page titles over the shorter ones;
- - bumped Go version to 1.16.
+- HTML: prioritize longer page titles over the shorter ones;
+- bumped Go version to 1.16;
+- released with GitHub Actions.
 
 ## 0.42.1
  - added support for Chinese, Hindi, Spanish, Arabic, Japanese, German, Hebrew, French and Korean tags.
