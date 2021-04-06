@@ -39,8 +39,8 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: _dist
-        
+        path: _dist/tagify_*
+
     - name: Archive code coverage results
       uses: actions/upload-artifact@v2
       with:
