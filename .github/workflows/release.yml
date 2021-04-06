@@ -15,17 +15,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16
-
-    - name: Get the version 
-      id: get_version 
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
-    # - name: Set version env
-    #   run:
-    #     echo $VERSION
-    #   env:
-    #     VERSION: ${{ steps.get_version.outputs.VERSION }}
+        go-version: 1.16    
 
     - name: Cache Go modules
       uses: actions/cache@v2
@@ -38,16 +28,15 @@ jobs:
     - name: Install
       run: go get -t -v ./...
 
-    - name: Build Linux
-      run: ./_bin/build.sh linux ${{ steps.get_version.outputs.VERSION }}
-      shell: bash
+    - name: Get the version 
+      id: get_version 
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-    - name: Build MacOS
-      run: ./_bin/build.sh darwin ${{ steps.get_version.outputs.VERSION }}
-      shell: bash
-
-    - name: Build Windows
-      run: ./_bin/build.sh windows ${{ steps.get_version.outputs.VERSION }}
+    - name: Build binaries
+      run: |
+        ./_bin/build.sh linux ${{ steps.get_version.outputs.VERSION }}
+        ./_bin/build.sh darwin ${{ steps.get_version.outputs.VERSION }}
+        ./_bin/build.sh windows ${{ steps.get_version.outputs.VERSION }}
       shell: bash
 
     - name: Create Release
@@ -59,29 +48,10 @@ jobs:
         created_tag: ${{ steps.get_version.outputs.VERSION }}
         changelog_file: CHANGELOG.md
 
-    - name: Upload Linux binaries to release
+    - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: _dist/tagify_linux_${{ steps.get_version.outputs.VERSION }}
-        asset_name: tagify_linux_${{ steps.get_version.outputs.VERSION }}
-        tag: ${{ github.ref }}
-        overwrite: true
-
-    - name: Upload Darwin binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: _dist/tagify_darwin_${{ steps.get_version.outputs.VERSION }}
-        asset_name: tagify_darwin_${{ steps.get_version.outputs.VERSION }}
-        tag: ${{ github.ref }}
-        overwrite: true
-
-    - name: Upload Windows binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: _dist/tagify_windows_${{ steps.get_version.outputs.VERSION }}
-        asset_name: tagify_windows_${{ steps.get_version.outputs.VERSION }}
+        file: _dist/tagify_*
         tag: ${{ github.ref }}
         overwrite: true
