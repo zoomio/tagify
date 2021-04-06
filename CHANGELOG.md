@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.45.0-test-2
+## v0.45.0
 
 - HTML: prioritize longer page titles over the shorter ones;
 - bumped Go version to 1.16;
