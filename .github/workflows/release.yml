@@ -46,6 +46,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         created_tag: ${{ steps.get_version.outputs.VERSION }}
+        release_title: Release ${{ steps.get_version.outputs.VERSION }}
         changelog_file: CHANGELOG.md
 
     - name: Upload binaries to release
@@ -55,3 +56,4 @@ jobs:
         file: _dist/tagify_*
         tag: ${{ github.ref }}
         overwrite: true
+        file_glob: true
