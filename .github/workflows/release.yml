@@ -34,3 +34,15 @@ jobs:
 
     - name: Test
       run: go test -coverprofile=coverage.txt -covermode=atomic
+
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: _dist
+        
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-coverage-report
+        path: _dist/coverage.out
