@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Install
+      run: go get -t -v ./...
+
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - name: Build Linux
+      run: ./_bin/build.sh linux ${RELEASE_VERSION}
+
+    - name: Build MacOS
+      run: ./_bin/build.sh darwin ${RELEASE_VERSION}
+
+    - name: Build Windows
+      run: ./_bin/build.sh windows ${RELEASE_VERSION}
+
+    - name: Test
+      run: go test -coverprofile=coverage.txt -covermode=atomic
