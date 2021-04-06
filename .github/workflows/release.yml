@@ -50,12 +50,6 @@ jobs:
       run: ./_bin/build.sh windows ${{ steps.get_version.outputs.VERSION }}
       shell: bash
 
-    - name: Archive code coverage results
-      uses: actions/upload-artifact@v2
-      with:
-        name: code-coverage-report
-        path: _dist/coverage.out
-
     # - name: Create Release
     #   id: create_release
     #   uses: actions/create-release@v1
@@ -78,7 +72,9 @@ jobs:
         changelog_file: CHANGELOG.md
 
     - name: Echo Outputs
-      run: echo ${{ steps.create_release.outputs }}
+      run: |
+        echo ${{ steps.create_release.outputs.value }}
+        echo ${{ join(steps.create_release.outputs.*, '\n') }}
       shell: bash
 
     - name: Upload Linux Release
