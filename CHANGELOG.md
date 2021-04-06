@@ -1,30 +1,6 @@
 # Changelog
 
-## v0.44.0-test-7
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test-6
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test-5
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test-4
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test-3
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test-2
-
-- Nothing new, just transition to the GitHub Actions.
-
-## v0.44.0-test
+## v0.44.0-test-8
 
 - Nothing new, just transition to the GitHub Actions.
 
