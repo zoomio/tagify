@@ -83,7 +83,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: https://github.com/zoomio/tagify/releases/tag/${{ steps.get_version.outputs.VERSION }}
+        upload_url: ${{ steps.create_release.outputs }}
         asset_path: _dist/tagify_linux_${{ steps.get_version.outputs.VERSION }}
         asset_name: tagify_linux_${{ steps.get_version.outputs.VERSION }}
         asset_content_type: application/octet-stream
