@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 0.44.0-test
+## v0.44.0-test
 - Nothing new, just transition to the GitHub Actions.
 
 ## 0.43.1
