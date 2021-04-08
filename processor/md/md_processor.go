@@ -51,22 +51,23 @@ var (
 		"strikethrough",
 	}
 
-	mdWeights = map[mdType]float64{
-		heading1:      2,
-		heading2:      1.5,
-		heading3:      1.4,
-		heading4:      1.3,
-		heading5:      1.2,
-		heading6:      1.1,
-		paragraph:     1.0,
-		boldItalic:    1.1,
-		bold:          1.1,
-		underscore:    1.1,
-		italic:        1.0,
-		blockquote:    1.0,
-		code:          0.7,
-		anchor:        0.4,
-		strikethrough: 0.0,
+	// default weights for MD tags
+	defaultTagWeights = model.TagWeights{
+		"heading1":      2,
+		"heading2":      1.5,
+		"heading3":      1.4,
+		"heading4":      1.3,
+		"heading5":      1.2,
+		"heading6":      1.1,
+		"paragraph":     1.0,
+		"boldItalic":    1.1,
+		"bold":          1.1,
+		"underscore":    1.1,
+		"italic":        1.0,
+		"blockquote":    1.0,
+		"code":          0.7,
+		"anchor":        0.4,
+		"strikethrough": 0.0,
 	}
 
 	boldItalicReg = regexp.MustCompile(`\*\*\*(.*?)\*\*\*`)
@@ -118,7 +119,15 @@ var ParseMD model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOptio
 		fmt.Printf("%s\n", contents)
 	}
 
-	tags, title := tagifyMD(contents, c.Verbose, c.NoStopWords)
+	var tagWeights model.TagWeights
+
+	if len(c.TagWeights) == 0 {
+		tagWeights = defaultTagWeights
+	} else {
+		tagWeights = c.TagWeights
+	}
+
+	tags, title := tagifyMD(contents, tagWeights, c.Verbose, c.NoStopWords)
 
 	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
@@ -193,7 +202,7 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, verbose, noStopWords bool) (map[string]*model.Tag, string) {
+func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopWords bool) (map[string]*model.Tag, string) {
 	tokenIndex := make(map[string]*model.Tag)
 	var docsCount int
 	var pageTitle string
@@ -222,7 +231,7 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) (map[string]*mode
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *mdPart) {
-				weight := mdWeights[p.tag]
+				weight := mdWeights[p.tag.String()]
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)

@@ -15,23 +15,24 @@ import (
 )
 
 var (
-	htmlTagWeights = map[atom.Atom]float64{
-		atom.H1:     2,
-		atom.Title:  1.7,
-		atom.Meta:   1.7,
-		atom.H2:     1.5,
-		atom.H3:     1.4,
-		atom.H4:     1.3,
-		atom.H5:     1.2,
-		atom.H6:     1.1,
-		atom.P:      1.0,
-		atom.B:      1.2,
-		atom.U:      1.2,
-		atom.Strong: 1.2,
-		atom.I:      1.1,
-		atom.Li:     1.0,
-		atom.Code:   0.7,
-		atom.A:      0.6,
+	// default weights for HTML tags
+	defaultTagWeights = model.TagWeights{
+		"h1":     2,
+		"title":  1.7,
+		"meta":   1.7,
+		"h2":     1.5,
+		"h3":     1.4,
+		"h4":     1.3,
+		"h5":     1.2,
+		"h6":     1.1,
+		"p":      1.0,
+		"b":      1.2,
+		"u":      1.2,
+		"strong": 1.2,
+		"i":      1.1,
+		"li":     1.0,
+		"code":   0.7,
+		"a":      0.6,
 	}
 )
 
@@ -107,16 +108,23 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 	var err error
 	var contents *htmlContents
 	var parseFn parseFunc = parseHTML
+	var tagWeights model.TagWeights
+
+	if len(c.TagWeights) == 0 {
+		tagWeights = defaultTagWeights
+	} else {
+		tagWeights = c.TagWeights
+	}
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler
-		crawler, err = newWebCrawler(parseFn, c.Source, c.Verbose)
+		crawler, err = newWebCrawler(parseFn, tagWeights, c.Source, c.Verbose)
 		if err != nil {
 			return &model.ParseOutput{Err: err}
 		}
 		contents = crawler.run(reader)
 	} else {
-		contents = parseFn(reader, nil)
+		contents = parseFn(reader, tagWeights, nil)
 	}
 
 	if err != nil {
@@ -127,13 +135,13 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		return &model.ParseOutput{}
 	}
 
-	tags, title := tagifyHTML(contents, c.Verbose, c.NoStopWords, c.ContentOnly)
+	tags, title := tagifyHTML(contents, tagWeights, c.Verbose, c.NoStopWords, c.ContentOnly)
 
 	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
 
-func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
-	contents := &htmlContents{lines: make([]*htmlLine, 0)}
+func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler) *htmlContents {
+	contents := &htmlContents{lines: make([]*htmlLine, 0), htmlTagWeights: htmlTagWeights}
 	parser := &htmlParser{}
 
 	var cur atom.Atom
@@ -148,7 +156,7 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 		case tt == html.StartTagToken:
 			token := z.Token()
 			cur = token.DataAtom
-			if _, ok := htmlTagWeights[cur]; ok {
+			if _, ok := htmlTagWeights[cur.String()]; ok {
 				parser.push(cur)
 
 				// Meta content is the attribute
@@ -185,7 +193,7 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 			}
 		case tt == html.EndTagToken:
 			token := z.Token()
-			if _, ok := htmlTagWeights[token.DataAtom]; ok {
+			if _, ok := htmlTagWeights[token.DataAtom.String()]; ok {
 				parser.pop()
 				cur = parser.current()
 				if parser.isEmpty() {
@@ -193,7 +201,7 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 				}
 			}
 		case tt == html.TextToken:
-			_, ok := htmlTagWeights[cur]
+			_, ok := htmlTagWeights[cur.String()]
 			if parser.isNotEmpty() && ok {
 				token := z.Token()
 
@@ -208,7 +216,7 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 	}
 }
 
-func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (map[string]*model.Tag, string) {
+func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose, noStopWords, contetOnly bool) (map[string]*model.Tag, string) {
 	tokenIndex := make(map[string]*model.Tag)
 	var docsCount int
 	var pageTitle string
@@ -246,7 +254,7 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *htmlPart) {
-				weight := htmlTagWeights[p.tag]
+				weight := htmlTagWeights[p.tag.String()]
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 
 				for _, token := range tokens {
@@ -278,7 +286,8 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 
 // htmlContents stores text from target tags.
 type htmlContents struct {
-	lines []*htmlLine
+	lines          []*htmlLine
+	htmlTagWeights model.TagWeights
 }
 
 func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
@@ -292,7 +301,7 @@ func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
 func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
-		if _, ok := htmlTagWeights[l.tag]; !ok {
+		if _, ok := cnt.htmlTagWeights[l.tag.String()]; !ok {
 			continue
 		}
 		it(i, l)

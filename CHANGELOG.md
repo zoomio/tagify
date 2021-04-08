@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.46.0
+
+- FEATURE: added two new parameters `-tag-weights` and `-tag-weights-json` to allow configuring parsed tags & weights for HTML and Markdown sources;
+- FEATURE: HTML mode is now parsing contents of `<meta name="description" content="...">` by default;
+- MISC: re-organised `processor` package into smaller focused sub-packages.
+
 ## v0.45.0
 
 - HTML: prioritize longer page titles over the shorter ones;

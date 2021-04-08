@@ -12,15 +12,17 @@ import (
 )
 
 type config struct {
-	source      string
-	query       string
-	content     string
-	contentType ContentType
-	limit       int
-	verbose     bool
-	noStopWords bool
-	contentOnly bool
-	fullSite    bool
+	source         string
+	query          string
+	content        string
+	contentType    ContentType
+	limit          int
+	verbose        bool
+	noStopWords    bool
+	contentOnly    bool
+	fullSite       bool
+	tagWeights     string
+	tagWeightsJSON string
 }
 
 // Run produces slice of tags ordered by frequency.
@@ -68,22 +70,30 @@ func ToStrings(items []*model.Tag) []string {
 
 func processInput(in *in, c config) (tags []*model.Tag, pageTitle string, hash []byte) {
 	var out *model.ParseOutput
+
+	opts := []model.ParseOption{
+		model.Verbose(c.verbose),
+		model.NoStopWords(c.noStopWords),
+	}
+
+	if c.tagWeights != "" {
+		opts = append(opts, model.TagWeightsString(c.tagWeights))
+	} else if c.tagWeightsJSON != "" {
+		opts = append(opts, model.TagWeightsJSON(c.tagWeightsJSON))
+	}
+
 	switch in.ContentType {
 	case HTML:
-		out = html.ParseHTML(in,
-			model.Verbose(c.verbose),
-			model.NoStopWords(c.noStopWords),
+		opts = append(opts,
 			model.ContentOnly(c.contentOnly),
 			model.FullSite(c.fullSite),
-			model.Source(in.source))
+			model.Source(in.source),
+		)
+		out = html.ParseHTML(in, opts...)
 	case Markdown:
-		out = md.ParseMD(in,
-			model.Verbose(c.verbose),
-			model.NoStopWords(c.noStopWords))
+		out = md.ParseMD(in, opts...)
 	default:
-		out = text.ParseText(in,
-			model.Verbose(c.verbose),
-			model.NoStopWords(c.noStopWords))
+		out = text.ParseText(in, opts...)
 	}
 
 	pageTitle = out.DocTitle

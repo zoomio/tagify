@@ -20,19 +20,27 @@ var runTests = []struct {
 }{
 	{
 		"run",
-		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true), ContentOnly(true)},
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true), ContentOnly(true)},
 		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
 		"bdb03356c79b2b1d9c69f4528ee398bbafc4a572629b713dcf4992bd43fd650ecedb4355ddd08fe1da748ac2c4babff71e3c425724793f0d4e636037121e123e",
 	},
 	{
 		"run with query",
-		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)), TargetType(HTML),
-			Limit(5), NoStopWords(true), Query("#box3 p"), ContentOnly(true)},
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true), Query("#box3 p"), ContentOnly(true)},
 		[]string{"bang", "began", "boy", "day", "eat"},
 		"",
 		"e5e0aef65e77e87a3e23a3f157357444910f94f5dccd5d0fe185da73cb72a8b7bff6ac80d71cfca1da27e9d1b7a3e810a348ceeee52c2e4b68393c8ba5d92cc4",
+	},
+	{
+		"run custom weights",
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true), TagWeights("title:3")},
+		[]string{"test"},
+		"Test",
+		"20c62640489dbc272c51abfd1fbe7b5aa7280f814fbfdb2baf993fb1e8b4c860fb1f1c6964760144e2ef15849ef073f47cb89284481d17845565395d7574e2e7",
 	},
 }
 

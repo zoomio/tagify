@@ -66,4 +66,18 @@ var (
 			c.fullSite = v
 		}
 	}
+
+	// TagWeights string with the custom tag weights for the HTML & Markdown tagging.
+	TagWeights = func(v string) Option {
+		return func(c *config) {
+			c.tagWeights = v
+		}
+	}
+
+	// TagWeightsJSON JSON file with the custom tag weights for the HTML & Markdown tagging.
+	TagWeightsJSON = func(v string) Option {
+		return func(c *config) {
+			c.tagWeightsJSON = v
+		}
+	}
 )
