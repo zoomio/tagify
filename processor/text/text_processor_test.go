@@ -1,4 +1,4 @@
-package processor
+package text
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/zoomio/inout"
+
+	"github.com/zoomio/tagify/processor/model"
 )
 
 var (
@@ -27,13 +29,13 @@ func Test_ParseText_Empty(t *testing.T) {
 func Test_ParseText_WithStopWords(t *testing.T) {
 	out := ParseText(inout.NewFromString(text))
 	assert.Len(t, out.Tags, 7)
-	assert.Subset(t, ToStrings(out.Tags), []string{"there", "was", "a", "boy", "who's", "name", "jim"})
+	assert.Subset(t, model.ToStrings(out.FlatTags()), []string{"there", "was", "a", "boy", "who's", "name", "jim"})
 }
 
 func Test_ParseText_NoStopWords(t *testing.T) {
-	out := ParseText(inout.NewFromString(text), NoStopWords(true))
+	out := ParseText(inout.NewFromString(text), model.NoStopWords(true))
 	assert.Len(t, out.Tags, 2)
-	assert.Subset(t, ToStrings(out.Tags), []string{"boy", "jim"})
+	assert.Subset(t, model.ToStrings(out.FlatTags()), []string{"boy", "jim"})
 }
 
 func Test_calculatesVersion(t *testing.T) {

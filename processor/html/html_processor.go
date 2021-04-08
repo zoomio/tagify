@@ -1,4 +1,4 @@
-package processor
+package html
 
 import (
 	"bytes"
@@ -9,12 +9,16 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+
+	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/processor/util"
 )
 
 var (
 	htmlTagWeights = map[atom.Atom]float64{
-		atom.Title:  3,
 		atom.H1:     2,
+		atom.Title:  1.7,
+		atom.Meta:   1.7,
 		atom.H2:     1.5,
 		atom.H3:     1.4,
 		atom.H4:     1.3,
@@ -42,11 +46,30 @@ func isHTMLHeading(t atom.Atom) bool {
 
 func isHTMLContent(t atom.Atom) bool {
 	switch t {
-	case atom.Title, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
+	case atom.Title, atom.Meta, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
 		return true
 	default:
 		return false
 	}
+}
+
+func isSameDomain(href, domain string) bool {
+	if strings.HasPrefix(href, "/") {
+		return true
+	}
+
+	// double trim http(s)
+	dest := strings.TrimPrefix(strings.TrimPrefix(href, "https://"), "http://")
+	// double trim http(s)
+	host := strings.TrimPrefix(strings.TrimPrefix(domain, "https://"), "http://")
+	// first slash in the address
+	i := strings.Index(dest, "/")
+
+	if i == -1 {
+		return strings.HasSuffix(dest, host)
+	}
+
+	return strings.HasSuffix(dest[:i], host)
 }
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
@@ -66,18 +89,18 @@ func isHTMLContent(t atom.Atom) bool {
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *ParseOutput {
+var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
 	defer reader.Close()
 
-	c := &parseConfig{}
+	c := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
 		option(c)
 	}
 
-	if c.verbose {
+	if c.Verbose {
 		fmt.Println("--> parsing HTML...")
 	}
 
@@ -85,11 +108,11 @@ var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *Pa
 	var contents *htmlContents
 	var parseFn parseFunc = parseHTML
 
-	if c.fullSite && c.source != "" {
+	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler
-		crawler, err = newWebCrawler(parseFn, c.source, c.verbose)
+		crawler, err = newWebCrawler(parseFn, c.Source, c.Verbose)
 		if err != nil {
-			return &ParseOutput{Err: err}
+			return &model.ParseOutput{Err: err}
 		}
 		contents = crawler.run(reader)
 	} else {
@@ -97,16 +120,16 @@ var ParseHTML ParseFunc = func(reader io.ReadCloser, options ...ParseOption) *Pa
 	}
 
 	if err != nil {
-		return &ParseOutput{Err: err}
+		return &model.ParseOutput{Err: err}
 	}
 
 	if len(contents.lines) == 0 {
-		return &ParseOutput{}
+		return &model.ParseOutput{}
 	}
 
-	tags, title := tagifyHTML(contents, c.verbose, c.noStopWords, c.contentOnly)
+	tags, title := tagifyHTML(contents, c.Verbose, c.NoStopWords, c.ContentOnly)
 
-	return &ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
 
 func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
@@ -127,9 +150,33 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 			cur = token.DataAtom
 			if _, ok := htmlTagWeights[cur]; ok {
 				parser.push(cur)
+
+				// Meta content is the attribute
+				if cur == atom.Meta {
+					var name, content string
+					for _, a := range token.Attr {
+						if a.Key == "name" {
+							name = a.Val
+						}
+						if a.Key == "content" {
+							content = a.Val
+						}
+						if name != "" && content != "" {
+							break
+						}
+					}
+					if name == "description" {
+						contents.append(parser.lineIndex, cur, []byte(content))
+						parser.lineIndex++
+					}
+
+					parser.pop()
+				}
+
+				// Go follow links
 				if c != nil && cur == atom.A {
 					for _, a := range token.Attr {
-						if a.Key == "href" {
+						if a.Key == "href" && isSameDomain(a.Val, c.domain) {
 							c.crawl(a.Val)
 							break
 						}
@@ -149,21 +196,20 @@ func parseHTML(reader io.Reader, c *webCrawler) *htmlContents {
 			_, ok := htmlTagWeights[cur]
 			if parser.isNotEmpty() && ok {
 				token := z.Token()
-				data := []byte(token.Data)
 
 				// skip empty or unknown lines
-				if len(data) == 0 {
+				if len(strings.TrimSpace(token.Data)) == 0 {
 					continue
 				}
 
-				contents.append(parser.lineIndex, cur, data)
+				contents.append(parser.lineIndex, cur, []byte(token.Data))
 			}
 		}
 	}
 }
 
-func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) ([]*Tag, string) {
-	tokenIndex := make(map[string]*Tag)
+func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (map[string]*model.Tag, string) {
+	tokenIndex := make(map[string]*model.Tag)
 	var docsCount int
 	var pageTitle string
 
@@ -174,9 +220,8 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 	for _, l := range contents.lines {
 		s := string(l.data)
 
-		if l.tag == atom.Title && len(pageTitle) < len(s) {
-			pageTitle = s
-		} else if l.tag == atom.H1 && pageTitle == "" {
+		// Title tags have special treatment
+		if (l.tag == atom.Title || l.tag == atom.H1) && len(pageTitle) < len(s) {
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings
@@ -202,13 +247,13 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 
 			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag]
-				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 
 				for _, token := range tokens {
 					visited[token] = true
 					item, ok := tokenIndex[token]
 					if !ok {
-						item = &Tag{Value: token}
+						item = &model.Tag{Value: token}
 						tokenIndex[token] = item
 					}
 					item.Score += weight
@@ -223,12 +268,12 @@ func tagifyHTML(contents *htmlContents, verbose, noStopWords, contetOnly bool) (
 		}
 	}
 
-	// set total number of dicuments in the text.
+	// set total number of documents in the text.
 	for _, v := range tokenIndex {
 		v.DocsCount = docsCount
 	}
 
-	return flatten(tokenIndex), pageTitle
+	return tokenIndex, pageTitle
 }
 
 // htmlContents stores text from target tags.
@@ -328,7 +373,7 @@ func (l *htmlLine) pData(part *htmlPart) []byte {
 func (l *htmlLine) sentences() []*htmlLine {
 	ret := []*htmlLine{}
 	var offset, diff, pDiff, i, j int
-	sents := SplitToSentences(l.data)
+	sents := util.SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
 		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
 		ret = append(ret, s)

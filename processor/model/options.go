@@ -1,41 +1,41 @@
-package processor
+package model
 
 // ParseOption allows to customise `Tagger` configuration.
-type ParseOption func(*parseConfig)
+type ParseOption func(*ParseConfig)
 
 var (
 	// Verbose enables high verbosity.
 	Verbose = func(verbose bool) ParseOption {
-		return func(c *parseConfig) {
-			c.verbose = verbose
+		return func(c *ParseConfig) {
+			c.Verbose = verbose
 		}
 	}
 
 	// NoStopWords enables stop-words exclusion from the output.
 	NoStopWords = func(noStopWords bool) ParseOption {
-		return func(c *parseConfig) {
-			c.noStopWords = noStopWords
+		return func(c *ParseConfig) {
+			c.NoStopWords = noStopWords
 		}
 	}
 
 	// ContentOnly ignores all none content related parts of the HTML page (HTML only).
 	ContentOnly = func(v bool) ParseOption {
-		return func(c *parseConfig) {
-			c.contentOnly = v
+		return func(c *ParseConfig) {
+			c.ContentOnly = v
 		}
 	}
 
 	// FullSite tells parser to process full site (HTML only).
 	FullSite = func(v bool) ParseOption {
-		return func(c *parseConfig) {
-			c.fullSite = v
+		return func(c *ParseConfig) {
+			c.FullSite = v
 		}
 	}
 
 	// Source of the parser.
 	Source = func(v string) ParseOption {
-		return func(c *parseConfig) {
-			c.source = v
+		return func(c *ParseConfig) {
+			c.Source = v
 		}
 	}
 )

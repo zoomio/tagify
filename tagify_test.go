@@ -24,7 +24,7 @@ var runTests = []struct {
 			Limit(5), NoStopWords(true), ContentOnly(true)},
 		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
-		"63c947e550b921392703ec704bb84480349757b53660aa464269faf66b124a1c7c63a5631870bc4b7ddcd248072ffb069721752892d9c68755db136c72a7802c",
+		"bdb03356c79b2b1d9c69f4528ee398bbafc4a572629b713dcf4992bd43fd650ecedb4355ddd08fe1da748ac2c4babff71e3c425724793f0d4e636037121e123e",
 	},
 	{
 		"run with query",

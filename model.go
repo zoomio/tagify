@@ -1,13 +1,13 @@
 package tagify
 
 import (
-	"github.com/zoomio/tagify/processor"
+	"github.com/zoomio/tagify/processor/model"
 )
 
 // Result represents result of Tagify.
 type Result struct {
 	Meta *Meta
-	Tags []*processor.Tag
+	Tags []*model.Tag
 }
 
 // Meta extra information.
@@ -24,7 +24,7 @@ func (r *Result) Len() int {
 
 // ForEach iterates through the slice of Tags
 // and calls provided "fn" on every iteration.
-func (r *Result) ForEach(fn func(i int, tag *processor.Tag)) {
+func (r *Result) ForEach(fn func(i int, tag *model.Tag)) {
 	for k, v := range r.Tags {
 		fn(k, v)
 	}

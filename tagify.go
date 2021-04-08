@@ -5,6 +5,10 @@ import (
 	"fmt"
 
 	"github.com/zoomio/tagify/processor"
+	"github.com/zoomio/tagify/processor/html"
+	"github.com/zoomio/tagify/processor/md"
+	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/processor/text"
 )
 
 type config struct {
@@ -58,28 +62,28 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 }
 
 // ToStrings transforms a list of tags into a list of strings.
-func ToStrings(items []*processor.Tag) []string {
-	return processor.ToStrings(items)
+func ToStrings(items []*model.Tag) []string {
+	return model.ToStrings(items)
 }
 
-func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, hash []byte) {
-	var out *processor.ParseOutput
+func processInput(in *in, c config) (tags []*model.Tag, pageTitle string, hash []byte) {
+	var out *model.ParseOutput
 	switch in.ContentType {
 	case HTML:
-		out = processor.ParseHTML(in,
-			processor.Verbose(c.verbose),
-			processor.NoStopWords(c.noStopWords),
-			processor.ContentOnly(c.contentOnly),
-			processor.FullSite(c.fullSite),
-			processor.Source(in.source))
+		out = html.ParseHTML(in,
+			model.Verbose(c.verbose),
+			model.NoStopWords(c.noStopWords),
+			model.ContentOnly(c.contentOnly),
+			model.FullSite(c.fullSite),
+			model.Source(in.source))
 	case Markdown:
-		out = processor.ParseMD(in,
-			processor.Verbose(c.verbose),
-			processor.NoStopWords(c.noStopWords))
+		out = md.ParseMD(in,
+			model.Verbose(c.verbose),
+			model.NoStopWords(c.noStopWords))
 	default:
-		out = processor.ParseText(in,
-			processor.Verbose(c.verbose),
-			processor.NoStopWords(c.noStopWords))
+		out = text.ParseText(in,
+			model.Verbose(c.verbose),
+			model.NoStopWords(c.noStopWords))
 	}
 
 	pageTitle = out.DocTitle
@@ -89,7 +93,7 @@ func processInput(in *in, c config) (tags []*processor.Tag, pageTitle string, ha
 		if c.verbose {
 			fmt.Println("tagifying...")
 		}
-		tags = processor.Run(out.Tags, c.limit)
+		tags = processor.Run(out.FlatTags(), c.limit)
 		if c.verbose {
 			fmt.Printf("\n%v\n", tags)
 		}

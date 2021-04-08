@@ -1,4 +1,4 @@
-package processor
+package text
 
 import (
 	"bytes"
@@ -6,19 +6,22 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/processor/util"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-var ParseText ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseOutput {
+var ParseText model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
-	c := &parseConfig{}
+	c := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
 		option(c)
 	}
 
-	if c.verbose {
+	if c.Verbose {
 		fmt.Println("parsing plain text...")
 	}
 
@@ -32,27 +35,27 @@ var ParseText ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseO
 		return r == '\n'
 	})
 
-	if c.verbose {
+	if c.Verbose {
 		fmt.Printf("got %d lines\n", len(lines))
 	}
 
 	if len(lines) == 0 {
-		return &ParseOutput{}
+		return &model.ParseOutput{}
 	}
 
-	tokenIndex := make(map[string]*Tag)
+	tokenIndex := make(map[string]*model.Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {
-		sentences := SplitToSentences([]byte(l))
+		sentences := util.SplitToSentences([]byte(l))
 		for _, s := range sentences {
 			docsCount++
-			tokens = append(tokens, sanitize(bytes.Fields(s), c.noStopWords)...)
+			tokens = append(tokens, util.Sanitize(bytes.Fields(s), c.NoStopWords)...)
 			visited := map[string]bool{}
 			for _, token := range tokens {
 				visited[token] = true
 				item, ok := tokenIndex[token]
 				if !ok {
-					item = &Tag{Value: token}
+					item = &model.Tag{Value: token}
 					tokenIndex[token] = item
 				}
 				item.Score++
@@ -70,7 +73,7 @@ var ParseText ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseO
 		v.DocsCount = docsCount
 	}
 
-	return &ParseOutput{Tags: flatten(tokenIndex), DocHash: hashTokens(tokens)}
+	return &model.ParseOutput{Tags: tokenIndex, DocHash: hashTokens(tokens)}
 }
 
 func hashTokens(ts []string) []byte {

@@ -1,15 +1,17 @@
-package processor
+package util
 
 import (
 	"sort"
 	"strings"
+
+	"github.com/zoomio/tagify/processor/model"
 )
 
-// sortTagItems sorts items by score in descending order,
+// SortTagItems sorts items by score in descending order,
 // if scores are equal it sorts by count if counts are equal,
 // it sorts string values alphabetically.
-func sortTagItems(items []*Tag) {
-	by(func(i1, i2 *Tag) bool {
+func SortTagItems(items []*model.Tag) {
+	by(func(i1, i2 *model.Tag) bool {
 		// Higher score goes 1st
 		if i1.Score > i2.Score {
 			return true
@@ -32,10 +34,10 @@ func sortTagItems(items []*Tag) {
 // ------------------------------------------ Sort ------------------------------------------
 
 // by is the type of a "less" function that defines the ordering of its item arguments.
-type by func(i1, i2 *Tag) bool
+type by func(i1, i2 *model.Tag) bool
 
 // Sort is a method on the function type, by, that sorts the argument slice according to the function.
-func (by by) Sort(items []*Tag) {
+func (by by) Sort(items []*model.Tag) {
 	sorter := &itemSorter{
 		items: items,
 		by:    by, // The Sort method's receiver is the function (closure) that defines the sort order.
@@ -45,8 +47,8 @@ func (by by) Sort(items []*Tag) {
 
 // itemSorter joins a by function and a slice of Items to be sorted.
 type itemSorter struct {
-	items []*Tag
-	by    func(p1, p2 *Tag) bool // Closure used in the Less method.
+	items []*model.Tag
+	by    func(p1, p2 *model.Tag) bool // Closure used in the Less method.
 }
 
 // Len is part of sort.Interface.

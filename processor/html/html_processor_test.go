@@ -1,4 +1,4 @@
-package processor
+package html
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zoomio/tagify/processor/model"
 	"golang.org/x/net/html/atom"
 )
 
@@ -129,6 +130,84 @@ const (
 	</body>
 </html>
 	`
+
+	theVergeHTMLWithMetaDescription = `
+	<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hi This is Slightly Longer Title</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-title" content="Verge" />
+    
+    
+    <script type="text/javascript" src="https://optimize-stats.voxmedia.com/loader.min.js?key=efd28c71b5699c36"></script>
+    
+    
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/unison_base/nittigrotesk/nittigrotesk-normal.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/AdelleSans-Italic.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/AdelleSans-Semibold.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/heroic-cond-vrg-web-ltd-md-obq.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/heroic-cond-vrg-web-ltd-md.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/heroic-cond-vrg-web-ltd-bd-obq.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/heroic-cond-vrg-web-ltd-hvy.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/heroic-cond-vrg-web-ltd-hvy.woff2" as="font" type="font/woff2" crossorigin>
+  
+
+  
+    <link rel="preload" href="https://cdn.vox-cdn.com/shared_fonts/unison/verge/pathways-normal-webfont.woff2" as="font" type="font/woff2" crossorigin>
+
+
+      <link href="https://www.theverge.com/style/community/372/group/51/f35cb97207edf9f6c534d472d9379ab4/hub_pages.css" data-chorus-theme="hub_pages" rel="stylesheet" media="all">
+  <link href="https://www.theverge.com/style/community/372/group/51/a5708a4eab8a208a91c915684007d4ce/chorus.css" data-chorus-theme="chorus" rel="stylesheet" media="all">
+
+    <meta name="style-tools" content="https://www.theverge.com/style/community/372/group/51/995c27ac3784100c9868052bc52731b9/tools.css">
+    
+    <script src="https://cdn.vox-cdn.com/packs/js/concert_ads-92cfec5fd564b444d5b8.js" async="async" integrity="sha256-X0slwMPNQoEY8TNC2vFvoZbryX1pMyuRztgUxHhp+go= sha384-j1tFkCldkvpYcHQDXzD2wJVPdm7ajbyJeGUdwXfEWMRTauxuf0wbxH+f9aXuxbnA" crossorigin="anonymous"></script>
+  <script defer type="text/javascript" src="https://z.moatads.com/voxprebidheader841653991752/moatheader.js"></script>
+
+
+    <meta name="google-site-verification" content="IucFf_TKtbFFH8_YeFyEteQIwYPdANM1R46_U9DpAr4" />
+
+<meta name="msvalidate.01" content="D385D0326A3AE144205C298DB34B4E94" />
+
+<meta name="ahrefs-site-verification" content="1e57a609922037a3fbdc1c22efd7334113f174f15608f37e1b8538a7b4ce64c3">
+    <meta name="description" content="The Verge was founded in 2011 in partnership with Vox Media, and covers the intersection of technology, science, art, and culture. Its mission is to offer in-depth reporting and long-form feature stories, breaking news coverage, product information, and community content in a unified and cohesive manner. The site is powered by Vox Media&#39;s Chorus platform, a modern media stack built for web-native news in the 21st century." />
+<link rel="canonical" href="https://www.theverge.com/" />
+<meta property="og:description" content="The Verge was founded in 2011 in partnership with Vox Media, and covers the intersection of technology, science, art, and culture. Its mission is to offer in-depth reporting and long-form feature stories, breaking news coverage, product information, and community content in a unified and cohesive manner. The site is powered by Vox Media&#39;s Chorus platform, a modern media stack built for web-native news in the 21st century." />
+<meta property="fb:app_id" content="549923288395304" />
+<meta property="og:image" content="https://cdn.vox-cdn.com/uploads/chorus_asset/file/9672633/VergeOG.0_1200x627.0.png" />
+<meta property="og:site_name" content="The Verge" />
+<meta property="og:title" content="The Verge" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.theverge.com/" />
+</head>
+<body><div><h1>The Verge</h1></div></body></html>
+	`
 )
 
 type inputReadCloser struct {
@@ -179,36 +258,45 @@ var parseHTMLTests = []struct {
 	{
 		"complex",
 		htmlComplexString,
-		[]string{"parse", "content", "from", "certain", "tags", "go", "golang", "html", "extract", "all"},
+		[]string{"go", "golang", "html", "extract", "all", "certain", "parse", "content", "from", "tags", "theme"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
-		"0b1e1436f1918ec3e331c9d865d88d8fdd82051dac258658e67a270b0d53b45572fa11a24df322dd2ea4dde8e374b9d33d8ac68940ef8979a13f0ca71d385a4f",
+		"4fa9283535a716ff1d1ba11e6e6edeb1e70ca342689f502dcb1dd793c752f66a9143053b8f1b1fd1a66c7d102b0b04e140cd4437ee8883b04d94950eb72899c2",
 		false,
 		true,
 	},
 	{
 		"complex exclude stopWords",
 		htmlComplexString,
-		[]string{"parse", "content", "tags", "golang", "html", "extract"},
+		[]string{"parse", "html", "extract", "content", "tags", "theme", "golang"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
-		"0b1e1436f1918ec3e331c9d865d88d8fdd82051dac258658e67a270b0d53b45572fa11a24df322dd2ea4dde8e374b9d33d8ac68940ef8979a13f0ca71d385a4f",
+		"4fa9283535a716ff1d1ba11e6e6edeb1e70ca342689f502dcb1dd793c752f66a9143053b8f1b1fd1a66c7d102b0b04e140cd4437ee8883b04d94950eb72899c2",
 		true,
 		true,
 	},
 	{
 		"complex exclude stopWords tag everything",
 		htmlComplexString,
-		[]string{"html", "content", "tags", "theme", "blog", "parse", "extract", "help", "golang"},
+		[]string{"tags", "help", "blog", "html", "content", "extract", "theme", "golang", "parse"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
-		"0b1e1436f1918ec3e331c9d865d88d8fdd82051dac258658e67a270b0d53b45572fa11a24df322dd2ea4dde8e374b9d33d8ac68940ef8979a13f0ca71d385a4f",
+		"4fa9283535a716ff1d1ba11e6e6edeb1e70ca342689f502dcb1dd793c752f66a9143053b8f1b1fd1a66c7d102b0b04e140cd4437ee8883b04d94950eb72899c2",
 		true,
 		false,
 	},
 	{
 		"css-y",
 		cssyHTML,
-		[]string{"stuff", "texty", "text", "people", "cool"},
+		[]string{"stuff", "foo", "texty", "text", "people", "cool"},
 		"People are looking for cool stuff",
-		"01443073300b7a758c6cdcd826e04c66b008acf033ef953231bee8119e1f0400e85e4702ce2cd929873e44bb2b0d550fea27bce2014ef24e6c68159e2a170210",
+		"09e63717d8ea919f68c3f8cc9403ebe5d119baf924e3bb0d7e7db7d317f6c3ba46f1319da2857f0fe965ff06a4bb5ee17e35bdd1c16d2402b8a5a6d3748b49e4",
+		true,
+		false,
+	},
+	{
+		"meta description",
+		theVergeHTMLWithMetaDescription,
+		[]string{"longer", "title", "verge"},
+		"Hi This is Slightly Longer Title",
+		"13ea1c679ec7d1678d60b614f595192c47907fed5ea0e2883de001e3e2bcfd4fea61dea4a9cfa5f9a8f91a575c181a582577987d7938e062b1820da80cfb64dd",
 		true,
 		false,
 	},
@@ -217,30 +305,30 @@ var parseHTMLTests = []struct {
 func Test_ParseHTML(t *testing.T) {
 	for _, tt := range parseHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, NoStopWords(tt.noStopWords), ContentOnly(tt.contentOnly))
+			out := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, model.NoStopWords(tt.noStopWords), model.ContentOnly(tt.contentOnly))
 			assert.Equal(t, tt.title, out.DocTitle)
 			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
-			assert.ElementsMatch(t, tt.expect, ToStrings(out.Tags))
+			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.FlatTags()))
 		})
 	}
 }
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, NoStopWords(true))
+	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, model.NoStopWords(true))
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		fmt.Sprintf("%x", out.DocHash))
-	assert.Contains(t, out.Tags, &Tag{Value: "story", Score: 3.0, Count: 1, Docs: 1, DocsCount: 4})
+	assert.Contains(t, out.FlatTags(), &model.Tag{Value: "story", Score: htmlTagWeights[atom.Title], Count: 1, Docs: 1, DocsCount: 4})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, NoStopWords(true))
+	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, model.NoStopWords(true))
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		fmt.Sprintf("%x", out.DocHash))
-	assert.NotContains(t, out.Tags, &Tag{Value: "part", Score: 1.4, Count: 1})
+	assert.NotContains(t, out.FlatTags(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
 }
 
 func Test_parseHTML(t *testing.T) {
@@ -267,4 +355,57 @@ func Test_parseHTML(t *testing.T) {
 
 	assert.Equal(t, atom.P, line.parts[2].tag)
 	assert.Equal(t, " name was Jim.", string(line.pData(line.parts[2])))
+}
+
+// table driven tests
+var isSameDomainTests = []struct {
+	name     string
+	href     string
+	domain   string
+	expected bool
+}{
+	{
+		"same",
+		"https://zoomio.org/tagify",
+		"https://zoomio.org",
+		true,
+	},
+	{
+		"different scheme",
+		"http://zoomio.org/tagify",
+		"https://zoomio.org",
+		true,
+	},
+	{
+		"subdomain",
+		"http://api.zoomio.org/api/tagify",
+		"https://zoomio.org",
+		true,
+	},
+	{
+		"path",
+		"/tagify",
+		"https://zoomio.org",
+		true,
+	},
+	{
+		"different",
+		"https://google.com",
+		"https://zoomio.org",
+		false,
+	},
+	{
+		"one letter diff",
+		"https://zoomioo.org",
+		"https://zoomio.org",
+		false,
+	},
+}
+
+func Test_isSameDomain(t *testing.T) {
+	for _, tt := range isSameDomainTests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, isSameDomain(tt.href, tt.domain))
+		})
+	}
 }

@@ -1,4 +1,4 @@
-package processor
+package model
 
 import (
 	"fmt"
@@ -32,18 +32,23 @@ func (t *Tag) String() string {
 
 // ParseOutput is a result of the `ParseFunc`.
 type ParseOutput struct {
-	Tags     []*Tag
+	Tags     map[string]*Tag
 	DocTitle string
 	DocHash  []byte
 	Err      error
 }
 
-type parseConfig struct {
-	verbose     bool
-	noStopWords bool
-	contentOnly bool
-	fullSite    bool
-	source      string
+// FlatTags transforms internal token register into a slice.
+func (po *ParseOutput) FlatTags() []*Tag {
+	return flatten(po.Tags)
+}
+
+type ParseConfig struct {
+	Verbose     bool
+	NoStopWords bool
+	ContentOnly bool
+	FullSite    bool
+	Source      string
 }
 
 // ParseFunc represents an arbitrary handler,

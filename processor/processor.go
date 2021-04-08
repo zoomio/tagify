@@ -1,23 +1,13 @@
 package processor
 
 import (
-	"bytes"
 	"math"
-	"regexp"
-	"strings"
 
 	"github.com/jinzhu/inflection"
 	"github.com/zoomio/stopwords"
-)
 
-var (
-	sanitizeRegex              = regexp.MustCompile(`([^\p{L}-']*)([\p{L}-']+)([^\p{L}-']*)`)
-	notAWordRegex              = regexp.MustCompile(`([^\p{L}'-]+)`)
-	noLetterWordRegex          = regexp.MustCompile(`[^\p{L}]`)
-	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^\p{L}]{2}`)
-	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
-
-	newLine = []byte("\n")
+	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/processor/util"
 )
 
 func init() {
@@ -41,12 +31,12 @@ func init() {
 // takes only requested size (limit) or just everything if result is smaller than limit.
 //
 // nolint: gocyclo
-func Run(items []*Tag, limit int) []*Tag {
-	uniqueTags := make([]*Tag, 0)
+func Run(items []*model.Tag, limit int) []*model.Tag {
+	uniqueTags := make([]*model.Tag, 0)
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
 
-	sortTagItems(items)
+	util.SortTagItems(items)
 
 	for i, tag := range items {
 
@@ -78,7 +68,7 @@ func Run(items []*Tag, limit int) []*Tag {
 		if (tag.Value != singularForm && seen) || (tag.Value == singularForm && seenIndex < i) {
 			savedIndex := uniqueTagsMap[singularForm]
 			saved := uniqueTags[savedIndex]
-			uniqueTags[savedIndex] = &Tag{
+			uniqueTags[savedIndex] = &model.Tag{
 				Value:     saved.Value,
 				Score:     saved.Score + tag.Score,
 				Count:     saved.Count + tag.Count,
@@ -91,69 +81,12 @@ func Run(items []*Tag, limit int) []*Tag {
 	// Apply TF-IDF
 	for _, t := range uniqueTags {
 		if t.Docs > 0 && t.DocsCount > 0 {
-			t.Score = tfidf(t)
+			t.Score = util.TFIDF(t)
 		}
 	}
 
-	sortTagItems(uniqueTags)
+	util.SortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
 	return uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
-}
-
-// sanitize ...
-func sanitize(strs [][]byte, noStopWords bool) []string {
-	result := make([]string, 0)
-	for _, s := range strs {
-		// all letters to lower and with proper quote
-		s = bytes.ToLower(bytes.Replace(s, []byte("’"), []byte("'"), -1))
-		parts := notAWordRegex.Split(string(s), -1)
-		for _, p := range parts {
-			normilized, ok := normalize(p, noStopWords)
-			if !ok {
-				continue
-			}
-			result = append(result, normilized)
-		}
-	}
-	return result
-}
-
-// normalize sanitizes word and tells whether it is allowed token or not.
-func normalize(word string, noStopWords bool) (string, bool) {
-	// False if doesn't match allowed regex
-	if !sanitizeRegex.MatchString(word) {
-		return word, false
-	}
-
-	// Remove not allowed symbols (sanitize)
-	word = sanitizeRegex.ReplaceAllString(word, "${2}")
-
-	// False if it is a stop word
-	if noStopWords && stopwords.IsStopWord(word) {
-		return word, false
-	}
-
-	// Defensive check if sanitized result is still not a word
-	if notAWordRegex.MatchString(word) || doubleNotWordySymbolsRegex.MatchString(word) {
-		return word, false
-	}
-
-	// Defensive check if word starts with hyphen
-	if strings.HasPrefix(word, "-") {
-		return word, false
-	}
-
-	if len(word) == 1 && noLetterWordRegex.MatchString(word) {
-		return word, false
-	}
-
-	// Allowed word
-	return word, true
-}
-
-// SplitToSentences splits given text into slice of sentences.
-func SplitToSentences(text []byte) [][]byte {
-	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(text), newLine)
-	return bytes.Split(split, newLine)
 }

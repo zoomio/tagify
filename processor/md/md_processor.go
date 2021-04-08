@@ -1,4 +1,4 @@
-package processor
+package md
 
 import (
 	"bufio"
@@ -8,6 +8,9 @@ import (
 	"io"
 	"regexp"
 	"strings"
+
+	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/processor/util"
 )
 
 // md types
@@ -94,30 +97,30 @@ func (t mdType) String() string {
 }
 
 // ParseMD parses given Markdown document input into a slice of tags.
-var ParseMD ParseFunc = func(in io.ReadCloser, options ...ParseOption) *ParseOutput {
+var ParseMD model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
-	c := &parseConfig{}
+	c := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
 		option(c)
 	}
 
-	if c.verbose {
+	if c.Verbose {
 		fmt.Println("--> parsing Markdown...")
 	}
 
 	defer in.Close()
 	contents := parseMD(in)
 
-	if c.verbose {
+	if c.Verbose {
 		fmt.Println("--> parsed")
 		fmt.Printf("%s\n", contents)
 	}
 
-	tags, title := tagifyMD(contents, c.verbose, c.noStopWords)
+	tags, title := tagifyMD(contents, c.Verbose, c.NoStopWords)
 
-	return &ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
 }
 
 func parseMD(reader io.Reader) *mdContents {
@@ -190,8 +193,8 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) {
-	tokenIndex := make(map[string]*Tag)
+func tagifyMD(contents *mdContents, verbose, noStopWords bool) (map[string]*model.Tag, string) {
+	tokenIndex := make(map[string]*model.Tag)
 	var docsCount int
 	var pageTitle string
 
@@ -220,7 +223,7 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := mdWeights[p.tag]
-				tokens := sanitize(bytes.Fields(snt.pData(p)), noStopWords)
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
@@ -229,7 +232,7 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 					visited[token] = true
 					item, ok := tokenIndex[token]
 					if !ok {
-						item = &Tag{Value: token}
+						item = &model.Tag{Value: token}
 						tokenIndex[token] = item
 					}
 					item.Score += weight
@@ -249,7 +252,7 @@ func tagifyMD(contents *mdContents, verbose, noStopWords bool) ([]*Tag, string) 
 		v.DocsCount = docsCount
 	}
 
-	return flatten(tokenIndex), pageTitle
+	return tokenIndex, pageTitle
 }
 
 func isMDHeading(t mdType) bool {
@@ -389,7 +392,7 @@ func (l *mdLine) forEach(it func(i int, p *mdPart)) {
 func (l *mdLine) sentences() []*mdLine {
 	ret := []*mdLine{}
 	var offset, diff, pDiff, i, j int
-	sents := SplitToSentences(l.data)
+	sents := util.SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
 		s := &mdLine{tag: l.tag, parts: []*mdPart{}}
 		ret = append(ret, s)

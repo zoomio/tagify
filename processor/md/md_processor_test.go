@@ -1,11 +1,13 @@
-package processor
+package md
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zoomio/tagify/processor/model"
 )
 
 const (
@@ -34,6 +36,14 @@ Said list:
 - Bee and dog - or a cat with **stripes**
 `
 )
+
+type inputReadCloser struct {
+	io.Reader
+}
+
+func (in *inputReadCloser) Close() error {
+	return nil
+}
 
 // table driven tests
 var parseMDTests = []struct {
@@ -73,10 +83,10 @@ var parseMDTests = []struct {
 func Test_ParseMD(t *testing.T) {
 	for _, tt := range parseMDTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := ParseMD(&inputReadCloser{strings.NewReader(tt.text)}, NoStopWords(tt.noStopWords))
+			out := ParseMD(&inputReadCloser{strings.NewReader(tt.text)}, model.NoStopWords(tt.noStopWords))
 			assert.Equal(t, tt.title, out.DocTitle)
 			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
-			assert.ElementsMatch(t, tt.tags, ToStrings(out.Tags))
+			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.FlatTags()))
 		})
 	}
 }
