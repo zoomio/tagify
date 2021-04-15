@@ -29,7 +29,6 @@ jobs:
     - name: Install
       run: go get -t -v ./...
 
-
     - name: Build
       run: go build -v ./...
 
