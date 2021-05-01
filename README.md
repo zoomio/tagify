@@ -46,12 +46,17 @@ Use `-no-stop` flag to disable filtering out of the [stop-words](https://github.
 
 For MacOS:
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh darwin)"
 ```
 
 For Linux:
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh linux)"
+```
+
+For Windows:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh windows)"
 ```
 
 ### Go dependency
