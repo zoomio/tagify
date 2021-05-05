@@ -210,6 +210,11 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 					continue
 				}
 
+				// Take ony <title> from <head> and ignore the rest in the body
+				if cur == atom.Title && parser.parent() != 0 {
+					continue
+				}
+
 				contents.append(parser.lineIndex, cur, []byte(token.Data))
 			}
 		}
@@ -332,6 +337,7 @@ func (cnt *htmlContents) hash() []byte {
 	return h.Sum(nil)
 }
 
+// htmlPart is a part of an HTML tag text.
 type htmlPart struct {
 	tag atom.Atom
 	pos int
@@ -435,6 +441,13 @@ func (p *htmlParser) current() atom.Atom {
 		return 0
 	}
 	return p.stack[len(p.stack)-1]
+}
+
+func (p *htmlParser) parent() atom.Atom {
+	if len(p.stack) < 2 {
+		return 0
+	}
+	return p.stack[len(p.stack)-2]
 }
 
 func (p *htmlParser) push(a atom.Atom) {

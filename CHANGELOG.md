@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.47.0
+
+- consider only the <title> tags which are part of the <head>.
+
 ## v0.46.0
 
 - FEATURE: added two new parameters `-tag-weights` and `-tag-weights-json` to allow configuring parsed tags & weights for HTML and Markdown sources;
