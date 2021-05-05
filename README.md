@@ -48,17 +48,17 @@ Get the latest [release](https://github.com/zoomio/tagify/releases/latest) of th
 
 For MacOS:
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh darwin)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" darwin
 ```
 
 For Linux:
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh linux)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" linux
 ```
 
 For Windows:
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh windows)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" windows
 ```
 
 ### Go dependency
