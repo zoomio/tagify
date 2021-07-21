@@ -24,6 +24,7 @@ var (
 	noStopWords    = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
 	tagWeights     = flag.String("tag-weights", "", "string with the custom tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
 	tagWeightsJSON = flag.String("tag-weights-json", "", "JSON file with the custom tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
+	adjustScores   = flag.Bool("adjust-scores", false, "adjusts tags score to the interval 0.0 to 1.0")
 
 	// EXPERIMENTAL
 	contentOnly = flag.Bool("content", false, "[EXPERIMENTAL] might not be included in next releases: ignore all none content related parts of the page (HTML only)")
@@ -82,6 +83,9 @@ func main() {
 		options = append(options, tagify.TagWeights(*tagWeights))
 	} else if *tagWeightsJSON != "" {
 		options = append(options, tagify.TagWeightsJSON(*tagWeightsJSON))
+	}
+	if *adjustScores {
+		options = append(options, tagify.AdjustScores(*adjustScores))
 	}
 
 	// print progress updates to terminal

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.48.0
+
+- FEATURE: added new parameter `-adjust-scores` to allow configuring scores adjustment to the interval from 0.0 to 1.0.
+
 ## v0.47.0
 
 - consider only the <title> tags which are part of the <head>.
