@@ -23,6 +23,7 @@ type config struct {
 	fullSite       bool
 	tagWeights     string
 	tagWeightsJSON string
+	adjustScores   bool
 }
 
 // Run produces slice of tags ordered by frequency.
@@ -103,7 +104,7 @@ func processInput(in *in, c config) (tags []*model.Tag, pageTitle string, hash [
 		if c.verbose {
 			fmt.Println("tagifying...")
 		}
-		tags = processor.Run(out.FlatTags(), c.limit)
+		tags = processor.Run(out.FlatTags(), c.limit, c.adjustScores)
 		if c.verbose {
 			fmt.Printf("\n%v\n", tags)
 		}

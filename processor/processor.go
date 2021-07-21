@@ -31,7 +31,7 @@ func init() {
 // takes only requested size (limit) or just everything if result is smaller than limit.
 //
 // nolint: gocyclo
-func Run(items []*model.Tag, limit int) []*model.Tag {
+func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 	uniqueTags := make([]*model.Tag, 0)
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
@@ -78,7 +78,7 @@ func Run(items []*model.Tag, limit int) []*model.Tag {
 		}
 	}
 
-	// Apply TF-IDF
+	// apply TF-IDF
 	for _, t := range uniqueTags {
 		if t.Docs > 0 && t.DocsCount > 0 {
 			t.Score = util.TFIDF(t)
@@ -88,5 +88,15 @@ func Run(items []*model.Tag, limit int) []*model.Tag {
 	util.SortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
-	return uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
+	result := uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
+
+	// adjust scores to the interval of 0.0 to 1.0
+	if adjustScores {
+		maxScore := uniqueTags[0].Score
+		for _, t := range result {
+			t.Score = t.Score / maxScore
+		}
+	}
+
+	return result
 }

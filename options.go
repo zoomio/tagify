@@ -80,4 +80,10 @@ var (
 			c.tagWeightsJSON = v
 		}
 	}
+
+	AdjustScores = func(v bool) Option {
+		return func(c *config) {
+			c.adjustScores = v
+		}
+	}
 )
