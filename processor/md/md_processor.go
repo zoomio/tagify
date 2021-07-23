@@ -9,6 +9,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/abadojack/whatlanggo"
+	"github.com/zoomio/stopwords"
+
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -127,9 +130,9 @@ var ParseMD model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOptio
 		tagWeights = c.TagWeights
 	}
 
-	tags, title := tagifyMD(contents, tagWeights, c.Verbose, c.NoStopWords)
+	tags, title, lang := tagifyMD(contents, tagWeights, c.Verbose, c.NoStopWords)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
 
 func parseMD(reader io.Reader) *mdContents {
@@ -202,19 +205,26 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopWords bool) (map[string]*model.Tag, string) {
-	tokenIndex := make(map[string]*model.Tag)
+func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose,
+	noStopWords bool) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	tokenIndex = make(map[string]*model.Tag)
 	var docsCount int
-	var pageTitle string
-
-	if verbose {
-		fmt.Println("--> tokenized")
-	}
+	var reg *stopwords.Register
 
 	for _, line := range contents.lines {
 		// skip empty lines
 		if len(line.parts) == 0 {
 			continue
+		}
+
+		if reg == nil {
+			info := whatlanggo.Detect(string(line.data))
+			lang = info.Lang.String()
+			reg = util.SetStopWords(info.Lang.Iso6391())
+			if verbose {
+				fmt.Printf("detected language: %s [%s] [%s]\n ",
+					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
 		}
 
 		if isMDHeading(line.tag) && pageTitle == "" {
@@ -232,7 +242,7 @@ func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopW
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := mdWeights[p.tag.String()]
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 				if verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
@@ -261,7 +271,7 @@ func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopW
 		v.DocsCount = docsCount
 	}
 
-	return tokenIndex, pageTitle
+	return
 }
 
 func isMDHeading(t mdType) bool {

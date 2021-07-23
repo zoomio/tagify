@@ -7,6 +7,9 @@ import (
 	"io"
 	"strings"
 
+	"github.com/abadojack/whatlanggo"
+	"github.com/zoomio/stopwords"
+
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -43,13 +46,24 @@ var ParseText model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOpt
 		return &model.ParseOutput{}
 	}
 
+	var lang string
+	var reg *stopwords.Register
 	tokenIndex := make(map[string]*model.Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {
+		if reg == nil {
+			info := whatlanggo.Detect(l)
+			lang = info.Lang.String()
+			reg = util.SetStopWords(info.Lang.Iso6391())
+			if c.Verbose {
+				fmt.Printf("detected language: %s [%s] [%s]\n ",
+					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+		}
 		sentences := util.SplitToSentences([]byte(l))
 		for _, s := range sentences {
 			docsCount++
-			tokens = append(tokens, util.Sanitize(bytes.Fields(s), c.NoStopWords)...)
+			tokens = append(tokens, util.Sanitize(bytes.Fields(s), reg)...)
 			visited := map[string]bool{}
 			for _, token := range tokens {
 				visited[token] = true
@@ -73,7 +87,7 @@ var ParseText model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOpt
 		v.DocsCount = docsCount
 	}
 
-	return &model.ParseOutput{Tags: tokenIndex, DocHash: hashTokens(tokens)}
+	return &model.ParseOutput{Tags: tokenIndex, DocHash: hashTokens(tokens), Lang: lang}
 }
 
 func hashTokens(ts []string) []byte {

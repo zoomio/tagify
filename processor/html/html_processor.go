@@ -7,6 +7,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/abadojack/whatlanggo"
+	"github.com/zoomio/stopwords"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
@@ -127,6 +129,10 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		contents = parseFn(reader, tagWeights, nil)
 	}
 
+	if c.Verbose {
+		fmt.Println("--> parsed")
+	}
+
 	if err != nil {
 		return &model.ParseOutput{Err: err}
 	}
@@ -135,9 +141,9 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		return &model.ParseOutput{}
 	}
 
-	tags, title := tagifyHTML(contents, tagWeights, c.Verbose, c.NoStopWords, c.ContentOnly)
+	tags, title, lang := tagifyHTML(contents, tagWeights, c.Verbose, c.NoStopWords, c.ContentOnly)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
 
 func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler) *htmlContents {
@@ -159,7 +165,7 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 			if _, ok := htmlTagWeights[cur.String()]; ok {
 				parser.push(cur)
 
-				// Meta content is the attribute
+				// handle <meta name="description" content="..." />
 				if cur == atom.Meta {
 					var name, content string
 					for _, a := range token.Attr {
@@ -181,7 +187,7 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 					parser.pop()
 				}
 
-				// Go follow links
+				// go follow links in case if web crawler is ON.
 				if c != nil && cur == atom.A {
 					for _, a := range token.Attr {
 						if a.Key == "href" && isSameDomain(a.Val, c.domain) {
@@ -221,14 +227,11 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 	}
 }
 
-func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose, noStopWords, contetOnly bool) (map[string]*model.Tag, string) {
-	tokenIndex := make(map[string]*model.Tag)
+func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose, noStopWords,
+	contetOnly bool) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
-	var pageTitle string
-
-	if verbose {
-		fmt.Println("--> tokenized")
-	}
+	var reg *stopwords.Register
 
 	for _, l := range contents.lines {
 		s := string(l.data)
@@ -242,6 +245,16 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
 			}
 			continue
+		}
+
+		if reg == nil && pageTitle != "" {
+			info := whatlanggo.Detect(pageTitle)
+			lang = info.Lang.String()
+			reg = util.SetStopWords(info.Lang.Iso6391())
+			if verbose {
+				fmt.Printf("detected language: %s [%s] [%s]\n ",
+					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
 		}
 
 		sentences := l.sentences()
@@ -260,7 +273,7 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 
 			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag.String()]
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 
 				for _, token := range tokens {
 					visited[token] = true
@@ -286,7 +299,7 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 		v.DocsCount = docsCount
 	}
 
-	return tokenIndex, pageTitle
+	return
 }
 
 // htmlContents stores text from target tags.

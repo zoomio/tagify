@@ -4,26 +4,10 @@ import (
 	"math"
 
 	"github.com/jinzhu/inflection"
-	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
-
-func init() {
-	stopwords.Setup(
-		stopwords.Words(stopwords.StopWordsRu),
-		stopwords.Words(stopwords.StopWordsZh),
-		stopwords.Words(stopwords.StopWordsJa),
-		stopwords.Words(stopwords.StopWordsKo),
-		stopwords.Words(stopwords.StopWordsHi),
-		stopwords.Words(stopwords.StopWordsHe),
-		stopwords.Words(stopwords.StopWordsAr),
-		stopwords.Words(stopwords.StopWordsDe),
-		stopwords.Words(stopwords.StopWordsEs),
-		stopwords.Words(stopwords.StopWordsFr),
-	)
-}
 
 // Run - 1st sorts given list,
 // then iterates over it and de-dupes items in the list by merging inflections,
@@ -35,6 +19,7 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 	uniqueTags := make([]*model.Tag, 0)
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
+	lang := util.StopWordsLang()
 
 	util.SortTagItems(items)
 
@@ -45,7 +30,13 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 			seenTagValues[tag.Value] = i
 		}
 
-		singularForm := inflection.Singular(tag.Value)
+		var singularForm string
+		if lang == "en" {
+			singularForm = inflection.Singular(tag.Value)
+		} else {
+			singularForm = tag.Value
+		}
+
 		seenIndex, seen := seenTagValues[singularForm]
 
 		// if item has different singular form, but singular form hasn't been seen yet,

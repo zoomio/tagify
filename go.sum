@@ -1,3 +1,5 @@
+github.com/abadojack/whatlanggo v1.0.1 h1:19N6YogDnf71CTHm3Mp2qhYfkRdyvbgwWdd2EPxJRG4=
+github.com/abadojack/whatlanggo v1.0.1/go.mod h1:66WiQbSbJBIlOZMsvbKe5m6pzQovxCH9B/K8tQB2uoc=
 github.com/chromedp/cdproto v0.0.0-20200116234248-4da64dd111ac h1:T7V5BXqnYd55Hj/g5uhDYumg9Fp3rMTS6bykYtTIFX4=
 github.com/chromedp/cdproto v0.0.0-20200116234248-4da64dd111ac/go.mod h1:PfAWWKJqjlGFYJEidUM6aVIWPr0EpobeyVWEEmplX7g=
 github.com/chromedp/chromedp v0.5.3 h1:F9LafxmYpsQhWQBdCs+6Sret1zzeeFyHS5LkRF//Ffg=
@@ -33,8 +35,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/zoomio/inout v0.10.0 h1:9HbYdLLbJFcpf+azL5MhXH+7j2SdM+BfYwlkZjFQ5lM=
 github.com/zoomio/inout v0.10.0/go.mod h1:5QCDs1fvWtITYkzT6Ua00szqDGi291e5421Xa2nC/WI=
-github.com/zoomio/stopwords v0.5.0 h1:Dbx/Jb6RjZhL1NmCKTVZaC8ZIzAeAnEcjFK/TfgRuLs=
-github.com/zoomio/stopwords v0.5.0/go.mod h1:quxF+kQ5p3VEhvmINw1V4ULJHI8s6xwscKlqSWt8Va8=
+github.com/zoomio/stopwords v0.6.0 h1:C1Nx85U51WuIbMyietcZeb1BVLpP9ZwmNNZH40T23dY=
+github.com/zoomio/stopwords v0.6.0/go.mod h1:gaosgTBK3xJE1dRenc/N4f/RnaKxjB1gfIqFSqtck+k=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 h1:qWPm9rbaAMKs8Bq/9LRpbMqxWRVUAQwMI9fVrssnTfw=
 golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

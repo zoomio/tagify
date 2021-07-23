@@ -81,6 +81,7 @@ type ParseOutput struct {
 	Tags     map[string]*Tag
 	DocTitle string
 	DocHash  []byte
+	Lang     string
 	Err      error
 }
 
