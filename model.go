@@ -13,7 +13,7 @@ type Result struct {
 
 // Meta extra information.
 type Meta struct {
-	ContentType config.ContentType
+	ContentType ContentType
 	DocTitle    string
 	DocHash     string
 }
@@ -59,4 +59,6 @@ var (
 	Text     = config.Text
 	HTML     = config.HTML
 	Markdown = config.Markdown
+
+	ContentTypeOf = config.ContentTypeOf
 )

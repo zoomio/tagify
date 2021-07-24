@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.49.2
+
+- support backwards compatibility for `ContentTypeOf`.
+
 ## v0.49.1
 
 - same as `v0.49.0`.
