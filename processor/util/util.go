@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/zoomio/stopwords"
 )
@@ -17,41 +16,7 @@ var (
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 
 	newLine = []byte("\n")
-
-	// stop words
-	once              sync.Once
-	stopWordsLang     string
-	stopWordsRegister *stopwords.Register
-	allStopWords      = map[string]stopwords.Option{
-		"en": stopwords.Words(stopwords.StopWords),
-		"ru": stopwords.Words(stopwords.StopWordsRu),
-		"zh": stopwords.Words(stopwords.StopWordsZh),
-		"ja": stopwords.Words(stopwords.StopWordsJa),
-		"ko": stopwords.Words(stopwords.StopWordsKo),
-		"hi": stopwords.Words(stopwords.StopWordsHi),
-		"he": stopwords.Words(stopwords.StopWordsHe),
-		"ar": stopwords.Words(stopwords.StopWordsAr),
-		"de": stopwords.Words(stopwords.StopWordsDe),
-		"es": stopwords.Words(stopwords.StopWordsEs),
-		"fr": stopwords.Words(stopwords.StopWordsFr),
-	}
 )
-
-func SetStopWords(lang string) *stopwords.Register {
-	once.Do(func() {
-		stopWordsLang = lang
-		stopWordsRegister = stopwords.Setup(allStopWords[lang])
-	})
-	return stopWordsRegister
-}
-
-func StopWords() *stopwords.Register {
-	return stopWordsRegister
-}
-
-func StopWordsLang() string {
-	return stopWordsLang
-}
 
 // SplitToSentences splits given text into slice of sentences.
 func SplitToSentences(text []byte) [][]byte {

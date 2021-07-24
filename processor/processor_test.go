@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 )
 
@@ -16,7 +17,8 @@ func Test_Run_Limits(t *testing.T) {
 		{Value: "bar", Score: 1},
 		{Value: "bee", Score: 1},
 	}
-	processed := Run(items, 3, false)
+	c := config.New(config.Limit(3), config.AdjustScores(false))
+	processed := Run(c, items)
 	assert.Len(t, processed, 3)
 }
 
@@ -28,7 +30,8 @@ func Test_Run_Sorts(t *testing.T) {
 		{Value: "bar", Score: 3},
 		{Value: "bee", Score: 4},
 	}
-	processed := Run(items, 5, false)
+	c := config.New(config.Limit(5), config.AdjustScores(false))
+	processed := Run(c, items)
 	assert.Len(t, processed, 5)
 	assert.Equal(t, "foo", processed[0].Value)
 	assert.Equal(t, "bee", processed[1].Value)
@@ -45,7 +48,8 @@ func Test_Run_DeDupes(t *testing.T) {
 		{Value: "bar", Score: 3},
 		{Value: "cats", Score: 1},
 	}
-	processed := Run(items, 5, false)
+	c := config.New(config.Limit(5), config.AdjustScores(false))
+	processed := Run(c, items)
 	assert.Len(t, processed, 3)
 	assert.Equal(t, "people", processed[0].Value)
 	assert.Equal(t, 7.0, processed[0].Score)
@@ -59,7 +63,8 @@ func Test_Run_IgnoresTFIDF_IfNoDocs(t *testing.T) {
 	items := []*model.Tag{
 		{Value: "cat", Score: 5},
 	}
-	processed := Run(items, 5, false)
+	c := config.New(config.Limit(5), config.AdjustScores(false))
+	processed := Run(c, items)
 	assert.Equal(t, 5.0, processed[0].Score)
 }
 
@@ -67,7 +72,8 @@ func Test_Run_AppliesTFIDF_WithDocs(t *testing.T) {
 	items := []*model.Tag{
 		{Value: "cat", Score: 5, Docs: 1, DocsCount: 3},
 	}
-	processed := Run(items, 5, false)
+	c := config.New(config.Limit(5), config.AdjustScores(false))
+	processed := Run(c, items)
 	assert.Equal(t, 1.9684489712313906, processed[0].Score)
 }
 
@@ -79,7 +85,8 @@ func Test_Run_AdjustsScores(t *testing.T) {
 		{Value: "bar", Score: 3},
 		{Value: "cats", Score: 1},
 	}
-	processed := Run(items, 5, true)
+	c := config.New(config.Limit(5), config.AdjustScores(true))
+	processed := Run(c, items)
 	assert.Len(t, processed, 3)
 	assert.Equal(t, "people", processed[0].Value)
 	assert.Equal(t, 1.0, processed[0].Score)

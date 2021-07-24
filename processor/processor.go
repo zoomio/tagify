@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/inflection"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -15,11 +16,10 @@ import (
 // takes only requested size (limit) or just everything if result is smaller than limit.
 //
 // nolint: gocyclo
-func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
+func Run(c *config.Config, items []*model.Tag) []*model.Tag {
 	uniqueTags := make([]*model.Tag, 0)
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
-	lang := util.StopWordsLang()
 
 	util.SortTagItems(items)
 
@@ -31,7 +31,7 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 		}
 
 		var singularForm string
-		if lang == "en" {
+		if c.Lang == "en" || c.Lang == "" {
 			singularForm = inflection.Singular(tag.Value)
 		} else {
 			singularForm = tag.Value
@@ -79,10 +79,10 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 	util.SortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
-	result := uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
+	result := uniqueTags[:int(math.Min(float64(c.Limit), float64(len(uniqueTags))))]
 
 	// adjust scores to the interval of 0.0 to 1.0
-	if adjustScores {
+	if c.AdjustScores {
 		maxScore := uniqueTags[0].Score
 		for _, t := range result {
 			t.Score = t.Score / maxScore

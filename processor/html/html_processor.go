@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -92,15 +93,15 @@ func isSameDomain(href, domain string) bool {
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
+var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
 	defer reader.Close()
 
-	c := &model.ParseConfig{}
+	pc := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
-		option(c)
+		option(pc)
 	}
 
 	if c.Verbose {
@@ -112,10 +113,10 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 	var parseFn parseFunc = parseHTML
 	var tagWeights model.TagWeights
 
-	if len(c.TagWeights) == 0 {
+	if c.TagWeights == "" {
 		tagWeights = defaultTagWeights
 	} else {
-		tagWeights = c.TagWeights
+		tagWeights = pc.TagWeights
 	}
 
 	if c.FullSite && c.Source != "" {
@@ -141,7 +142,7 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		return &model.ParseOutput{}
 	}
 
-	tags, title, lang := tagifyHTML(contents, tagWeights, c.Verbose, c.NoStopWords, c.ContentOnly)
+	tags, title, lang := tagifyHTML(contents, c, tagWeights)
 
 	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
@@ -227,8 +228,8 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 	}
 }
 
-func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose, noStopWords,
-	contetOnly bool) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyHTML(contents *htmlContents, c *config.Config,
+	htmlTagWeights model.TagWeights) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
 	var reg *stopwords.Register
@@ -241,26 +242,30 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings
-			if verbose {
+			if c.Verbose {
 				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
 			}
 			continue
 		}
 
-		if reg == nil && pageTitle != "" {
-			info := whatlanggo.Detect(pageTitle)
+		// detect language and setup stop words for it
+		if c.StopWords == nil && s != "" {
+			info := whatlanggo.Detect(s)
 			lang = info.Lang.String()
-			reg = util.SetStopWords(info.Lang.Iso6391())
-			if verbose {
+			c.SetStopWords(info.Lang.Iso6391())
+			if c.Verbose {
 				fmt.Printf("detected language: %s [%s] [%s]\n ",
 					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+			if c.NoStopWords {
+				reg = c.StopWords
 			}
 		}
 
 		sentences := l.sentences()
 		for _, snt := range sentences {
 			// skip random non-text related tags
-			if contetOnly && !isHTMLContent(snt.tag) {
+			if c.ContentOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
 

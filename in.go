@@ -6,52 +6,16 @@ import (
 	"strings"
 
 	"github.com/zoomio/inout"
+
+	"github.com/zoomio/tagify/config"
 )
-
-// Content types
-const (
-	Unknown ContentType = iota
-	Text
-	HTML
-	Markdown
-)
-
-var (
-	contentTypes = [...]string{
-		"Unknown",
-		"Text",
-		"HTML",
-		"Markdown",
-	}
-)
-
-// ContentType ...
-type ContentType byte
-
-// ContentTypeOf returns ContentType based on string value.
-func ContentTypeOf(contentType string) ContentType {
-	for i, key := range contentTypes {
-		if key == contentType {
-			return ContentType(i)
-		}
-	}
-	return Unknown
-}
-
-// String ...
-func (ct ContentType) String() string {
-	if ct < Text || ct > Markdown {
-		return "Unknown"
-	}
-	return contentTypes[ct]
-}
 
 // in - Input. This struct provides methods for reading strings
 // and numbers from standard input, file input, URLs, and sockets.
 type in struct {
 	source string
 	reader *inout.Reader
-	ContentType
+	config.ContentType
 }
 
 // newIn initializes an input stream from STDIN, file or web page.
@@ -72,16 +36,16 @@ func newIn(ctx context.Context, source, query string, verbose bool) (in, error) 
 	in.reader = &r
 
 	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") || query != "" {
-		in.ContentType = HTML
+		in.ContentType = config.HTML
 	} else if strings.ToLower(filepath.Ext(source)) == ".md" {
-		in.ContentType = Markdown
+		in.ContentType = config.Markdown
 	}
 
 	return in, err
 }
 
 // newInFromString ...
-func newInFromString(input string, contentType ContentType) in {
+func newInFromString(input string, contentType config.ContentType) in {
 	r := inout.NewFromString(input)
 	return in{
 		ContentType: contentType,

@@ -11,7 +11,7 @@ import (
 type ParseOption func(*ParseConfig)
 
 var (
-	// Verbose enables high verbosity.
+	/* // Verbose enables high verbosity.
 	Verbose = func(verbose bool) ParseOption {
 		return func(c *ParseConfig) {
 			c.Verbose = verbose
@@ -44,7 +44,7 @@ var (
 		return func(c *ParseConfig) {
 			c.Source = v
 		}
-	}
+	} */
 
 	TagWeightsString = func(v string) ParseOption {
 		return func(c *ParseConfig) {

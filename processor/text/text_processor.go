@@ -10,19 +10,20 @@ import (
 	"github.com/abadojack/whatlanggo"
 	"github.com/zoomio/stopwords"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-var ParseText model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
+var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
-	c := &model.ParseConfig{}
+	/* pc := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
-		option(c)
-	}
+		option(pc)
+	} */
 
 	if c.Verbose {
 		fmt.Println("parsing plain text...")
@@ -51,13 +52,17 @@ var ParseText model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOpt
 	tokenIndex := make(map[string]*model.Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {
-		if reg == nil {
+		// detect language and setup stop words for it
+		if c.StopWords == nil && l != "" {
 			info := whatlanggo.Detect(l)
 			lang = info.Lang.String()
-			reg = util.SetStopWords(info.Lang.Iso6391())
+			c.SetStopWords(info.Lang.Iso6391())
 			if c.Verbose {
 				fmt.Printf("detected language: %s [%s] [%s]\n ",
 					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+			if c.NoStopWords {
+				reg = c.StopWords
 			}
 		}
 		sentences := util.SplitToSentences([]byte(l))
