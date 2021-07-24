@@ -4,26 +4,11 @@ import (
 	"math"
 
 	"github.com/jinzhu/inflection"
-	"github.com/zoomio/stopwords"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
-
-func init() {
-	stopwords.Setup(
-		stopwords.Words(stopwords.StopWordsRu),
-		stopwords.Words(stopwords.StopWordsZh),
-		stopwords.Words(stopwords.StopWordsJa),
-		stopwords.Words(stopwords.StopWordsKo),
-		stopwords.Words(stopwords.StopWordsHi),
-		stopwords.Words(stopwords.StopWordsHe),
-		stopwords.Words(stopwords.StopWordsAr),
-		stopwords.Words(stopwords.StopWordsDe),
-		stopwords.Words(stopwords.StopWordsEs),
-		stopwords.Words(stopwords.StopWordsFr),
-	)
-}
 
 // Run - 1st sorts given list,
 // then iterates over it and de-dupes items in the list by merging inflections,
@@ -31,7 +16,7 @@ func init() {
 // takes only requested size (limit) or just everything if result is smaller than limit.
 //
 // nolint: gocyclo
-func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
+func Run(c *config.Config, items []*model.Tag) []*model.Tag {
 	uniqueTags := make([]*model.Tag, 0)
 	seenTagValues := make(map[string]int)
 	uniqueTagsMap := make(map[string]int)
@@ -45,7 +30,13 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 			seenTagValues[tag.Value] = i
 		}
 
-		singularForm := inflection.Singular(tag.Value)
+		var singularForm string
+		if c.Lang == "en" || c.Lang == "" {
+			singularForm = inflection.Singular(tag.Value)
+		} else {
+			singularForm = tag.Value
+		}
+
 		seenIndex, seen := seenTagValues[singularForm]
 
 		// if item has different singular form, but singular form hasn't been seen yet,
@@ -88,10 +79,10 @@ func Run(items []*model.Tag, limit int, adjustScores bool) []*model.Tag {
 	util.SortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
-	result := uniqueTags[:int(math.Min(float64(limit), float64(len(uniqueTags))))]
+	result := uniqueTags[:int(math.Min(float64(c.Limit), float64(len(uniqueTags))))]
 
 	// adjust scores to the interval of 0.0 to 1.0
-	if adjustScores {
+	if c.AdjustScores {
 		maxScore := uniqueTags[0].Score
 		for _, t := range result {
 			t.Score = t.Score / maxScore

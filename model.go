@@ -1,6 +1,7 @@
 package tagify
 
 import (
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 )
 
@@ -12,7 +13,7 @@ type Result struct {
 
 // Meta extra information.
 type Meta struct {
-	ContentType ContentType
+	ContentType config.ContentType
 	DocTitle    string
 	DocHash     string
 }

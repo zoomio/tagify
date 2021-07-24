@@ -6,6 +6,8 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/zoomio/tagify/config"
 )
 
 // InputReader ...
@@ -81,6 +83,7 @@ type ParseOutput struct {
 	Tags     map[string]*Tag
 	DocTitle string
 	DocHash  []byte
+	Lang     string
 	Err      error
 }
 
@@ -100,7 +103,7 @@ type ParseConfig struct {
 
 // ParseFunc represents an arbitrary handler,
 // which goes through given reader and produces tags.
-type ParseFunc func(reader io.ReadCloser, options ...ParseOption) *ParseOutput
+type ParseFunc func(c *config.Config, reader io.ReadCloser, options ...ParseOption) *ParseOutput
 
 func flatten(dict map[string]*Tag) []*Tag {
 	flat := make([]*Tag, len(dict))

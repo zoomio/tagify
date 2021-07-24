@@ -4,7 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/zoomio/stopwords"
 )
+
+var register = stopwords.Setup()
 
 // table driven tests
 var normalizeTests = []struct {
@@ -27,7 +30,11 @@ var normalizeTests = []struct {
 func Test_normalize(t *testing.T) {
 	for _, tt := range normalizeTests {
 		t.Run(tt.in, func(t *testing.T) {
-			out, ok := Normalize(tt.in, tt.exclude)
+			var reg *stopwords.Register
+			if tt.exclude {
+				reg = register
+			}
+			out, ok := Normalize(tt.in, reg)
 			assert.Equal(t, tt.pass, ok)
 			assert.Equal(t, tt.expect, out)
 		})
@@ -48,7 +55,11 @@ var sanitizeTests = []struct {
 func Test_sanitize(t *testing.T) {
 	for _, tt := range sanitizeTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := Sanitize(tt.in, tt.exclude)
+			var reg *stopwords.Register
+			if tt.exclude {
+				reg = register
+			}
+			out := Sanitize(tt.in, reg)
 			assert.ElementsMatch(t, tt.expect, out)
 		})
 	}

@@ -25,14 +25,14 @@ func SplitToSentences(text []byte) [][]byte {
 }
 
 // Sanitize ...
-func Sanitize(strs [][]byte, noStopWords bool) []string {
+func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
 		// all letters to lower and with proper quote
 		s = bytes.ToLower(bytes.Replace(s, []byte("’"), []byte("'"), -1))
 		parts := notAWordRegex.Split(string(s), -1)
 		for _, p := range parts {
-			normilized, ok := Normalize(p, noStopWords)
+			normilized, ok := Normalize(p, reg)
 			if !ok {
 				continue
 			}
@@ -43,7 +43,7 @@ func Sanitize(strs [][]byte, noStopWords bool) []string {
 }
 
 // Normalize sanitizes word and tells whether it is allowed token or not.
-func Normalize(word string, noStopWords bool) (string, bool) {
+func Normalize(word string, reg *stopwords.Register) (string, bool) {
 	// False if doesn't match allowed regex
 	if !sanitizeRegex.MatchString(word) {
 		return word, false
@@ -53,7 +53,7 @@ func Normalize(word string, noStopWords bool) (string, bool) {
 	word = sanitizeRegex.ReplaceAllString(word, "${2}")
 
 	// False if it is a stop word
-	if noStopWords && stopwords.IsStopWord(word) {
+	if reg != nil && reg.IsStopWord(word) {
 		return word, false
 	}
 

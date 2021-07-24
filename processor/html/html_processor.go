@@ -7,9 +7,12 @@ import (
 	"io"
 	"strings"
 
+	"github.com/abadojack/whatlanggo"
+	"github.com/zoomio/stopwords"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -90,15 +93,15 @@ func isSameDomain(href, domain string) bool {
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
+var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
 	defer reader.Close()
 
-	c := &model.ParseConfig{}
+	pc := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
-		option(c)
+		option(pc)
 	}
 
 	if c.Verbose {
@@ -110,10 +113,10 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 	var parseFn parseFunc = parseHTML
 	var tagWeights model.TagWeights
 
-	if len(c.TagWeights) == 0 {
+	if c.TagWeights == "" {
 		tagWeights = defaultTagWeights
 	} else {
-		tagWeights = c.TagWeights
+		tagWeights = pc.TagWeights
 	}
 
 	if c.FullSite && c.Source != "" {
@@ -127,6 +130,10 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		contents = parseFn(reader, tagWeights, nil)
 	}
 
+	if c.Verbose {
+		fmt.Println("--> parsed")
+	}
+
 	if err != nil {
 		return &model.ParseOutput{Err: err}
 	}
@@ -135,9 +142,9 @@ var ParseHTML model.ParseFunc = func(reader io.ReadCloser, options ...model.Pars
 		return &model.ParseOutput{}
 	}
 
-	tags, title := tagifyHTML(contents, tagWeights, c.Verbose, c.NoStopWords, c.ContentOnly)
+	tags, title, lang := tagifyHTML(contents, c, tagWeights)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
 
 func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler) *htmlContents {
@@ -159,7 +166,7 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 			if _, ok := htmlTagWeights[cur.String()]; ok {
 				parser.push(cur)
 
-				// Meta content is the attribute
+				// handle <meta name="description" content="..." />
 				if cur == atom.Meta {
 					var name, content string
 					for _, a := range token.Attr {
@@ -181,7 +188,7 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 					parser.pop()
 				}
 
-				// Go follow links
+				// go follow links in case if web crawler is ON.
 				if c != nil && cur == atom.A {
 					for _, a := range token.Attr {
 						if a.Key == "href" && isSameDomain(a.Val, c.domain) {
@@ -221,14 +228,11 @@ func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler)
 	}
 }
 
-func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose, noStopWords, contetOnly bool) (map[string]*model.Tag, string) {
-	tokenIndex := make(map[string]*model.Tag)
+func tagifyHTML(contents *htmlContents, c *config.Config,
+	htmlTagWeights model.TagWeights) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
-	var pageTitle string
-
-	if verbose {
-		fmt.Println("--> tokenized")
-	}
+	var reg *stopwords.Register
 
 	for _, l := range contents.lines {
 		s := string(l.data)
@@ -238,16 +242,30 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings
-			if verbose {
+			if c.Verbose {
 				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
 			}
 			continue
 		}
 
+		// detect language and setup stop words for it
+		if c.StopWords == nil && s != "" {
+			info := whatlanggo.Detect(s)
+			lang = info.Lang.String()
+			c.SetStopWords(info.Lang.Iso6391())
+			if c.Verbose {
+				fmt.Printf("detected language: %s [%s] [%s]\n ",
+					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+			if c.NoStopWords {
+				reg = c.StopWords
+			}
+		}
+
 		sentences := l.sentences()
 		for _, snt := range sentences {
 			// skip random non-text related tags
-			if contetOnly && !isHTMLContent(snt.tag) {
+			if c.ContentOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
 
@@ -260,7 +278,7 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 
 			snt.forEach(func(i int, p *htmlPart) {
 				weight := htmlTagWeights[p.tag.String()]
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 
 				for _, token := range tokens {
 					visited[token] = true
@@ -286,7 +304,7 @@ func tagifyHTML(contents *htmlContents, htmlTagWeights model.TagWeights, verbose
 		v.DocsCount = docsCount
 	}
 
-	return tokenIndex, pageTitle
+	return
 }
 
 // htmlContents stores text from target tags.

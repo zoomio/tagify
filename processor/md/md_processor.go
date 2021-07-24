@@ -9,6 +9,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/abadojack/whatlanggo"
+	"github.com/zoomio/stopwords"
+
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -98,13 +102,13 @@ func (t mdType) String() string {
 }
 
 // ParseMD parses given Markdown document input into a slice of tags.
-var ParseMD model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
+var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
 
-	c := &model.ParseConfig{}
+	pc := &model.ParseConfig{}
 
 	// apply custom configuration
 	for _, option := range options {
-		option(c)
+		option(pc)
 	}
 
 	if c.Verbose {
@@ -121,15 +125,15 @@ var ParseMD model.ParseFunc = func(in io.ReadCloser, options ...model.ParseOptio
 
 	var tagWeights model.TagWeights
 
-	if len(c.TagWeights) == 0 {
+	if c.TagWeights == "" {
 		tagWeights = defaultTagWeights
 	} else {
-		tagWeights = c.TagWeights
+		tagWeights = pc.TagWeights
 	}
 
-	tags, title := tagifyMD(contents, tagWeights, c.Verbose, c.NoStopWords)
+	tags, title, lang := tagifyMD(contents, c, tagWeights)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash()}
+	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
 
 func parseMD(reader io.Reader) *mdContents {
@@ -202,14 +206,11 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopWords bool) (map[string]*model.Tag, string) {
-	tokenIndex := make(map[string]*model.Tag)
+func tagifyMD(contents *mdContents, c *config.Config,
+	mdWeights model.TagWeights) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	tokenIndex = make(map[string]*model.Tag)
 	var docsCount int
-	var pageTitle string
-
-	if verbose {
-		fmt.Println("--> tokenized")
-	}
+	var reg *stopwords.Register
 
 	for _, line := range contents.lines {
 		// skip empty lines
@@ -217,8 +218,24 @@ func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopW
 			continue
 		}
 
+		s := string(line.data)
+
+		// detect language and setup stop words for it
+		if c.StopWords == nil && s != "" {
+			info := whatlanggo.Detect(s)
+			lang = info.Lang.String()
+			c.SetStopWords(info.Lang.Iso6391())
+			if c.Verbose {
+				fmt.Printf("detected language: %s [%s] [%s]\n ",
+					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+			if c.NoStopWords {
+				reg = c.StopWords
+			}
+		}
+
 		if isMDHeading(line.tag) && pageTitle == "" {
-			pageTitle = string(line.data)
+			pageTitle = s
 		}
 
 		sentences := line.sentences()
@@ -232,8 +249,8 @@ func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopW
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := mdWeights[p.tag.String()]
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), noStopWords)
-				if verbose && len(tokens) > 0 {
+				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
+				if c.Verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
 
@@ -261,7 +278,7 @@ func tagifyMD(contents *mdContents, mdWeights model.TagWeights, verbose, noStopW
 		v.DocsCount = docsCount
 	}
 
-	return tokenIndex, pageTitle
+	return
 }
 
 func isMDHeading(t mdType) bool {

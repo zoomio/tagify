@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.49.0
+
+- added language detection in order to improve handling of stop words.
+
 ## v0.48.0
 
 - FEATURE: added new parameter `-adjust-scores` to allow configuring scores adjustment to the interval from 0.0 to 1.0.

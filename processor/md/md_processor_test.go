@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/processor/model"
 )
 
@@ -83,7 +85,7 @@ var parseMDTests = []struct {
 func Test_ParseMD(t *testing.T) {
 	for _, tt := range parseMDTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := ParseMD(&inputReadCloser{strings.NewReader(tt.text)}, model.NoStopWords(tt.noStopWords))
+			out := ParseMD(config.New(config.NoStopWords(tt.noStopWords)), &inputReadCloser{strings.NewReader(tt.text)})
 			assert.Equal(t, tt.title, out.DocTitle)
 			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
 			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.FlatTags()))

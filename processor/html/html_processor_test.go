@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/zoomio/tagify/processor/model"
 	"golang.org/x/net/html/atom"
+
+	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/processor/model"
 )
 
 const (
@@ -305,7 +307,8 @@ var parseHTMLTests = []struct {
 func Test_ParseHTML(t *testing.T) {
 	for _, tt := range parseHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := ParseHTML(&inputReadCloser{strings.NewReader(tt.in)}, model.NoStopWords(tt.noStopWords), model.ContentOnly(tt.contentOnly))
+			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
+			out := ParseHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.DocTitle)
 			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.FlatTags()))
@@ -314,7 +317,7 @@ func Test_ParseHTML(t *testing.T) {
 }
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, model.NoStopWords(true))
+	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
@@ -323,7 +326,7 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	out := ParseHTML(&inputReadCloser{strings.NewReader(htmlDupedString)}, model.NoStopWords(true))
+	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
