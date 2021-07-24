@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.49.1
+
+- same as `v0.49.0`.
+
 ## v0.49.0
 
 - added language detection in order to improve handling of stop words.
