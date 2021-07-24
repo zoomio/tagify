@@ -35,3 +35,28 @@ func (r *Result) ForEach(fn func(i int, tag *model.Tag)) {
 func (r *Result) TagsStrings() []string {
 	return ToStrings(r.Tags)
 }
+
+// backwards compatibility
+type Config = config.Config
+type Option = config.Option
+type ContentType = config.ContentType
+
+var (
+	Source         = config.Source
+	Query          = config.Query
+	Content        = config.Content
+	TargetType     = config.TargetType
+	Limit          = config.Limit
+	Verbose        = config.Verbose
+	NoStopWords    = config.NoStopWords
+	ContentOnly    = config.ContentOnly
+	FullSite       = config.FullSite
+	TagWeights     = config.TagWeights
+	TagWeightsJSON = config.TagWeightsJSON
+	AdjustScores   = config.AdjustScores
+
+	Unknown  = config.Unknown
+	Text     = config.Text
+	HTML     = config.HTML
+	Markdown = config.Markdown
+)

@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/zoomio/inout"
-
-	"github.com/zoomio/tagify/config"
 )
 
 // in - Input. This struct provides methods for reading strings
@@ -15,7 +13,7 @@ import (
 type in struct {
 	source string
 	reader *inout.Reader
-	config.ContentType
+	ContentType
 }
 
 // newIn initializes an input stream from STDIN, file or web page.
@@ -36,16 +34,16 @@ func newIn(ctx context.Context, source, query string, verbose bool) (in, error) 
 	in.reader = &r
 
 	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") || query != "" {
-		in.ContentType = config.HTML
+		in.ContentType = HTML
 	} else if strings.ToLower(filepath.Ext(source)) == ".md" {
-		in.ContentType = config.Markdown
+		in.ContentType = Markdown
 	}
 
 	return in, err
 }
 
 // newInFromString ...
-func newInFromString(input string, contentType config.ContentType) in {
+func newInFromString(input string, contentType ContentType) in {
 	r := inout.NewFromString(input)
 	return in{
 		ContentType: contentType,

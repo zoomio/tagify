@@ -1,45 +1,46 @@
 package tagify
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/zoomio/tagify/config"
 )
+
+var ctx = context.TODO()
 
 // table driven tests
 var runTests = []struct {
 	name        string
-	in          []config.Option
+	in          []Option
 	expectTags  []string
 	expectTitle string
 	expectHash  string
 }{
 	{
 		"run",
-		[]config.Option{config.Source(fmt.Sprintf("http://localhost:%d", port)),
-			config.TargetType(config.HTML), config.Limit(5), config.NoStopWords(true), config.ContentOnly(true)},
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true), ContentOnly(true)},
 		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
 		"bdb03356c79b2b1d9c69f4528ee398bbafc4a572629b713dcf4992bd43fd650ecedb4355ddd08fe1da748ac2c4babff71e3c425724793f0d4e636037121e123e",
 	},
 	{
 		"run with query",
-		[]config.Option{config.Source(fmt.Sprintf("http://localhost:%d", port)),
-			config.TargetType(config.HTML), config.Limit(5), config.NoStopWords(true),
-			config.Query("#box3 p"), config.ContentOnly(true)},
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true),
+			Query("#box3 p"), ContentOnly(true)},
 		[]string{"bang", "began", "boy", "day", "eat"},
 		"",
 		"e5e0aef65e77e87a3e23a3f157357444910f94f5dccd5d0fe185da73cb72a8b7bff6ac80d71cfca1da27e9d1b7a3e810a348ceeee52c2e4b68393c8ba5d92cc4",
 	},
 	{
 		"run custom weights",
-		[]config.Option{config.Source(fmt.Sprintf("http://localhost:%d", port)),
-			config.TargetType(config.HTML), config.Limit(5), config.NoStopWords(true), config.TagWeights("title:3")},
+		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
+			TargetType(HTML), Limit(5), NoStopWords(true), TagWeights("title:3")},
 		[]string{"test"},
 		"Test",
 		"20c62640489dbc272c51abfd1fbe7b5aa7280f814fbfdb2baf993fb1e8b4c860fb1f1c6964760144e2ef15849ef073f47cb89284481d17845565395d7574e2e7",
@@ -52,7 +53,7 @@ func Test_Run_HTML(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := Run(ctx, tt.in...)
 			assert.Nil(t, err)
-			assert.Equal(t, config.HTML, res.Meta.ContentType)
+			assert.Equal(t, HTML, res.Meta.ContentType)
 			assert.Equal(t, tt.expectTitle, res.Meta.DocTitle)
 			assert.Equal(t, tt.expectHash, res.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expectTags, res.TagsStrings())
@@ -62,10 +63,10 @@ func Test_Run_HTML(t *testing.T) {
 
 func Test_GetTagsFromString(t *testing.T) {
 	res, err := Run(ctx,
-		config.Content("Test input reader of type text"),
-		config.TargetType(config.Text),
-		config.Limit(3),
-		config.NoStopWords(true),
+		Content("Test input reader of type text"),
+		TargetType(Text),
+		Limit(3),
+		NoStopWords(true),
 	)
 	assert.Nil(t, err)
 	assert.Len(t, res.Tags, 3)
@@ -76,9 +77,10 @@ func Test_GetTagsFromString(t *testing.T) {
 
 func Test_ToStrings(t *testing.T) {
 	res, err := Run(ctx,
-		config.Content("Test input reader of type text"),
-		config.TargetType(config.Text),
-		config.Limit(3), config.NoStopWords(true),
+		Content("Test input reader of type text"),
+		TargetType(Text),
+		Limit(3),
+		NoStopWords(true),
 	)
 	assert.Nil(t, err)
 
