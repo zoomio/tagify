@@ -115,7 +115,7 @@ const (
 	indexHTML = `<!doctype html>
 <html>
 <head>
-  <title>Test HTML input for Tagify</title>
+  <title>Test</title>
 </head>
 <body>
   <div id="box1">

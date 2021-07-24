@@ -15,10 +15,10 @@ const txt = "Some random text to test Tagify model"
 var ctx = context.TODO()
 
 func Test_ForEach(t *testing.T) {
-	res, err := Run(ctx, 
-		config.Content(txt), 
-		config.TargetType(config.Text), 
-		config.Limit(3), 
+	res, err := Run(ctx,
+		config.Content(txt),
+		config.TargetType(config.Text),
+		config.Limit(3),
 		config.NoStopWords(true),
 	)
 	assert.Nil(t, err)

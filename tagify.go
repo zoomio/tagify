@@ -33,7 +33,7 @@ func Run(ctx context.Context, options ...config.Option) (*Result, error) {
 		return nil, err
 	}
 
-	tags, title, hash := processInput(&in, c)
+	tags, title, hash := processInput(&in, *c)
 
 	return &Result{
 		Meta: &Meta{
