@@ -1,4 +1,4 @@
-package config
+package extension
 
 // Extension ...
 type Extension interface {

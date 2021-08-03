@@ -4,16 +4,17 @@ import (
 	"fmt"
 
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 )
 
 // HTMLExtension ...
 type HTMLExtension interface {
-	config.Extension
+	extension.Extension
 	Run(cfg *config.Config, line *HTMLLine) error
 }
 
 // HTMLExtensions ...
-func HTMLExtensions(exts []config.Extension) []HTMLExtension {
+func HTMLExtensions(exts []extension.Extension) []HTMLExtension {
 	res := []HTMLExtension{}
 	for _, v := range exts {
 		if e, ok := v.(HTMLExtension); ok {

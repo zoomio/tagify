@@ -2,6 +2,8 @@ package config
 
 import (
 	"github.com/zoomio/stopwords"
+
+	"github.com/zoomio/tagify/extension"
 )
 
 var (
@@ -35,7 +37,7 @@ type Config struct {
 	FullSite    bool
 	TagWeights
 	AdjustScores bool
-	Extensions   []Extension
+	Extensions   []extension.Extension
 }
 
 // SetStopWords ...
