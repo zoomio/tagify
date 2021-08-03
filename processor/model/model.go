@@ -92,18 +92,18 @@ func (po *ParseOutput) FlatTags() []*Tag {
 	return flatten(po.Tags)
 }
 
-type ParseConfig struct {
-	Verbose     bool
-	NoStopWords bool
-	ContentOnly bool
-	FullSite    bool
-	Source      string
-	TagWeights
-}
+// type ParseConfig struct {
+// 	Verbose     bool
+// 	NoStopWords bool
+// 	ContentOnly bool
+// 	FullSite    bool
+// 	Source      string
+// 	TagWeights
+// }
 
 // ParseFunc represents an arbitrary handler,
 // which goes through given reader and produces tags.
-type ParseFunc func(c *config.Config, reader io.ReadCloser, options ...ParseOption) *ParseOutput
+type ParseFunc func(c *config.Config, reader io.ReadCloser) *ParseOutput
 
 func flatten(dict map[string]*Tag) []*Tag {
 	flat := make([]*Tag, len(dict))

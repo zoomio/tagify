@@ -1,6 +1,8 @@
 package config
 
-import "github.com/zoomio/stopwords"
+import (
+	"github.com/zoomio/stopwords"
+)
 
 var (
 	allStopWords = map[string]stopwords.Option{
@@ -31,9 +33,10 @@ type Config struct {
 	StopWords      *stopwords.Register
 	ContentOnly    bool
 	FullSite       bool
-	TagWeights     string
+	TagWeightsStr  string
 	TagWeightsJSON string
 	AdjustScores   bool
+	Extensions     []Extension
 }
 
 // SetStopWords ...

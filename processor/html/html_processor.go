@@ -113,7 +113,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, opt
 	var parseFn parseFunc = parseHTML
 	var tagWeights model.TagWeights
 
-	if c.TagWeights == "" {
+	if c.TagWeightsStr == "" {
 		tagWeights = defaultTagWeights
 	} else {
 		tagWeights = pc.TagWeights
@@ -148,7 +148,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, opt
 }
 
 func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler) *htmlContents {
-	contents := &htmlContents{lines: make([]*htmlLine, 0), htmlTagWeights: htmlTagWeights}
+	contents := &htmlContents{lines: make([]*HTMLLine, 0), htmlTagWeights: htmlTagWeights}
 	parser := &htmlParser{}
 
 	var cur atom.Atom
@@ -309,19 +309,19 @@ func tagifyHTML(contents *htmlContents, c *config.Config,
 
 // htmlContents stores text from target tags.
 type htmlContents struct {
-	lines          []*htmlLine
+	lines          []*HTMLLine
 	htmlTagWeights model.TagWeights
 }
 
 func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
 	for len(cnt.lines) <= lineIndex {
-		cnt.lines = append(cnt.lines, &htmlLine{tag: tag, parts: make([]*htmlPart, 0)})
+		cnt.lines = append(cnt.lines, &HTMLLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
 	line := cnt.lines[lineIndex]
 	line.add(tag, data)
 }
 
-func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
+func (cnt *htmlContents) forEach(it func(i int, line *HTMLLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
 		if _, ok := cnt.htmlTagWeights[l.tag.String()]; !ok {
@@ -333,7 +333,7 @@ func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
 
 func (cnt *htmlContents) String() string {
 	var sb strings.Builder
-	cnt.forEach(func(i int, line *htmlLine) {
+	cnt.forEach(func(i int, line *HTMLLine) {
 		sb.WriteString(fmt.Sprintf("[%d] ", i))
 		sb.WriteString(line.String())
 		sb.WriteString("\n")
@@ -343,7 +343,7 @@ func (cnt *htmlContents) String() string {
 
 func (cnt *htmlContents) hash() []byte {
 	h := sha512.New()
-	cnt.forEach(func(i int, line *htmlLine) {
+	cnt.forEach(func(i int, line *HTMLLine) {
 		_, _ = h.Write([]byte(line.tag.String()))
 		_, _ = h.Write([]byte(":"))
 		line.forEach(func(i int, p *htmlPart) {
@@ -366,13 +366,13 @@ func (d *htmlPart) String() string {
 	return fmt.Sprintf("<%s>: pos - %d, len - %d", d.tag.String(), d.pos, d.len)
 }
 
-type htmlLine struct {
+type HTMLLine struct {
 	tag   atom.Atom
 	parts []*htmlPart
 	data  []byte
 }
 
-func (l *htmlLine) String() string {
+func (l *HTMLLine) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("<%s> - %d parts: [ ", l.tag.String(), len(l.parts)))
 	l.forEach(func(i int, p *htmlPart) {
@@ -387,28 +387,28 @@ func (l *htmlLine) String() string {
 	return sb.String()
 }
 
-func (l *htmlLine) forEach(it func(i int, p *htmlPart)) {
+func (l *HTMLLine) forEach(it func(i int, p *htmlPart)) {
 	for i, p := range l.parts {
 		it(i, p)
 	}
 }
 
-func (l *htmlLine) add(tag atom.Atom, data []byte) {
+func (l *HTMLLine) add(tag atom.Atom, data []byte) {
 	l.parts = append(l.parts, &htmlPart{tag: tag, pos: len(l.data), len: len(data)})
 	l.data = append(l.data, data...)
 }
 
-func (l *htmlLine) pData(part *htmlPart) []byte {
+func (l *HTMLLine) pData(part *htmlPart) []byte {
 	return l.data[part.pos : part.pos+part.len]
 }
 
 // breaksdown an HTML line into a slice of HTML sentences.
-func (l *htmlLine) sentences() []*htmlLine {
-	ret := []*htmlLine{}
+func (l *HTMLLine) sentences() []*HTMLLine {
+	ret := []*HTMLLine{}
 	var offset, diff, pDiff, i, j int
 	sents := util.SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
-		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
+		s := &HTMLLine{tag: l.tag, parts: []*htmlPart{}}
 		ret = append(ret, s)
 
 		sent := sents[j]

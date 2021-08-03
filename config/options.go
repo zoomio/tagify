@@ -68,9 +68,9 @@ var (
 	}
 
 	// TagWeights string with the custom tag weights for the HTML & Markdown tagging.
-	TagWeights = func(v string) Option {
+	TagWeightsStr = func(v string) Option {
 		return func(c *Config) {
-			c.TagWeights = v
+			c.TagWeightsStr = v
 		}
 	}
 

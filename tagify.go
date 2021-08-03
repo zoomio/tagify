@@ -54,8 +54,8 @@ func processInput(in *in, c Config) (tags []*model.Tag, pageTitle string, hash [
 	var out *model.ParseOutput
 
 	opts := []model.ParseOption{}
-	if c.TagWeights != "" {
-		opts = append(opts, model.TagWeightsString(c.TagWeights))
+	if c.TagWeightsStr != "" {
+		opts = append(opts, model.TagWeightsString(c.TagWeightsStr))
 	} else if c.TagWeightsJSON != "" {
 		opts = append(opts, model.TagWeightsJSON(c.TagWeightsJSON))
 	}

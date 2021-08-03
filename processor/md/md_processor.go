@@ -125,7 +125,7 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser, options .
 
 	var tagWeights model.TagWeights
 
-	if c.TagWeights == "" {
+	if c.TagWeightsStr == "" {
 		tagWeights = defaultTagWeights
 	} else {
 		tagWeights = pc.TagWeights
