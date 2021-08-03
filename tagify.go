@@ -53,20 +53,13 @@ func ToStrings(items []*model.Tag) []string {
 func processInput(in *in, c Config) (tags []*model.Tag, pageTitle string, hash []byte) {
 	var out *model.ParseOutput
 
-	opts := []model.ParseOption{}
-	if c.TagWeightsStr != "" {
-		opts = append(opts, model.TagWeightsString(c.TagWeightsStr))
-	} else if c.TagWeightsJSON != "" {
-		opts = append(opts, model.TagWeightsJSON(c.TagWeightsJSON))
-	}
-
 	switch in.ContentType {
 	case HTML:
-		out = html.ParseHTML(&c, in, opts...)
+		out = html.ParseHTML(&c, in)
 	case Markdown:
-		out = md.ParseMD(&c, in, opts...)
+		out = md.ParseMD(&c, in)
 	default:
-		out = text.ParseText(&c, in, opts...)
+		out = text.ParseText(&c, in)
 	}
 
 	pageTitle = out.DocTitle

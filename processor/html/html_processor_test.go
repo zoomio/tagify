@@ -342,7 +342,11 @@ func Test_parseHTML(t *testing.T) {
 	</body>
 	</html>
 `
-	contents := parseHTML(&inputReadCloser{strings.NewReader(htmlPage)}, defaultTagWeights, nil)
+	contents := parseHTML(
+		&inputReadCloser{strings.NewReader(htmlPage)},
+		&config.Config{TagWeights: defaultTagWeights},
+		nil,
+	)
 	assert.NotNil(t, contents)
 
 	assert.Len(t, contents.lines, 1)

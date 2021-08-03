@@ -56,7 +56,7 @@ var (
 	}
 
 	// default weights for MD tags
-	defaultTagWeights = model.TagWeights{
+	defaultTagWeights = config.TagWeights{
 		"heading1":      2,
 		"heading2":      1.5,
 		"heading3":      1.4,
@@ -102,14 +102,7 @@ func (t mdType) String() string {
 }
 
 // ParseMD parses given Markdown document input into a slice of tags.
-var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
-
-	pc := &model.ParseConfig{}
-
-	// apply custom configuration
-	for _, option := range options {
-		option(pc)
-	}
+var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.ParseOutput {
 
 	if c.Verbose {
 		fmt.Println("--> parsing Markdown...")
@@ -123,15 +116,11 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser, options .
 		fmt.Printf("%s\n", contents)
 	}
 
-	var tagWeights model.TagWeights
-
-	if c.TagWeightsStr == "" {
-		tagWeights = defaultTagWeights
-	} else {
-		tagWeights = pc.TagWeights
+	if c.TagWeights == nil {
+		c.TagWeights = defaultTagWeights
 	}
 
-	tags, title, lang := tagifyMD(contents, c, tagWeights)
+	tags, title, lang := tagifyMD(contents, c)
 
 	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
 }
@@ -206,8 +195,7 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, c *config.Config,
-	mdWeights model.TagWeights) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyMD(contents *mdContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = make(map[string]*model.Tag)
 	var docsCount int
 	var reg *stopwords.Register
@@ -248,7 +236,7 @@ func tagifyMD(contents *mdContents, c *config.Config,
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *mdPart) {
-				weight := mdWeights[p.tag.String()]
+				weight := c.TagWeights[p.tag.String()]
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 				if c.Verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)

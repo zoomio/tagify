@@ -40,7 +40,7 @@ var runTests = []struct {
 	{
 		"run custom weights",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
-			TargetType(HTML), Limit(5), NoStopWords(true), TagWeights("title:3")},
+			TargetType(HTML), Limit(5), NoStopWords(true), TagWeightsString("title:3")},
 		[]string{"test"},
 		"Test",
 		"20c62640489dbc272c51abfd1fbe7b5aa7280f814fbfdb2baf993fb1e8b4c860fb1f1c6964760144e2ef15849ef073f47cb89284481d17845565395d7574e2e7",

@@ -26,17 +26,16 @@ type Config struct {
 	Query   string
 	Content string
 	ContentType
-	Limit          int
-	Verbose        bool
-	NoStopWords    bool
-	Lang           string
-	StopWords      *stopwords.Register
-	ContentOnly    bool
-	FullSite       bool
-	TagWeightsStr  string
-	TagWeightsJSON string
-	AdjustScores   bool
-	Extensions     []Extension
+	Limit       int
+	Verbose     bool
+	NoStopWords bool
+	Lang        string
+	StopWords   *stopwords.Register
+	ContentOnly bool
+	FullSite    bool
+	TagWeights
+	AdjustScores bool
+	Extensions   []Extension
 }
 
 // SetStopWords ...

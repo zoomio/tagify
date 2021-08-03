@@ -16,14 +16,7 @@ import (
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
-
-	/* pc := &model.ParseConfig{}
-
-	// apply custom configuration
-	for _, option := range options {
-		option(pc)
-	} */
+var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.ParseOutput {
 
 	if c.Verbose {
 		fmt.Println("parsing plain text...")

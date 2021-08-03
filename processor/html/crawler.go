@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/zoomio/inout"
-	"github.com/zoomio/tagify/processor/model"
+
+	"github.com/zoomio/tagify/config"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 	crwlBadThresholdInterval = 1500
 )
 
-type parseFunc func(io.Reader, model.TagWeights, *webCrawler) *htmlContents
+type parseFunc func(io.Reader, *config.Config, *webCrawler) *htmlContents
 
 type parseOut struct {
 	cnt *htmlContents
@@ -34,7 +35,7 @@ type crwlStats struct {
 }
 
 type webCrawler struct {
-	tagWeights model.TagWeights
+	cfg *config.Config
 	parseFunc
 	dataCh  chan *parseOut
 	stopCh  chan struct{}
@@ -46,7 +47,7 @@ type webCrawler struct {
 	verbose bool
 }
 
-func newWebCrawler(parse parseFunc, tagWeights model.TagWeights, source string, verbose bool) (*webCrawler, error) {
+func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, error) {
 	u, err := url.Parse(source)
 	if err != nil {
 		return nil, err
@@ -56,16 +57,15 @@ func newWebCrawler(parse parseFunc, tagWeights model.TagWeights, source string, 
 	var docs sync.Map
 	var av atomic.Value
 	return &webCrawler{
-		tagWeights: tagWeights,
-		parseFunc:  parse,
-		dataCh:     make(chan *parseOut, 5),
-		stopCh:     make(chan struct{}),
-		stats:      &av,
-		wg:         &wg,
-		links:      &links,
-		docs:       &docs,
-		domain:     toDomain(u),
-		verbose:    verbose,
+		parseFunc: parse,
+		dataCh:    make(chan *parseOut, 5),
+		stopCh:    make(chan struct{}),
+		stats:     &av,
+		wg:        &wg,
+		links:     &links,
+		docs:      &docs,
+		domain:    toDomain(u),
+		verbose:   verbose,
 	}, nil
 }
 
@@ -84,7 +84,7 @@ func (c *webCrawler) run(r io.Reader) *htmlContents {
 		start: time.Now(),
 	})
 
-	result := c.parseFunc(r, c.tagWeights, c)
+	result := c.parseFunc(r, c.cfg, c)
 
 	// waiter
 	go func(stopCh chan struct{}, wg *sync.WaitGroup) {
@@ -172,7 +172,7 @@ func (c *webCrawler) schedule(href string) {
 		return
 	}
 
-	cnt := c.parseFunc(&r, c.tagWeights, c)
+	cnt := c.parseFunc(&r, c.cfg, c)
 	h := fmt.Sprintf("%x", cnt.hash())
 
 	// skip visited docs

@@ -81,7 +81,7 @@ func main() {
 		options = append(options, config.FullSite(*fullSite))
 	}
 	if *tagWeights != "" {
-		options = append(options, config.TagWeights(*tagWeights))
+		options = append(options, config.TagWeightsString(*tagWeights))
 	} else if *tagWeightsJSON != "" {
 		options = append(options, config.TagWeightsJSON(*tagWeightsJSON))
 	}
