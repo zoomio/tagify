@@ -223,6 +223,8 @@ func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string
 	var docsCount int
 	var reg *stopwords.Register
 
+	exts := HTMLExtensions(c.Extensions)
+
 	for _, l := range contents.lines {
 		s := string(l.data)
 
@@ -286,6 +288,9 @@ func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string
 				tokenIndex[token].Docs++
 			}
 		}
+
+		// allow for extension input
+		RunExtensions(c, l, exts)
 	}
 
 	// set total number of documents in the text.

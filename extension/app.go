@@ -17,7 +17,6 @@ const (
 	install_path_prefix = "$HOME/bin/tagify_"
 
 	flagVersion = "-version"
-	flagSteps   = "-steps"
 )
 
 // App represents the executable for the extension.

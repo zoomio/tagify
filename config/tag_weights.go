@@ -42,7 +42,7 @@ func ParseTagWeights(reader io.Reader, readerType TagWeightsType) TagWeights {
 		}
 	case JSON:
 		if err := json.NewDecoder(reader).Decode(&weights); err != nil {
-			println(fmt.Errorf("error: can't read JSON: %w\n", err))
+			println(fmt.Errorf("error: can't read JSON: %w", err))
 		}
 	default:
 		fmt.Printf("error: unknown readerType\n")
