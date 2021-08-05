@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/zoomio/tagify"
-	"github.com/zoomio/tagify/config"
 )
 
 var (
@@ -21,7 +20,7 @@ var (
 	query          = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
 	limit          = flag.Int("l", 5, "number of tags to return")
 	verbose        = flag.Bool("v", false, "enables verbose mode")
-	contentType    = flag.String("t", config.Unknown.String(), "type of content type in the source (Text or HTML)")
+	contentType    = flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
 	noStopWords    = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
 	tagWeights     = flag.String("tag-weights", "", "string with the custom tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
 	tagWeightsJSON = flag.String("tag-weights-json", "", "JSON file with the custom tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
@@ -58,35 +57,35 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	options := []config.Option{
-		config.TargetType(config.ContentTypeOf(*contentType)),
-		config.Limit(*limit),
+	options := []tagify.Option{
+		tagify.TargetType(tagify.ContentTypeOf(*contentType)),
+		tagify.Limit(*limit),
 	}
 	if *source != "" {
-		options = append(options, config.Source(*source))
+		options = append(options, tagify.Source(*source))
 	}
 	if *query != "" {
-		options = append(options, config.Query(*query))
+		options = append(options, tagify.Query(*query))
 	}
 	if *verbose {
-		options = append(options, config.Verbose(*verbose))
+		options = append(options, tagify.Verbose(*verbose))
 	}
 	if *noStopWords {
-		options = append(options, config.NoStopWords(*noStopWords))
+		options = append(options, tagify.NoStopWords(*noStopWords))
 	}
 	if *contentOnly {
-		options = append(options, config.ContentOnly(*contentOnly))
+		options = append(options, tagify.ContentOnly(*contentOnly))
 	}
 	if *fullSite {
-		options = append(options, config.FullSite(*fullSite))
+		options = append(options, tagify.FullSite(*fullSite))
 	}
 	if *tagWeights != "" {
-		options = append(options, config.TagWeightsString(*tagWeights))
+		options = append(options, tagify.TagWeightsString(*tagWeights))
 	} else if *tagWeightsJSON != "" {
-		options = append(options, config.TagWeightsJSON(*tagWeightsJSON))
+		options = append(options, tagify.TagWeightsJSON(*tagWeightsJSON))
 	}
 	if *adjustScores {
-		options = append(options, config.AdjustScores(*adjustScores))
+		options = append(options, tagify.AdjustScores(*adjustScores))
 	}
 
 	// print progress updates to terminal
