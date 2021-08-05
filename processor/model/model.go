@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 )
 
 // InputReader ...
@@ -34,11 +35,12 @@ func (t *Tag) String() string {
 
 // ParseOutput is a result of the `ParseFunc`.
 type ParseOutput struct {
-	Tags     map[string]*Tag
-	DocTitle string
-	DocHash  []byte
-	Lang     string
-	Err      error
+	Tags       map[string]*Tag
+	DocTitle   string
+	DocHash    []byte
+	Lang       string
+	Err        error
+	Extensions []*extension.Result
 }
 
 // FlatTags transforms internal token register into a slice.

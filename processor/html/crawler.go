@@ -20,7 +20,7 @@ const (
 	crwlBadThresholdInterval = 1500
 )
 
-type parseFunc func(io.Reader, *config.Config, *webCrawler) *htmlContents
+type parseFunc func(io.Reader, *config.Config, []HTMLExtension, *webCrawler) *htmlContents
 
 type parseOut struct {
 	cnt *htmlContents
@@ -45,9 +45,10 @@ type webCrawler struct {
 	docs    *sync.Map
 	domain  string
 	verbose bool
+	exts    []HTMLExtension
 }
 
-func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, error) {
+func newWebCrawler(parse parseFunc, exts []HTMLExtension, source string, verbose bool) (*webCrawler, error) {
 	u, err := url.Parse(source)
 	if err != nil {
 		return nil, err
@@ -66,6 +67,7 @@ func newWebCrawler(parse parseFunc, source string, verbose bool) (*webCrawler, e
 		docs:      &docs,
 		domain:    toDomain(u),
 		verbose:   verbose,
+		exts:      exts,
 	}, nil
 }
 
@@ -84,7 +86,7 @@ func (c *webCrawler) run(r io.Reader) *htmlContents {
 		start: time.Now(),
 	})
 
-	result := c.parseFunc(r, c.cfg, c)
+	result := c.parseFunc(r, c.cfg, c.exts, c)
 
 	// waiter
 	go func(stopCh chan struct{}, wg *sync.WaitGroup) {
@@ -172,7 +174,7 @@ func (c *webCrawler) schedule(href string) {
 		return
 	}
 
-	cnt := c.parseFunc(&r, c.cfg, c)
+	cnt := c.parseFunc(&r, c.cfg, c.exts, c)
 	h := fmt.Sprintf("%x", cnt.hash())
 
 	// skip visited docs

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/zoomio/tagify/extension"
 )
 
 // Option allows to customise configuration.
@@ -98,6 +100,13 @@ var (
 	AdjustScores = func(v bool) Option {
 		return func(c *Config) {
 			c.AdjustScores = v
+		}
+	}
+
+	Extensions = func(v []extension.Extension) Option {
+		return func(c *Config) {
+			c.Extensions = make([]extension.Extension, len(v))
+			copy(c.Extensions, v)
 		}
 	}
 )

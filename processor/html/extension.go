@@ -3,6 +3,8 @@ package html
 import (
 	"fmt"
 
+	"golang.org/x/net/html"
+
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/extension"
 )
@@ -10,11 +12,13 @@ import (
 // HTMLExtension ...
 type HTMLExtension interface {
 	extension.Extension
-	Run(cfg *config.Config, line *HTMLLine) error
+	ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error
+	ParseText(cfg *config.Config, token *html.Token, lineIdx int) error
+	Tagify(cfg *config.Config, line *HTMLLine) error
 }
 
 // HTMLExtensions ...
-func HTMLExtensions(exts []extension.Extension) []HTMLExtension {
+func extHTML(exts []extension.Extension) []HTMLExtension {
 	res := []HTMLExtension{}
 	for _, v := range exts {
 		if e, ok := v.(HTMLExtension); ok {
@@ -24,14 +28,38 @@ func HTMLExtensions(exts []extension.Extension) []HTMLExtension {
 	return res
 }
 
-func RunExtensions(cfg *config.Config, line *HTMLLine, exts []HTMLExtension) {
+func extParseTag(cfg *config.Config, exts []HTMLExtension, token *html.Token, lineIdx int) {
 	for _, v := range exts {
 		if cfg.Verbose {
-			fmt.Printf("running %q %s\n", v.Name(), v.Version())
+			fmt.Printf("parsing HTML tag %q %s\n", v.Name(), v.Version())
 		}
-		err := v.Run(cfg, line)
+		err := v.ParseTag(cfg, token, lineIdx)
 		if err != nil {
-			fmt.Printf("error in running %q %s: %v\n", v.Name(), v.Version(), err)
+			fmt.Printf("error in parsing HTML tag %q %s: %v\n", v.Name(), v.Version(), err)
+		}
+	}
+}
+
+func extParseText(cfg *config.Config, exts []HTMLExtension, token *html.Token, lineIdx int) {
+	for _, v := range exts {
+		if cfg.Verbose {
+			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
+		}
+		err := v.ParseText(cfg, token, lineIdx)
+		if err != nil {
+			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
+		}
+	}
+}
+
+func extTagify(cfg *config.Config, exts []HTMLExtension, line *HTMLLine) {
+	for _, v := range exts {
+		if cfg.Verbose {
+			fmt.Printf("tagifying %q %s\n", v.Name(), v.Version())
+		}
+		err := v.Tagify(cfg, line)
+		if err != nil {
+			fmt.Printf("error in tagifying %q %s: %v\n", v.Name(), v.Version(), err)
 		}
 	}
 }

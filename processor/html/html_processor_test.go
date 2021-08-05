@@ -346,6 +346,7 @@ func Test_parseHTML(t *testing.T) {
 		&inputReadCloser{strings.NewReader(htmlPage)},
 		&config.Config{TagWeights: defaultTagWeights},
 		nil,
+		nil,
 	)
 	assert.NotNil(t, contents)
 

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/html/atom"
 
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 	"github.com/zoomio/tagify/processor/model"
 	"github.com/zoomio/tagify/processor/util"
 )
@@ -105,19 +106,21 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	var contents *htmlContents
 	var parseFn parseFunc = parseHTML
 
+	exts := extHTML(c.Extensions)
+
 	if c.TagWeights == nil {
 		c.TagWeights = defaultTagWeights
 	}
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler
-		crawler, err = newWebCrawler(parseFn, c.Source, c.Verbose)
+		crawler, err = newWebCrawler(parseFn, exts, c.Source, c.Verbose)
 		if err != nil {
 			return &model.ParseOutput{Err: err}
 		}
 		contents = crawler.run(reader)
 	} else {
-		contents = parseFn(reader, c, nil)
+		contents = parseFn(reader, c, exts, nil)
 	}
 
 	if c.Verbose {
@@ -132,12 +135,18 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 		return &model.ParseOutput{}
 	}
 
-	tags, title, lang := tagifyHTML(contents, c)
+	tags, title, lang := tagifyHTML(contents, c, exts)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
+	return &model.ParseOutput{
+		Tags:       tags,
+		DocTitle:   title,
+		DocHash:    contents.hash(),
+		Lang:       lang,
+		Extensions: extension.GetResults(c.Extensions),
+	}
 }
 
-func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContents {
+func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExtension, c *webCrawler) *htmlContents {
 	contents := &htmlContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
@@ -146,11 +155,18 @@ func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContent
 	for {
 		tt := z.Next()
 
-		switch {
-		case tt == html.ErrorToken:
+		switch tt {
+		case html.ErrorToken:
 			// end of the document, we're done
 			return contents
-		case tt == html.StartTagToken:
+		case html.SelfClosingTagToken:
+			// e.g. <img ... />
+			token := z.Token()
+			cur = token.DataAtom
+			if _, ok := cfg.TagWeights[cur.String()]; ok {
+				extParseTag(cfg, exts, &token, parser.lineIndex)
+			}
+		case html.StartTagToken:
 			token := z.Token()
 			cur = token.DataAtom
 			if _, ok := cfg.TagWeights[cur.String()]; ok {
@@ -178,6 +194,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContent
 					parser.pop()
 				}
 
+				extParseTag(cfg, exts, &token, parser.lineIndex)
+
 				// go follow links in case if web crawler is ON.
 				if c != nil && cur == atom.A {
 					for _, a := range token.Attr {
@@ -188,7 +206,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContent
 					}
 				}
 			}
-		case tt == html.EndTagToken:
+		case html.EndTagToken:
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.DataAtom.String()]; ok {
 				parser.pop()
@@ -197,10 +215,12 @@ func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContent
 					parser.lineIndex++
 				}
 			}
-		case tt == html.TextToken:
+		case html.TextToken:
 			_, ok := cfg.TagWeights[cur.String()]
 			if parser.isNotEmpty() && ok {
 				token := z.Token()
+
+				extParseText(cfg, exts, &token, parser.lineIndex)
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
@@ -218,12 +238,11 @@ func parseHTML(reader io.Reader, cfg *config.Config, c *webCrawler) *htmlContent
 	}
 }
 
-func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyHTML(contents *htmlContents, cfg *config.Config,
+	exts []HTMLExtension) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
 	var reg *stopwords.Register
-
-	exts := HTMLExtensions(c.Extensions)
 
 	for _, l := range contents.lines {
 		s := string(l.data)
@@ -233,30 +252,30 @@ func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings
-			if c.Verbose {
+			if cfg.Verbose {
 				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
 			}
 			continue
 		}
 
 		// detect language and setup stop words for it
-		if c.StopWords == nil && s != "" {
+		if cfg.StopWords == nil && s != "" {
 			info := whatlanggo.Detect(s)
 			lang = info.Lang.String()
-			c.SetStopWords(info.Lang.Iso6391())
-			if c.Verbose {
+			cfg.SetStopWords(info.Lang.Iso6391())
+			if cfg.Verbose {
 				fmt.Printf("detected language: %s [%s] [%s]\n ",
 					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
 			}
-			if c.NoStopWords {
-				reg = c.StopWords
+			if cfg.NoStopWords {
+				reg = cfg.StopWords
 			}
 		}
 
 		sentences := l.sentences()
 		for _, snt := range sentences {
 			// skip random non-text related tags
-			if c.ContentOnly && !isHTMLContent(snt.tag) {
+			if cfg.ContentOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
 
@@ -268,7 +287,7 @@ func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *htmlPart) {
-				weight := c.TagWeights[p.tag.String()]
+				weight := cfg.TagWeights[p.tag.String()]
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 
 				for _, token := range tokens {
@@ -289,8 +308,8 @@ func tagifyHTML(contents *htmlContents, c *config.Config) (tokenIndex map[string
 			}
 		}
 
-		// allow for extension input
-		RunExtensions(c, l, exts)
+		// run extensions if any
+		extTagify(cfg, exts, l)
 	}
 
 	// set total number of documents in the text.
