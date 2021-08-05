@@ -54,6 +54,7 @@ var (
 	TagWeightsString = config.TagWeightsString
 	TagWeightsJSON   = config.TagWeightsJSON
 	AdjustScores     = config.AdjustScores
+	Extensions       = config.Extensions
 
 	Unknown  = config.Unknown
 	Text     = config.Text
