@@ -146,7 +146,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 }
 
-func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExtension, c *webCrawler) *htmlContents {
+func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *htmlContents {
 	contents := &htmlContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
@@ -239,7 +239,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExtension, c *we
 }
 
 func tagifyHTML(contents *htmlContents, cfg *config.Config,
-	exts []HTMLExtension) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
 	var reg *stopwords.Register

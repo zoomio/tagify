@@ -1,7 +1,6 @@
 package html
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -72,7 +71,6 @@ func (ext *TestImgCrawlerExt) Result() *extension.Result {
 }
 
 func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error {
-	fmt.Printf("parsing %q\n", token.DataAtom.String())
 	if token.DataAtom.String() == "img" {
 		for _, v := range token.Attr {
 			if v.Key == "src" {
@@ -80,13 +78,5 @@ func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, li
 			}
 		}
 	}
-	return nil
-}
-
-func (ext *TestImgCrawlerExt) ParseText(cfg *config.Config, token *html.Token, lineIdx int) error {
-	return nil
-}
-
-func (ext *TestImgCrawlerExt) Tagify(cfg *config.Config, line *HTMLLine) error {
 	return nil
 }

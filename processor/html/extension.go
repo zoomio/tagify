@@ -9,55 +9,79 @@ import (
 	"github.com/zoomio/tagify/extension"
 )
 
-// HTMLExtension ...
-type HTMLExtension interface {
+// HTMLExt ...
+type HTMLExt interface {
 	extension.Extension
+}
+
+type HTMLExtParseTag interface {
+	HTMLExt
 	ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error
+}
+
+type HTMLExtParseText interface {
+	HTMLExt
 	ParseText(cfg *config.Config, token *html.Token, lineIdx int) error
+}
+
+type HTMLExtTagify interface {
+	HTMLExt
 	Tagify(cfg *config.Config, line *HTMLLine) error
 }
 
 // HTMLExtensions ...
-func extHTML(exts []extension.Extension) []HTMLExtension {
-	res := []HTMLExtension{}
+func extHTML(exts []extension.Extension) []HTMLExt {
+	res := []HTMLExt{}
 	for _, v := range exts {
-		if e, ok := v.(HTMLExtension); ok {
+		if e, ok := v.(HTMLExt); ok {
 			res = append(res, e)
 		}
 	}
 	return res
 }
 
-func extParseTag(cfg *config.Config, exts []HTMLExtension, token *html.Token, lineIdx int) {
+func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int) {
 	for _, v := range exts {
+		e, ok := v.(HTMLExtParseTag)
+		if !ok {
+			continue
+		}
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML tag %q %s\n", v.Name(), v.Version())
 		}
-		err := v.ParseTag(cfg, token, lineIdx)
+		err := e.ParseTag(cfg, token, lineIdx)
 		if err != nil {
 			fmt.Printf("error in parsing HTML tag %q %s: %v\n", v.Name(), v.Version(), err)
 		}
 	}
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExtension, token *html.Token, lineIdx int) {
+func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int) {
 	for _, v := range exts {
+		e, ok := v.(HTMLExtParseText)
+		if !ok {
+			continue
+		}
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
 		}
-		err := v.ParseText(cfg, token, lineIdx)
+		err := e.ParseText(cfg, token, lineIdx)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
 		}
 	}
 }
 
-func extTagify(cfg *config.Config, exts []HTMLExtension, line *HTMLLine) {
+func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine) {
 	for _, v := range exts {
+		e, ok := v.(HTMLExtTagify)
+		if !ok {
+			continue
+		}
 		if cfg.Verbose {
 			fmt.Printf("tagifying %q %s\n", v.Name(), v.Version())
 		}
-		err := v.Tagify(cfg, line)
+		err := e.Tagify(cfg, line)
 		if err != nil {
 			fmt.Printf("error in tagifying %q %s: %v\n", v.Name(), v.Version(), err)
 		}

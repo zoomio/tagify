@@ -20,7 +20,7 @@ const (
 	crwlBadThresholdInterval = 1500
 )
 
-type parseFunc func(io.Reader, *config.Config, []HTMLExtension, *webCrawler) *htmlContents
+type parseFunc func(io.Reader, *config.Config, []HTMLExt, *webCrawler) *htmlContents
 
 type parseOut struct {
 	cnt *htmlContents
@@ -45,10 +45,10 @@ type webCrawler struct {
 	docs    *sync.Map
 	domain  string
 	verbose bool
-	exts    []HTMLExtension
+	exts    []HTMLExt
 }
 
-func newWebCrawler(parse parseFunc, exts []HTMLExtension, source string, verbose bool) (*webCrawler, error) {
+func newWebCrawler(parse parseFunc, exts []HTMLExt, source string, verbose bool) (*webCrawler, error) {
 	u, err := url.Parse(source)
 	if err != nil {
 		return nil, err
