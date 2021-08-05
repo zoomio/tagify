@@ -15,6 +15,16 @@ type Result struct {
 	Data    map[string]interface{} `json:"data,omitempty"`
 }
 
+// NewResult ...
+func NewResult(ext Extension, data map[string]interface{}, err error) *Result {
+	return &Result{
+		Name:    ext.Name(),
+		Version: ext.Version(),
+		Err:     err,
+		Data:    data,
+	}
+}
+
 // GetResults ...
 func GetResults(exts []Extension) []*Result {
 	res := make([]*Result, len(exts))

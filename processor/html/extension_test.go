@@ -61,13 +61,7 @@ func (ext *TestImgCrawlerExt) Version() string {
 }
 
 func (ext *TestImgCrawlerExt) Result() *extension.Result {
-	return &extension.Result{
-		Name:    ext.Name(),
-		Version: ext.Version(),
-		Data: map[string]interface{}{
-			"images": ext.images,
-		},
-	}
+	return extension.NewResult(ext, map[string]interface{}{"images": ext.images}, nil)
 }
 
 func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error {
