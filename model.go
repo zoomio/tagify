@@ -2,13 +2,15 @@ package tagify
 
 import (
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 	"github.com/zoomio/tagify/processor/model"
 )
 
 // Result represents result of Tagify.
 type Result struct {
-	Meta *Meta
-	Tags []*model.Tag
+	Meta       *Meta
+	Tags       []*model.Tag
+	Extensions []*extension.Result
 }
 
 // Meta extra information.
@@ -16,6 +18,7 @@ type Meta struct {
 	ContentType ContentType
 	DocTitle    string
 	DocHash     string
+	Lang        string
 }
 
 // Len returns count of tags in the result.

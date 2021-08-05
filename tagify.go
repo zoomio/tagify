@@ -33,15 +33,28 @@ func Run(ctx context.Context, options ...Option) (*Result, error) {
 		return nil, err
 	}
 
-	tags, title, hash := processInput(&in, *c)
+	out := processInput(&in, c)
+
+	tags := []*model.Tag{}
+	if len(out.Tags) > 0 {
+		if c.Verbose {
+			fmt.Println("tagifying...")
+		}
+		tags = processor.Run(c, out.FlatTags())
+		if c.Verbose {
+			fmt.Printf("\n%v\n", tags)
+		}
+	}
 
 	return &Result{
 		Meta: &Meta{
 			ContentType: in.ContentType,
-			DocTitle:    title,
-			DocHash:     fmt.Sprintf("%x", hash),
+			DocTitle:    out.DocTitle,
+			DocHash:     fmt.Sprintf("%x", out.DocHash),
+			Lang:        out.Lang,
 		},
-		Tags: tags,
+		Tags:       tags,
+		Extensions: out.Extensions,
 	}, nil
 }
 
@@ -50,30 +63,13 @@ func ToStrings(items []*model.Tag) []string {
 	return model.ToStrings(items)
 }
 
-func processInput(in *in, c Config) (tags []*model.Tag, pageTitle string, hash []byte) {
-	var out *model.ParseOutput
-
+func processInput(in *in, c *Config) *model.ParseOutput {
 	switch in.ContentType {
 	case HTML:
-		out = html.ParseHTML(&c, in)
+		return html.ParseHTML(c, in)
 	case Markdown:
-		out = md.ParseMD(&c, in)
+		return md.ParseMD(c, in)
 	default:
-		out = text.ParseText(&c, in)
+		return text.ParseText(c, in)
 	}
-
-	pageTitle = out.DocTitle
-	hash = out.DocHash
-
-	if len(out.Tags) > 0 {
-		if c.Verbose {
-			fmt.Println("tagifying...")
-		}
-		tags = processor.Run(&c, out.FlatTags())
-		if c.Verbose {
-			fmt.Printf("\n%v\n", tags)
-		}
-	}
-
-	return
 }
