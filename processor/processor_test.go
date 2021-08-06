@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 func Test_Run_Limits(t *testing.T) {

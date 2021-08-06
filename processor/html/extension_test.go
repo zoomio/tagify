@@ -24,7 +24,6 @@ const (
 
 func Test_Parse_img(t *testing.T) {
 	cfg := config.New(
-		config.Verbose(true),
 		config.TagWeightsString("h2:1|img:0"),
 		config.Extensions([]extension.Extension{newTestImgCrawlerExt()}),
 	)

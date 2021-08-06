@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 // SortTagItems sorts items by score in descending order,

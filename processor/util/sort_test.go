@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 func Test_SortTagItems_byScore(t *testing.T) {

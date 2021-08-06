@@ -14,7 +14,7 @@ import (
 
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/extension"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 
@@ -94,7 +94,7 @@ func isSameDomain(href, domain string) bool {
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *model.ParseOutput {
+var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
 
@@ -116,7 +116,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 		var crawler *webCrawler
 		crawler, err = newWebCrawler(parseFn, exts, c.Source, c.Verbose)
 		if err != nil {
-			return &model.ParseOutput{Err: err}
+			return model.ErrResult(err)
 		}
 		contents = crawler.run(reader)
 	} else {
@@ -128,20 +128,23 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 
 	if err != nil {
-		return &model.ParseOutput{Err: err}
+		return &model.Result{Err: err}
 	}
 
 	if len(contents.lines) == 0 {
-		return &model.ParseOutput{}
+		return model.EmptyResult()
 	}
 
 	tags, title, lang := tagifyHTML(contents, c, exts)
 
-	return &model.ParseOutput{
-		Tags:       tags,
-		DocTitle:   title,
-		DocHash:    contents.hash(),
-		Lang:       lang,
+	return &model.Result{
+		Meta: &model.Meta{
+			ContentType: config.HTML,
+			DocTitle:    title,
+			DocHash:     fmt.Sprintf("%x", contents.hash()),
+			Lang:        lang,
+		},
+		RawTags:    tags,
 		Extensions: extension.MapResults(c.Extensions),
 	}
 }

@@ -1,7 +1,6 @@
 package md
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -9,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 const (
@@ -86,8 +85,8 @@ func Test_ParseMD(t *testing.T) {
 	for _, tt := range parseMDTests {
 		t.Run(tt.name, func(t *testing.T) {
 			out := ParseMD(config.New(config.NoStopWords(tt.noStopWords)), &inputReadCloser{strings.NewReader(tt.text)})
-			assert.Equal(t, tt.title, out.DocTitle)
-			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
+			assert.Equal(t, tt.title, out.Meta.DocTitle)
+			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.FlatTags()))
 		})
 	}

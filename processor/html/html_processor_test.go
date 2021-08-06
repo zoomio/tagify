@@ -1,7 +1,6 @@
 package html
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -10,7 +9,7 @@ import (
 	"golang.org/x/net/html/atom"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 const (
@@ -309,8 +308,8 @@ func Test_ParseHTML(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
 			out := ParseHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
-			assert.Equal(t, tt.title, out.DocTitle)
-			assert.Equal(t, tt.hash, fmt.Sprintf("%x", out.DocHash))
+			assert.Equal(t, tt.title, out.Meta.DocTitle)
+			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.FlatTags()))
 		})
 	}
@@ -318,19 +317,19 @@ func Test_ParseHTML(t *testing.T) {
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
-	assert.Equal(t, "A story about a boy", out.DocTitle)
+	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
-		fmt.Sprintf("%x", out.DocHash))
+		out.Meta.DocHash)
 	assert.Contains(t, out.FlatTags(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
-	assert.Equal(t, "A story about a boy", out.DocTitle)
+	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
-		fmt.Sprintf("%x", out.DocHash))
+		out.Meta.DocHash)
 	assert.NotContains(t, out.FlatTags(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
 }
 

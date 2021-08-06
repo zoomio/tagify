@@ -33,43 +33,76 @@ func (t *Tag) String() string {
 		t.Value, t.Score, t.Count, t.Docs, t.DocsCount)
 }
 
-// ParseOutput is a result of the `ParseFunc`.
-type ParseOutput struct {
-	Tags       map[string]*Tag
-	DocTitle   string
-	DocHash    []byte
-	Lang       string
-	Err        error
+func EmptyResult() *Result {
+	return &Result{Meta: &Meta{}}
+}
+
+func ErrResult(err error) *Result {
+	return &Result{Meta: &Meta{}, Err: err}
+}
+
+// Result represents result of Tagify.
+type Result struct {
+	Meta       *Meta
+	RawTags    map[string]*Tag
+	Tags       []*Tag
 	Extensions map[string]map[string]*extension.Result
+	Err        error
 }
 
 // FlatTags transforms internal token register into a slice.
-func (po *ParseOutput) FlatTags() []*Tag {
-	return flatten(po.Tags)
+func (res *Result) FlatTags() []*Tag {
+	return flatten(res.RawTags)
 }
 
 // FindExtResults finds requested extension result(s), in case if version is empty.
-func (c *ParseOutput) FindExtResults(name, version string) []*extension.Result {
-	vs, ok := c.Extensions[name]
+func (res *Result) FindExtResults(name, version string) []*extension.Result {
+	vs, ok := res.Extensions[name]
 	if !ok {
 		return nil
 	}
-	res := []*extension.Result{}
+	list := []*extension.Result{}
 	if version != "" {
 		if v, ok := vs[version]; ok {
-			res = append(res, v)
+			list = append(list, v)
 		}
-		return res
+		return list
 	}
 	for _, v := range vs {
-		res = append(res, v)
+		list = append(list, v)
 	}
-	return res
+	return list
+}
+
+// Meta extra information.
+type Meta struct {
+	ContentType config.ContentType
+	DocTitle    string
+	DocHash     string
+	Lang        string
+}
+
+// Len returns count of tags in the result.
+func (r *Result) Len() int {
+	return len(r.Tags)
+}
+
+// ForEach iterates through the slice of Tags
+// and calls provided "fn" on every iteration.
+func (r *Result) ForEach(fn func(i int, tag *Tag)) {
+	for k, v := range r.Tags {
+		fn(k, v)
+	}
+}
+
+// TagsStrings transforms slice of tags into a slice of strings.
+func (r *Result) TagsStrings() []string {
+	return ToStrings(r.Tags)
 }
 
 // ParseFunc represents an arbitrary handler,
 // which goes through given reader and produces tags.
-type ParseFunc func(c *config.Config, reader io.ReadCloser) *ParseOutput
+type ParseFunc func(c *config.Config, reader io.ReadCloser) *Result
 
 func flatten(dict map[string]*Tag) []*Tag {
 	flat := make([]*Tag, len(dict))

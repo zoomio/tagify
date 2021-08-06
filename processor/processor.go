@@ -6,7 +6,7 @@ import (
 	"github.com/jinzhu/inflection"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 

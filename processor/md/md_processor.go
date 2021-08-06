@@ -13,7 +13,7 @@ import (
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 
@@ -102,7 +102,7 @@ func (t mdType) String() string {
 }
 
 // ParseMD parses given Markdown document input into a slice of tags.
-var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.ParseOutput {
+var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
 
 	if c.Verbose {
 		fmt.Println("--> parsing Markdown...")
@@ -122,7 +122,15 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Pa
 
 	tags, title, lang := tagifyMD(contents, c)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
+	return &model.Result{
+		RawTags: tags,
+		Meta: &model.Meta{
+			ContentType: config.Markdown,
+			DocTitle:    title,
+			DocHash:     fmt.Sprintf("%x", contents.hash()),
+			Lang:        lang,
+		},
+	}
 }
 
 func parseMD(reader io.Reader) *mdContents {
