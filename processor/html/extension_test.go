@@ -30,10 +30,9 @@ func Test_Parse_img(t *testing.T) {
 	)
 	out := ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
 	assert.Len(t, out.Extensions, 1)
-	res := out.Extensions[0]
-	assert.Nil(t, res.Err)
-	assert.Equal(t, "test-img-crawler", res.Name)
-	assert.Equal(t, "v0.0.1", res.Version)
+	versions := out.FindExtResults("test-img-crawler", "v0.0.1") //Extensions["test-img-crawler"]
+	assert.Len(t, versions, 1)
+	res := versions[0]
 	images, ok := res.Data["images"]
 	assert.True(t, ok)
 	srcs, ok := images.([]string)

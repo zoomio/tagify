@@ -40,12 +40,31 @@ type ParseOutput struct {
 	DocHash    []byte
 	Lang       string
 	Err        error
-	Extensions []*extension.Result
+	Extensions map[string]map[string]*extension.Result
 }
 
 // FlatTags transforms internal token register into a slice.
 func (po *ParseOutput) FlatTags() []*Tag {
 	return flatten(po.Tags)
+}
+
+// FindExtResults finds requested extension result(s), in case if version is empty.
+func (c *ParseOutput) FindExtResults(name, version string) []*extension.Result {
+	vs, ok := c.Extensions[name]
+	if !ok {
+		return nil
+	}
+	res := []*extension.Result{}
+	if version != "" {
+		if v, ok := vs[version]; ok {
+			res = append(res, v)
+		}
+		return res
+	}
+	for _, v := range vs {
+		res = append(res, v)
+	}
+	return res
 }
 
 // ParseFunc represents an arbitrary handler,

@@ -25,11 +25,16 @@ func NewResult(ext Extension, data map[string]interface{}, err error) *Result {
 	}
 }
 
-// GetResults ...
-func GetResults(exts []Extension) []*Result {
-	res := make([]*Result, len(exts))
-	for k, v := range exts {
-		res[k] = v.Result()
+// MapResults ...
+func MapResults(exts []Extension) map[string]map[string]*Result {
+	res := map[string]map[string]*Result{}
+	for _, v := range exts {
+		e, ok := res[v.Name()]
+		if !ok {
+			e = map[string]*Result{}
+			res[v.Name()] = e
+		}
+		e[v.Version()] = v.Result()
 	}
 	return res
 }

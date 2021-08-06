@@ -22,6 +22,18 @@ var (
 	}
 )
 
+// New ...
+func New(options ...Option) *Config {
+	c := &Config{}
+
+	// apply custom configuration
+	for _, option := range options {
+		option(c)
+	}
+
+	return c
+}
+
 // Config ...
 type Config struct {
 	Source  string
@@ -48,16 +60,4 @@ func (c *Config) SetStopWords(lang string) {
 	} else {
 		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWords))
 	}
-}
-
-// New ...
-func New(options ...Option) *Config {
-	c := &Config{}
-
-	// apply custom configuration
-	for _, option := range options {
-		option(c)
-	}
-
-	return c
 }

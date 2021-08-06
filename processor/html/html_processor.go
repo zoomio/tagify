@@ -142,7 +142,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 		DocTitle:   title,
 		DocHash:    contents.hash(),
 		Lang:       lang,
-		Extensions: extension.GetResults(c.Extensions),
+		Extensions: extension.MapResults(c.Extensions),
 	}
 }
 
