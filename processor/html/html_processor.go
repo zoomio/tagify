@@ -226,19 +226,18 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			if _, ok := cfg.TagWeights[cur]; ok && parser.isNotEmpty() {
 				token := z.Token()
 
-				extParseText(cfg, exts, &token, parser.lineIndex)
-
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
 					continue
 				}
 
-				// Take ony <title> from <head> and ignore the rest in the body
+				// Take only <title> from <head> and ignore the rest in the body
 				if cur == atom.Title.String() && parser.parent() != "" {
 					continue
 				}
 
 				contents.append(parser.lineIndex, cur, []byte(token.Data))
+				extParseText(cfg, exts, &token, parser.lineIndex)
 			}
 		}
 	}
@@ -340,6 +339,13 @@ func (cnt *htmlContents) append(lineIndex int, tag string, data []byte) {
 	line.add(tag, data)
 }
 
+func (cnt *htmlContents) appendWeight(lineIndex int, tag string, data []byte, weight float64) {
+	cnt.append(lineIndex, tag, data)
+	line := cnt.lines[lineIndex]
+	line.weightOverride = true
+	line.weight = weight
+}
+
 func (cnt *htmlContents) forEach(it func(i int, line *HTMLLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
@@ -386,9 +392,11 @@ func (d *htmlPart) String() string {
 }
 
 type HTMLLine struct {
-	tag   string
-	parts []*htmlPart
-	data  []byte
+	tag            string
+	parts          []*htmlPart
+	data           []byte
+	weightOverride bool
+	weight         float64
 }
 
 func (l *HTMLLine) String() string {
