@@ -20,10 +20,10 @@ const (
 	crwlBadThresholdInterval = 1500
 )
 
-type parseFunc func(io.Reader, *config.Config, []HTMLExt, *webCrawler) *htmlContents
+type parseFunc func(io.Reader, *config.Config, []HTMLExt, *webCrawler) *HTMLContents
 
 type parseOut struct {
-	cnt *htmlContents
+	cnt *HTMLContents
 	err error
 }
 
@@ -79,7 +79,7 @@ func (c *webCrawler) setStats(sts *crwlStats) {
 	c.stats.Store(sts)
 }
 
-func (c *webCrawler) run(r io.Reader) *htmlContents {
+func (c *webCrawler) run(r io.Reader) *HTMLContents {
 	defer close(c.dataCh)
 
 	c.setStats(&crwlStats{

@@ -103,7 +103,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 
 	var err error
-	var contents *htmlContents
+	var contents *HTMLContents
 	var parseFn parseFunc = parseHTML
 
 	exts := extHTML(c.Extensions)
@@ -154,8 +154,8 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 }
 
-func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *htmlContents {
-	contents := &htmlContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
+func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
+	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
 	var cur string
@@ -178,8 +178,6 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			cur = token.Data
 			if _, ok := cfg.TagWeights[cur]; ok {
 				parser.push(cur)
-
-				extParseTag(cfg, exts, &token, parser.lineIndex)
 
 				// handle <meta name="description" content="..." />
 				if cur == atom.Meta.String() {
@@ -212,6 +210,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 						}
 					}
 				}
+
+				extParseTag(cfg, exts, &token, parser.lineIndex)
 			}
 		case html.EndTagToken:
 			token := z.Token()
@@ -243,7 +243,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 	}
 }
 
-func tagifyHTML(contents *htmlContents, cfg *config.Config,
+func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
@@ -292,7 +292,12 @@ func tagifyHTML(contents *htmlContents, cfg *config.Config,
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *htmlPart) {
-				weight := cfg.TagWeights[p.tag]
+				var weight float64
+				if l.weightOverride {
+					weight = l.weight
+				} else {
+					weight = cfg.TagWeights[p.tag]
+				}
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 
 				for _, token := range tokens {
@@ -325,13 +330,13 @@ func tagifyHTML(contents *htmlContents, cfg *config.Config,
 	return
 }
 
-// htmlContents stores text from target tags.
-type htmlContents struct {
+// HTMLContents stores text from target tags.
+type HTMLContents struct {
 	lines          []*HTMLLine
 	htmlTagWeights config.TagWeights
 }
 
-func (cnt *htmlContents) append(lineIndex int, tag string, data []byte) {
+func (cnt *HTMLContents) append(lineIndex int, tag string, data []byte) {
 	for len(cnt.lines) <= lineIndex {
 		cnt.lines = append(cnt.lines, &HTMLLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
@@ -339,14 +344,17 @@ func (cnt *htmlContents) append(lineIndex int, tag string, data []byte) {
 	line.add(tag, data)
 }
 
-func (cnt *htmlContents) appendWeight(lineIndex int, tag string, data []byte, weight float64) {
-	cnt.append(lineIndex, tag, data)
+func (cnt *HTMLContents) AppendWeight(lineIndex int, weight float64) {
+	if lineIndex >= len(cnt.lines) {
+		// silently ignore for now ...
+		return
+	}
 	line := cnt.lines[lineIndex]
 	line.weightOverride = true
 	line.weight = weight
 }
 
-func (cnt *htmlContents) forEach(it func(i int, line *HTMLLine)) {
+func (cnt *HTMLContents) forEach(it func(i int, line *HTMLLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
 		if _, ok := cnt.htmlTagWeights[l.tag]; !ok {
@@ -356,7 +364,7 @@ func (cnt *htmlContents) forEach(it func(i int, line *HTMLLine)) {
 	}
 }
 
-func (cnt *htmlContents) String() string {
+func (cnt *HTMLContents) String() string {
 	var sb strings.Builder
 	cnt.forEach(func(i int, line *HTMLLine) {
 		sb.WriteString(fmt.Sprintf("[%d] ", i))
@@ -366,7 +374,7 @@ func (cnt *htmlContents) String() string {
 	return sb.String()
 }
 
-func (cnt *htmlContents) hash() []byte {
+func (cnt *HTMLContents) hash() []byte {
 	h := sha512.New()
 	cnt.forEach(func(i int, line *HTMLLine) {
 		_, _ = h.Write([]byte(line.tag))
