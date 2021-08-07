@@ -170,8 +170,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.SelfClosingTagToken:
 			// e.g. <img ... />
 			token := z.Token()
-			cur = token.Data
-			if _, ok := cfg.TagWeights[cur]; ok {
+			if _, ok := cfg.TagWeights[token.Data]; ok {
 				extParseTag(cfg, exts, &token, parser.lineIndex)
 			}
 		case html.StartTagToken:
@@ -179,6 +178,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			cur = token.Data
 			if _, ok := cfg.TagWeights[cur]; ok {
 				parser.push(cur)
+
+				extParseTag(cfg, exts, &token, parser.lineIndex)
 
 				// handle <meta name="description" content="..." />
 				if cur == atom.Meta.String() {
@@ -202,8 +203,6 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					parser.pop()
 				}
 
-				extParseTag(cfg, exts, &token, parser.lineIndex)
-
 				// go follow links in case if web crawler is ON.
 				if c != nil && cur == atom.A.String() {
 					for _, a := range token.Attr {
@@ -224,8 +223,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 			}
 		case html.TextToken:
-			_, ok := cfg.TagWeights[cur]
-			if parser.isNotEmpty() && ok {
+			if _, ok := cfg.TagWeights[cur]; ok && parser.isNotEmpty() {
 				token := z.Token()
 
 				extParseText(cfg, exts, &token, parser.lineIndex)
