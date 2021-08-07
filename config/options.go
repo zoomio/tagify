@@ -97,6 +97,27 @@ var (
 		}
 	}
 
+	// ExtraTagWeightsString ...
+	ExtraTagWeightsString = func(v string) Option {
+		return func(c *Config) {
+			c.ExtraTagWeights = ParseTagWeights(strings.NewReader(v), String)
+		}
+	}
+
+	// TagWeightsJSON ...
+	ExtraTagWeightsJSON = func(v string) Option {
+		return func(c *Config) {
+			f, err := os.Open(v)
+			if err != nil {
+				println(fmt.Errorf("error: can't open JSON file [%s]: %w", v, err))
+				return
+			}
+			r := bufio.NewReader(f)
+			c.ExtraTagWeights = ParseTagWeights(r, JSON)
+			f.Close()
+		}
+	}
+
 	AdjustScores = func(v bool) Option {
 		return func(c *Config) {
 			c.AdjustScores = v

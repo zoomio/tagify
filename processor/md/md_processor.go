@@ -119,6 +119,11 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Re
 	if c.TagWeights == nil {
 		c.TagWeights = defaultTagWeights
 	}
+	if c.ExtraTagWeights != nil {
+		for k, v := range c.ExtraTagWeights {
+			c.TagWeights[k] = v
+		}
+	}
 
 	tags, title, lang := tagifyMD(contents, c)
 

@@ -111,6 +111,11 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	if c.TagWeights == nil {
 		c.TagWeights = defaultTagWeights
 	}
+	if c.ExtraTagWeights != nil {
+		for k, v := range c.ExtraTagWeights {
+			c.TagWeights[k] = v
+		}
+	}
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler

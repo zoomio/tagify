@@ -10,19 +10,21 @@ type Option = config.Option
 type ContentType = config.ContentType
 
 var (
-	Source           = config.Source
-	Query            = config.Query
-	Content          = config.Content
-	TargetType       = config.TargetType
-	Limit            = config.Limit
-	Verbose          = config.Verbose
-	NoStopWords      = config.NoStopWords
-	ContentOnly      = config.ContentOnly
-	FullSite         = config.FullSite
-	TagWeightsString = config.TagWeightsString
-	TagWeightsJSON   = config.TagWeightsJSON
-	AdjustScores     = config.AdjustScores
-	Extensions       = config.Extensions
+	Source                = config.Source
+	Query                 = config.Query
+	Content               = config.Content
+	TargetType            = config.TargetType
+	Limit                 = config.Limit
+	Verbose               = config.Verbose
+	NoStopWords           = config.NoStopWords
+	ContentOnly           = config.ContentOnly
+	FullSite              = config.FullSite
+	TagWeightsString      = config.TagWeightsString
+	TagWeightsJSON        = config.TagWeightsJSON
+	ExtraTagWeightsString = config.ExtraTagWeightsString
+	ExtraTagWeightsJSON   = config.ExtraTagWeightsJSON
+	AdjustScores          = config.AdjustScores
+	Extensions            = config.Extensions
 
 	Unknown  = config.Unknown
 	Text     = config.Text

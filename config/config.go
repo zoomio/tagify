@@ -48,8 +48,9 @@ type Config struct {
 	ContentOnly bool
 	FullSite    bool
 	TagWeights
-	AdjustScores bool
-	Extensions   []extension.Extension
+	ExtraTagWeights TagWeights
+	AdjustScores    bool
+	Extensions      []extension.Extension
 }
 
 // SetStopWords ...
