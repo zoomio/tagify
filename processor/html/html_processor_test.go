@@ -354,13 +354,13 @@ func Test_parseHTML(t *testing.T) {
 	line := contents.lines[0]
 	assert.Len(t, line.parts, 3)
 
-	assert.Equal(t, atom.P, line.parts[0].tag)
+	assert.Equal(t, atom.P.String(), line.parts[0].tag)
 	assert.Equal(t, "There was a boy ", string(line.pData(line.parts[0])))
 
-	assert.Equal(t, atom.B, line.parts[1].tag)
+	assert.Equal(t, atom.B.String(), line.parts[1].tag)
 	assert.Equal(t, "whose", string(line.pData(line.parts[1])))
 
-	assert.Equal(t, atom.P, line.parts[2].tag)
+	assert.Equal(t, atom.P.String(), line.parts[2].tag)
 	assert.Equal(t, " name was Jim.", string(line.pData(line.parts[2])))
 }
 

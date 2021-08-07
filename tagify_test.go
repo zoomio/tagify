@@ -8,6 +8,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/html"
+
+	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 )
 
 var ctx = context.TODO()
@@ -26,7 +30,7 @@ var runTests = []struct {
 			TargetType(HTML), Limit(5), NoStopWords(true), ContentOnly(true)},
 		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
-		"bdb03356c79b2b1d9c69f4528ee398bbafc4a572629b713dcf4992bd43fd650ecedb4355ddd08fe1da748ac2c4babff71e3c425724793f0d4e636037121e123e",
+		"d91b531c92a14fe5556b9bf3e82ef6dac0da69914affca86795181d2ca9ca3046630a41eba734b146eec0c5e78c5780734dfb42bcef453cf1d9d20830b562dac",
 	},
 	{
 		"run with query",
@@ -88,6 +92,20 @@ func Test_ToStrings(t *testing.T) {
 	assert.Len(t, strs, 3)
 }
 
+func Test_CustomHTML(t *testing.T) {
+	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
+	ext := &customHTML{}
+	res, err := Run(ctx,
+		Source(fmt.Sprintf("http://localhost:%d", port)),
+		TargetType(HTML),
+		ExtraTagWeightsString("foo-stuff:0|bar-stuff:0"),
+		Extensions([]extension.Extension{ext}),
+	)
+	assert.Nil(t, err)
+	assert.Len(t, res.Extensions, 1)
+	assert.Equal(t, "Zoom IO is here", ext.text)
+}
+
 // startServer is a simple HTTP server that displays the passed headers in the html.
 func startServer(addr string) *http.Server {
 	mux := http.NewServeMux()
@@ -144,6 +162,11 @@ const (
 	<p class="line">And hungrily began to eat</p>
 	<p class="line">The Boy: beginning at his feet.</p>
   </div>
+  <foo-stuff>
+  	<bar-stuff>
+	  <a href="https://www.zoomio.org">Zoom IO is here</a>
+	</bar-stuff>
+  </foo-stuff>
   <script>
   	setTimeout(function() {
 		document.querySelector('#box3').style.display = '';
@@ -152,3 +175,40 @@ const (
 </body>
 </html>`
 )
+
+type customHTML struct {
+	text     string
+	inParent bool
+	inA      bool
+}
+
+func (ext *customHTML) Name() string {
+	return "custom-html"
+}
+
+func (ext *customHTML) Version() string {
+	return "v0.0.1"
+}
+
+func (ext *customHTML) Result() *extension.Result {
+	return extension.NewResult(ext, map[string]interface{}{"text": ext.text}, nil)
+}
+
+func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error {
+	if token.Data == "bar-stuff" {
+		ext.inParent = true
+	}
+	if ext.inParent && token.Data == "a" {
+		ext.inA = true
+		ext.inParent = false
+	}
+	return nil
+}
+
+func (ext *customHTML) ParseText(cfg *config.Config, token *html.Token, lineIdx int) error {
+	if ext.inA {
+		ext.text = token.Data
+		ext.inA = false
+	}
+	return nil
+}
