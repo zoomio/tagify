@@ -13,6 +13,7 @@ import (
 
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/extension"
+	"github.com/zoomio/tagify/model"
 	thtml "github.com/zoomio/tagify/processor/html"
 )
 
@@ -100,16 +101,24 @@ func Test_CustomHTML(t *testing.T) {
 	defer stopServer(startServer(fmt.Sprintf(":%d", port), string(ytPage)))
 	res, err := Run(ctx,
 		Source(fmt.Sprintf("http://localhost:%d", port)),
+		Limit(2),
 		TargetType(HTML),
 		NoStopWords(true),
-		ExtraTagWeightsString("link:2"),
+		ExtraTagWeightsString("link:0"),
 		Extensions([]extension.Extension{ext}),
 	)
 	assert.Nil(t, err)
 	assert.Len(t, res.Extensions, 1)
 	assert.Equal(t, "Next Level Reynolds - YouTube", res.Meta.DocTitle)
 	assert.Equal(t, "Ryan Reynolds", ext.text)
-	assert.Contains(t, res.TagsStrings(), []string{"ryan", "reynolds"})
+
+	var found int
+	res.ForEach(func(i int, tag *model.Tag) {
+		if tag.Value == "ryan" || tag.Value == "reynolds" {
+			found++
+		}
+	})
+	assert.Equal(t, 2, found)
 }
 
 // startServer is a simple HTTP server that displays the passed headers in the html.

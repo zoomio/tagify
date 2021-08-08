@@ -79,11 +79,13 @@ func Run(c *config.Config, items []*model.Tag) []*model.Tag {
 	util.SortTagItems(uniqueTags)
 
 	// take only requested size (limit) or just everything if result is smaller than limit
-	result := uniqueTags[:int(math.Min(float64(c.Limit), float64(len(uniqueTags))))]
+	resLen := int(math.Min(float64(c.Limit), float64(len(uniqueTags))))
+	result := make([]*model.Tag, resLen)
+	copy(result, uniqueTags[:resLen])
 
 	// adjust scores to the interval of 0.0 to 1.0
 	if c.AdjustScores {
-		maxScore := uniqueTags[0].Score
+		maxScore := result[0].Score
 		for _, t := range result {
 			t.Score = t.Score / maxScore
 		}
