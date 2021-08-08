@@ -13,6 +13,7 @@ import (
 
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/extension"
+	thtml "github.com/zoomio/tagify/processor/html"
 )
 
 var ctx = context.TODO()
@@ -108,6 +109,7 @@ func Test_CustomHTML(t *testing.T) {
 	assert.Len(t, res.Extensions, 1)
 	assert.Equal(t, "Next Level Reynolds - YouTube", res.Meta.DocTitle)
 	assert.Equal(t, "Ryan Reynolds", ext.text)
+	assert.Contains(t, res.TagsStrings(), []string{"ryan", "reynolds"})
 }
 
 // startServer is a simple HTTP server that displays the passed headers in the html.
@@ -196,8 +198,9 @@ func (ext *customHTML) Result() *extension.Result {
 	return extension.NewResult(ext, map[string]interface{}{"text": ext.text}, nil)
 }
 
-func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error {
-	if ext.text == "" && token.Data == "link" {
+func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *thtml.HTMLContents) error {
+	tag := token.Data
+	if ext.text == "" && tag == "link" {
 		var itemprop, content string
 		for _, v := range token.Attr {
 			if v.Key == "itemprop" {
@@ -208,7 +211,15 @@ func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx i
 			}
 		}
 		if itemprop == "name" && content != "" {
+			// collect YouTube channel name
 			ext.text = content
+			// make it count as a tag too
+			// 1st check if line is there and append it if it is not
+			if lineIdx >= cnts.Len() {
+				cnts.Append(lineIdx, tag, []byte(content))
+			}
+			// 2nd weight the line higher to bust its tags
+			cnts.Weigh(lineIdx, 6)
 		}
 	}
 	return nil

@@ -171,18 +171,20 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			// e.g. <img ... />
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
-				extParseTag(cfg, exts, &token, parser.lineIndex)
+				extParseTag(cfg, exts, &token, parser.lineIndex, contents)
 			}
 		case html.StartTagToken:
 			token := z.Token()
 			cur = token.Data
 			if _, ok := cfg.TagWeights[cur]; ok {
 
+				// handle <link ...> which neither self-closing nor has closing tag
 				if cur != "link" {
 					parser.push(cur)
 				}
 
 				// handle <meta name="description" content="..." />
+				var appended bool
 				if cur == atom.Meta.String() {
 					var name, content string
 					for _, a := range token.Attr {
@@ -197,8 +199,9 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 						}
 					}
 					if name == "description" {
-						contents.append(parser.lineIndex, cur, []byte(content))
+						contents.Append(parser.lineIndex, cur, []byte(content))
 						parser.lineIndex++
+						appended = true
 					}
 					parser.pop()
 				}
@@ -213,7 +216,11 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				extParseTag(cfg, exts, &token, parser.lineIndex)
+				if appended {
+					extParseTag(cfg, exts, &token, parser.lineIndex-1, contents)
+				} else {
+					extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+				}
 			}
 		case html.EndTagToken:
 			token := z.Token()
@@ -233,13 +240,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					continue
 				}
 
-				// Take only <title> from <head> and ignore the rest in the body
+				// Take only <title> from <head> and ignore the rest <title> tags in the body
 				if cur == atom.Title.String() && parser.parent() != "" {
 					continue
 				}
 
-				contents.append(parser.lineIndex, cur, []byte(token.Data))
-				extParseText(cfg, exts, &token, parser.lineIndex)
+				contents.Append(parser.lineIndex, cur, []byte(token.Data))
+				extParseText(cfg, exts, &token, parser.lineIndex, contents)
 			}
 		}
 	}
@@ -338,7 +345,11 @@ type HTMLContents struct {
 	htmlTagWeights config.TagWeights
 }
 
-func (cnt *HTMLContents) append(lineIndex int, tag string, data []byte) {
+func (cnt *HTMLContents) Len() int {
+	return len(cnt.lines)
+}
+
+func (cnt *HTMLContents) Append(lineIndex int, tag string, data []byte) {
 	for len(cnt.lines) <= lineIndex {
 		cnt.lines = append(cnt.lines, &HTMLLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
@@ -346,9 +357,9 @@ func (cnt *HTMLContents) append(lineIndex int, tag string, data []byte) {
 	line.add(tag, data)
 }
 
-func (cnt *HTMLContents) AppendWeight(lineIndex int, weight float64) {
+func (cnt *HTMLContents) Weigh(lineIndex int, weight float64) {
 	if lineIndex >= len(cnt.lines) {
-		// silently ignore for now ...
+		// silently ignore for now...
 		return
 	}
 	line := cnt.lines[lineIndex]

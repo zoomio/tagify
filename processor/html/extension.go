@@ -16,12 +16,12 @@ type HTMLExt interface {
 
 type HTMLExtParseTag interface {
 	HTMLExt
-	ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error
+	ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) error
 }
 
 type HTMLExtParseText interface {
 	HTMLExt
-	ParseText(cfg *config.Config, token *html.Token, lineIdx int) error
+	ParseText(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) error
 }
 
 type HTMLExtTagify interface {
@@ -40,7 +40,7 @@ func extHTML(exts []extension.Extension) []HTMLExt {
 	return res
 }
 
-func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int) {
+func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseTag)
 		if !ok {
@@ -49,14 +49,14 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML tag %q %s\n", v.Name(), v.Version())
 		}
-		err := e.ParseTag(cfg, token, lineIdx)
+		err := e.ParseTag(cfg, token, lineIdx, cnts)
 		if err != nil {
 			fmt.Printf("error in parsing HTML tag %q %s: %v\n", v.Name(), v.Version(), err)
 		}
 	}
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int) {
+func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseText)
 		if !ok {
@@ -65,7 +65,7 @@ func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
 		}
-		err := e.ParseText(cfg, token, lineIdx)
+		err := e.ParseText(cfg, token, lineIdx, cnts)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
 		}
