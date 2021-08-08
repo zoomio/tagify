@@ -177,7 +177,10 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			token := z.Token()
 			cur = token.Data
 			if _, ok := cfg.TagWeights[cur]; ok {
-				parser.push(cur)
+
+				if cur != "link" {
+					parser.push(cur)
+				}
 
 				// handle <meta name="description" content="..." />
 				if cur == atom.Meta.String() {
@@ -197,7 +200,6 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 						contents.append(parser.lineIndex, cur, []byte(content))
 						parser.lineIndex++
 					}
-
 					parser.pop()
 				}
 
@@ -223,8 +225,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 			}
 		case html.TextToken:
+			token := z.Token()
 			if _, ok := cfg.TagWeights[cur]; ok && parser.isNotEmpty() {
-				token := z.Token()
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {

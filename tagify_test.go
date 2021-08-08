@@ -3,6 +3,7 @@ package tagify
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
@@ -52,7 +53,7 @@ var runTests = []struct {
 }
 
 func Test_Run_HTML(t *testing.T) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
+	defer stopServer(startServer(fmt.Sprintf(":%d", port), indexHTML))
 	for _, tt := range runTests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := Run(ctx, tt.in...)
@@ -93,25 +94,28 @@ func Test_ToStrings(t *testing.T) {
 }
 
 func Test_CustomHTML(t *testing.T) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
+	ytPage, _ := ioutil.ReadFile("yt_page.html")
 	ext := &customHTML{}
+	defer stopServer(startServer(fmt.Sprintf(":%d", port), string(ytPage)))
 	res, err := Run(ctx,
 		Source(fmt.Sprintf("http://localhost:%d", port)),
 		TargetType(HTML),
-		ExtraTagWeightsString("foo-stuff:0|bar-stuff:0"),
+		NoStopWords(true),
+		ExtraTagWeightsString("link:2"),
 		Extensions([]extension.Extension{ext}),
 	)
 	assert.Nil(t, err)
 	assert.Len(t, res.Extensions, 1)
-	assert.Equal(t, "Zoom IO is here", ext.text)
+	assert.Equal(t, "Next Level Reynolds - YouTube", res.Meta.DocTitle)
+	assert.Equal(t, "Ryan Reynolds", ext.text)
 }
 
 // startServer is a simple HTTP server that displays the passed headers in the html.
-func startServer(addr string) *http.Server {
+func startServer(addr string, pageHTML string) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(res http.ResponseWriter, _ *http.Request) {
 		res.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(res, indexHTML)
+		fmt.Fprint(res, pageHTML)
 	})
 	srv := &http.Server{Addr: addr, Handler: mux}
 	go func() {
@@ -177,9 +181,7 @@ const (
 )
 
 type customHTML struct {
-	text     string
-	inParent bool
-	inA      bool
+	text string
 }
 
 func (ext *customHTML) Name() string {
@@ -195,20 +197,19 @@ func (ext *customHTML) Result() *extension.Result {
 }
 
 func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int) error {
-	if token.Data == "bar-stuff" {
-		ext.inParent = true
-	}
-	if ext.inParent && token.Data == "a" {
-		ext.inA = true
-		ext.inParent = false
-	}
-	return nil
-}
-
-func (ext *customHTML) ParseText(cfg *config.Config, token *html.Token, lineIdx int) error {
-	if ext.inA {
-		ext.text = token.Data
-		ext.inA = false
+	if ext.text == "" && token.Data == "link" {
+		var itemprop, content string
+		for _, v := range token.Attr {
+			if v.Key == "itemprop" {
+				itemprop = v.Val
+			}
+			if v.Key == "content" {
+				content = v.Val
+			}
+		}
+		if itemprop == "name" && content != "" {
+			ext.text = content
+		}
 	}
 	return nil
 }
