@@ -21,7 +21,7 @@ type HTMLExtParseTag interface {
 
 type HTMLExtParseText interface {
 	HTMLExt
-	ParseText(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) error
+	ParseText(cfg *config.Config, tagName, text string, lineIdx int, cnts *HTMLContents) error
 }
 
 type HTMLExtTagify interface {
@@ -56,7 +56,7 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 	}
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) {
+func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int, cnts *HTMLContents) {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseText)
 		if !ok {
@@ -65,7 +65,7 @@ func extParseText(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
 		}
-		err := e.ParseText(cfg, token, lineIdx, cnts)
+		err := e.ParseText(cfg, tagName, text, lineIdx, cnts)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
 		}
