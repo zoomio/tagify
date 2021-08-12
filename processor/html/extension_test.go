@@ -62,7 +62,7 @@ func (ext *TestImgCrawlerExt) Result() *extension.Result {
 	return extension.NewResult(ext, map[string]interface{}{"images": ext.images}, nil)
 }
 
-func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) error {
+func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
 	if token.DataAtom.String() == "img" {
 		for _, v := range token.Attr {
 			if v.Key == "src" {
@@ -70,5 +70,5 @@ func (ext *TestImgCrawlerExt) ParseTag(cfg *config.Config, token *html.Token, li
 			}
 		}
 	}
-	return nil
+	return false, nil
 }

@@ -207,8 +207,9 @@ func (ext *customHTML) Result() *extension.Result {
 	return extension.NewResult(ext, map[string]interface{}{"text": ext.text}, nil)
 }
 
-func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *thtml.HTMLContents) error {
+func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *thtml.HTMLContents) (bool, error) {
 	tag := token.Data
+	var appended bool
 	if ext.text == "" && tag == "link" {
 		var itemprop, content string
 		for _, v := range token.Attr {
@@ -226,10 +227,11 @@ func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx i
 			// 1st check if line is there and append it if it is not
 			if lineIdx >= cnts.Len() {
 				cnts.Append(lineIdx, tag, []byte(content))
+				appended = true
 			}
-			// 2nd weight the line higher to bust its tags
+			// 2nd weight the line higher to boost its tags
 			cnts.Weigh(lineIdx, 6)
 		}
 	}
-	return nil
+	return appended, nil
 }

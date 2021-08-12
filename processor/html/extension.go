@@ -16,12 +16,16 @@ type HTMLExt interface {
 
 type HTMLExtParseTag interface {
 	HTMLExt
-	ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) error
+
+	// ParseTag returns true in case if the contnets have been appended and false otherwise.
+	ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error)
 }
 
 type HTMLExtParseText interface {
 	HTMLExt
-	ParseText(cfg *config.Config, tagName, text string, lineIdx int, cnts *HTMLContents) error
+
+	// ParseText returns true in case if the contnets have been appended and false otherwise.
+	ParseText(cfg *config.Config, tagName, text string, lineIdx int, cnts *HTMLContents) (bool, error)
 }
 
 type HTMLExtTagify interface {
@@ -40,7 +44,8 @@ func extHTML(exts []extension.Extension) []HTMLExt {
 	return res
 }
 
-func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) {
+func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) bool {
+	var appended bool
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseTag)
 		if !ok {
@@ -49,14 +54,19 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML tag %q %s\n", v.Name(), v.Version())
 		}
-		err := e.ParseTag(cfg, token, lineIdx, cnts)
+		ok, err := e.ParseTag(cfg, token, lineIdx, cnts)
 		if err != nil {
 			fmt.Printf("error in parsing HTML tag %q %s: %v\n", v.Name(), v.Version(), err)
 		}
+		if !appended && ok {
+			appended = true
+		}
 	}
+	return appended
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int, cnts *HTMLContents) {
+func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int, cnts *HTMLContents) bool {
+	var appended bool
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseText)
 		if !ok {
@@ -65,11 +75,15 @@ func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, line
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
 		}
-		err := e.ParseText(cfg, tagName, text, lineIdx, cnts)
+		ok, err := e.ParseText(cfg, tagName, text, lineIdx, cnts)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
 		}
+		if !appended && ok {
+			appended = true
+		}
 	}
+	return appended
 }
 
 func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine) {
