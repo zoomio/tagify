@@ -24,8 +24,8 @@ type HTMLExtParseTag interface {
 type HTMLExtParseText interface {
 	HTMLExt
 
-	// ParseText returns true in case if the contnets have been appended and false otherwise.
-	ParseText(cfg *config.Config, tagName, text string, lineIdx int, cnts *HTMLContents) (bool, error)
+	// ParseText ...
+	ParseText(cfg *config.Config, tagName, text string, lineIdx int) error
 }
 
 type HTMLExtTagify interface {
@@ -65,8 +65,7 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 	return appended
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int, cnts *HTMLContents) bool {
-	var appended bool
+func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int) {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseText)
 		if !ok {
@@ -75,15 +74,11 @@ func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, line
 		if cfg.Verbose {
 			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
 		}
-		ok, err := e.ParseText(cfg, tagName, text, lineIdx, cnts)
+		err := e.ParseText(cfg, tagName, text, lineIdx)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
 		}
-		if !appended && ok {
-			appended = true
-		}
 	}
-	return appended
 }
 
 func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine) {

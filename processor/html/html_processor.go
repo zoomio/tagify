@@ -58,6 +58,15 @@ func isHTMLContent(t string) bool {
 	}
 }
 
+func isNonClosingSingleTag(t string) bool {
+	switch atom.Lookup([]byte(t)) {
+	case atom.Meta, atom.Link:
+		return true
+	default:
+		return false
+	}
+}
+
 func isSameDomain(href, domain string) bool {
 	if strings.HasPrefix(href, "/") {
 		return true
@@ -176,52 +185,57 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.StartTagToken:
 			token := z.Token()
 			cur = token.Data
-			if _, ok := cfg.TagWeights[cur]; ok {
+			if _, ok := cfg.TagWeights[cur]; !ok {
+				continue
+			}
 
-				// handle <link ...> which neither self-closing nor has closing tag
-				if cur != "link" {
-					parser.push(cur)
-				}
+			parser.push(cur)
 
-				// handle <meta name="description" content="..." />
-				var appended bool
-				if cur == atom.Meta.String() {
-					var name, content string
-					for _, a := range token.Attr {
-						if a.Key == "name" {
-							name = a.Val
-						}
-						if a.Key == "content" {
-							content = a.Val
-						}
-						if name != "" && content != "" {
-							break
-						}
+			// handle <meta name="description" content="...">
+			var appended bool
+			if cur == atom.Meta.String() {
+				var name, content string
+				for _, a := range token.Attr {
+					if a.Key == "name" {
+						name = a.Val
 					}
-					if name == "description" {
-						contents.Append(parser.lineIndex, cur, []byte(content))
-						parser.lineIndex++
-						appended = true
+					if a.Key == "content" {
+						content = a.Val
 					}
-					parser.pop()
-				}
-
-				// go follow links in case if web crawler is ON.
-				if c != nil && cur == atom.A.String() {
-					for _, a := range token.Attr {
-						if a.Key == "href" && isSameDomain(a.Val, c.domain) {
-							c.crawl(a.Val)
-							break
-						}
+					if name != "" && content != "" {
+						break
 					}
 				}
-
-				if appended {
-					extParseTag(cfg, exts, &token, parser.lineIndex-1, contents)
-				} else {
-					extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+				if name == "description" {
+					contents.Append(parser.lineIndex, cur, []byte(content))
+					appended = true
 				}
 			}
+
+			// allow for extensions
+			ok := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+			if !appended && ok {
+				appended = true
+			}
+
+			// handle non-self-closing nor has closing tags, e.g. <link ...> & <meta ...>
+			if isNonClosingSingleTag(cur) {
+				parser.pop()
+				if appended {
+					parser.lineIndex++
+				}
+			}
+
+			// go follow links in case if web crawler is ON.
+			if c != nil && cur == atom.A.String() {
+				for _, a := range token.Attr {
+					if a.Key == "href" && isSameDomain(a.Val, c.domain) {
+						c.crawl(a.Val)
+						break
+					}
+				}
+			}
+
 		case html.EndTagToken:
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
@@ -246,7 +260,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 
 				contents.Append(parser.lineIndex, cur, []byte(token.Data))
-				extParseText(cfg, exts, cur, token.Data, parser.lineIndex, contents)
+				extParseText(cfg, exts, cur, token.Data, parser.lineIndex)
 			}
 		}
 	}
