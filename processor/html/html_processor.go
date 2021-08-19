@@ -276,7 +276,8 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 		s := string(l.data)
 
 		// Title tags have special treatment
-		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
+		// if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
+		if l.tag == atom.Title.String() && pageTitle == "" {
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings

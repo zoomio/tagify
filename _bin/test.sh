@@ -4,8 +4,8 @@
 gofmt -w=true -s $(find . -type f -name '*.go' -not -path "./vendor/*")
 
 # linter
-go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-golangci-lint run
+go install honnef.co/go/tools/cmd/staticcheck@latest
+staticcheck ./...
 
 # tests & coverage
 go test -coverprofile=_dist/coverage.out -v ./...
