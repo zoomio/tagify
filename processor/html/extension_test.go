@@ -64,6 +64,25 @@ func Test_Ext_Tagify_stopwords(t *testing.T) {
 	assert.NotContains(t, out2.RawTags, "sunset")
 }
 
+func Test_Ext_ParseEnd(t *testing.T) {
+	// Total amount of tags is 7 (see assert.Len)
+	cfg := config.New(
+		config.ExtraTagWeightsString("img:0"),
+		config.NoStopWords(true),
+	)
+	out := ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	assert.Equal(t, 7, out.Len())
+
+	// Amount of tags when stopped is 3 (see assert.Len)
+	cfg = config.New(
+		config.ExtraTagWeightsString("img:0"),
+		config.Extensions([]extension.Extension{&testStopExt{}}),
+		config.NoStopWords(true),
+	)
+	out = ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	assert.Equal(t, 3, out.Len())
+}
+
 func newTestImgCrawlerExt() *testImgCrawlerExt {
 	return &testImgCrawlerExt{
 		images: []string{},
@@ -118,4 +137,26 @@ func (ext *testExtraStopWordsExt) Tagify(cfg *config.Config, line *HTMLLine, tok
 		delete(tokenIndex, v)
 	}
 	return nil
+}
+
+type testStopExt struct {
+}
+
+func (ext *testStopExt) Name() string {
+	return "test-stop"
+}
+
+func (ext *testStopExt) Version() string {
+	return "v0.0.1"
+}
+
+func (ext *testStopExt) Result() *extension.Result {
+	return extension.NewResult(ext, map[string]interface{}{}, nil)
+}
+
+func (ext *testStopExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
+	if token.DataAtom.String() == "img" {
+		return false, NewHTMLParseEndError()
+	}
+	return false, nil
 }

@@ -39,6 +39,10 @@ type HTMLExtTagify interface {
 	Tagify(cfg *config.Config, line *HTMLLine, tokenIndex map[string]*model.Tag) error
 }
 
+func NewHTMLParseEndError() *HTMLParseEndError {
+	return &HTMLParseEndError{}
+}
+
 type HTMLParseEndError struct {
 }
 
@@ -79,7 +83,7 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 	return appended, nil
 }
 
-func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int) {
+func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int) error {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseText)
 		if !ok {
@@ -91,8 +95,10 @@ func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, line
 		err := e.ParseText(cfg, tagName, text, lineIdx)
 		if err != nil {
 			fmt.Printf("error in parsing HTML text %q %s: %v\n", v.Name(), v.Version(), err)
+			return err
 		}
 	}
+	return nil
 }
 
 func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine, tokenIndex map[string]*model.Tag) {

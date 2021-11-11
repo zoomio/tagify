@@ -84,7 +84,7 @@ type Meta struct {
 
 // Len returns count of tags in the result.
 func (r *Result) Len() int {
-	return len(r.Tags)
+	return len(r.RawTags)
 }
 
 // ForEach iterates through the slice of Tags

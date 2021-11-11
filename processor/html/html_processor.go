@@ -178,6 +178,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			// end of the document, we're done
 			return contents
 		case html.SelfClosingTagToken:
+			if shouldStop {
+				// flag has been set to true, exiting
+				if cfg.Verbose {
+					fmt.Println(HTMLParseEndErrorMsg)
+				}
+				return contents
+			}
 			// e.g. <img ... />
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
@@ -194,6 +201,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 			}
 		case html.StartTagToken:
+			if shouldStop {
+				// flag has been set to true, exiting
+				if cfg.Verbose {
+					fmt.Println(HTMLParseEndErrorMsg)
+				}
+				return contents
+			}
 			token := z.Token()
 			cur = token.Data
 			if _, ok := cfg.TagWeights[cur]; !ok {
@@ -292,7 +306,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					continue
 				}
 
-				extParseText(cfg, exts, cur, token.Data, parser.lineIndex)
+				err := extParseText(cfg, exts, cur, token.Data, parser.lineIndex)
+				if err != nil {
+					switch err.(type) {
+					case *HTMLParseEndError:
+						shouldStop = true
+					}
+				}
 				contents.Append(parser.lineIndex, cur, []byte(token.Data))
 			}
 		}
