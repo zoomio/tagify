@@ -10,6 +10,8 @@ import (
 	"github.com/zoomio/tagify/model"
 )
 
+const HTMLParseEndErrorMsg = "received stop command, exiting HTML parser"
+
 // HTMLExt ...
 type HTMLExt interface {
 	extension.Extension
@@ -37,6 +39,13 @@ type HTMLExtTagify interface {
 	Tagify(cfg *config.Config, line *HTMLLine, tokenIndex map[string]*model.Tag) error
 }
 
+type HTMLParseEndError struct {
+}
+
+func (e *HTMLParseEndError) Error() string {
+	return HTMLParseEndErrorMsg
+}
+
 // HTMLExtensions ...
 func extHTML(exts []extension.Extension) []HTMLExt {
 	res := []HTMLExt{}
@@ -48,7 +57,7 @@ func extHTML(exts []extension.Extension) []HTMLExt {
 	return res
 }
 
-func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) bool {
+func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
 	var appended bool
 	for _, v := range exts {
 		e, ok := v.(HTMLExtParseTag)
@@ -60,13 +69,14 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 		}
 		ok, err := e.ParseTag(cfg, token, lineIdx, cnts)
 		if err != nil {
-			fmt.Printf("error in parsing HTML tag %q %s: %v\n", v.Name(), v.Version(), err)
+			fmt.Printf("error in parsing HTML tag %q in %q %s: %v\n", token.DataAtom.String(), v.Name(), v.Version(), err)
+			return appended, err
 		}
 		if !appended && ok {
 			appended = true
 		}
 	}
-	return appended
+	return appended, nil
 }
 
 func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, lineIdx int) {

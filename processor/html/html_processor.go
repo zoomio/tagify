@@ -167,6 +167,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
+	var shouldStop bool
 	var cur string
 	z := html.NewTokenizer(reader)
 	for {
@@ -180,7 +181,17 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			// e.g. <img ... />
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
-				extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+				if err != nil {
+					switch err.(type) {
+					case *HTMLParseEndError:
+						shouldStop = true
+						if cfg.Verbose {
+							fmt.Println(err.Error())
+						}
+						return contents
+					}
+				}
 			}
 		case html.StartTagToken:
 			token := z.Token()
@@ -213,7 +224,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 
 			// allow for extensions
-			ok := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+			ok, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+			if err != nil {
+				switch err.(type) {
+				case *HTMLParseEndError:
+					shouldStop = true
+				}
+			}
 			if !appended && ok {
 				appended = true
 			}
@@ -223,6 +240,14 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				parser.pop()
 				if appended {
 					parser.lineIndex++
+				}
+
+				if shouldStop {
+					// flag has been set to true, exiting
+					if cfg.Verbose {
+						fmt.Println(HTMLParseEndErrorMsg)
+					}
+					return contents
 				}
 			}
 
@@ -244,6 +269,14 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				if parser.isEmpty() {
 					parser.lineIndex++
 				}
+			}
+
+			if shouldStop {
+				// flag has been set to true, exiting
+				if cfg.Verbose {
+					fmt.Println(HTMLParseEndErrorMsg)
+				}
+				return contents
 			}
 		case html.TextToken:
 			token := z.Token()
