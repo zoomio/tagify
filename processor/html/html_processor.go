@@ -167,8 +167,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
-	var shouldStop bool
-	var cur string
+	var cursor string
 	z := html.NewTokenizer(reader)
 	for {
 		tt := z.Next()
@@ -178,7 +177,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			// end of the document, we're done
 			return contents
 		case html.SelfClosingTagToken:
-			if shouldStop {
+			if parser.shouldStop() {
 				// flag has been set to true, exiting
 				if cfg.Verbose {
 					fmt.Println(HTMLParseEndErrorMsg)
@@ -192,7 +191,6 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				if err != nil {
 					switch err.(type) {
 					case *HTMLParseEndError:
-						shouldStop = true
 						if cfg.Verbose {
 							fmt.Println(err.Error())
 						}
@@ -201,24 +199,17 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 			}
 		case html.StartTagToken:
-			if shouldStop {
-				// flag has been set to true, exiting
-				if cfg.Verbose {
-					fmt.Println(HTMLParseEndErrorMsg)
-				}
-				return contents
-			}
 			token := z.Token()
-			cur = token.Data
-			if _, ok := cfg.TagWeights[cur]; !ok {
+			cursor = token.Data
+			if _, ok := cfg.TagWeights[cursor]; !ok {
 				continue
 			}
 
-			parser.push(cur)
+			parser.push(cursor)
 
 			// handle <meta name="description" content="...">
 			var appended bool
-			if cur == atom.Meta.String() {
+			if cursor == atom.Meta.String() {
 				var name, content string
 				for _, a := range token.Attr {
 					if a.Key == "name" {
@@ -232,7 +223,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					contents.Append(parser.lineIndex, cur, []byte(content))
+					contents.Append(parser.lineIndex, cursor, []byte(content))
 					appended = true
 				}
 			}
@@ -242,7 +233,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			if err != nil {
 				switch err.(type) {
 				case *HTMLParseEndError:
-					shouldStop = true
+					parser.stop()
 				}
 			}
 			if !appended && ok {
@@ -250,13 +241,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 
 			// handle non-self-closing nor has closing tags, e.g. <link ...> & <meta ...>
-			if isNonClosingSingleTag(cur) {
+			if isNonClosingSingleTag(cursor) {
 				parser.pop()
 				if appended {
 					parser.lineIndex++
 				}
 
-				if shouldStop {
+				if parser.shouldStop() {
 					// flag has been set to true, exiting
 					if cfg.Verbose {
 						fmt.Println(HTMLParseEndErrorMsg)
@@ -266,7 +257,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 
 			// go follow links in case if web crawler is ON.
-			if c != nil && cur == atom.A.String() {
+			if c != nil && cursor == atom.A.String() {
 				for _, a := range token.Attr {
 					if a.Key == "href" && isSameDomain(a.Val, c.domain) {
 						c.crawl(a.Val)
@@ -279,13 +270,13 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
 				parser.pop()
-				cur = parser.current()
+				cursor = parser.current()
 				if parser.isEmpty() {
 					parser.lineIndex++
 				}
 			}
 
-			if shouldStop {
+			if parser.shouldStop() {
 				// flag has been set to true, exiting
 				if cfg.Verbose {
 					fmt.Println(HTMLParseEndErrorMsg)
@@ -294,7 +285,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		case html.TextToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[cur]; ok && parser.isNotEmpty() {
+			if _, ok := cfg.TagWeights[cursor]; ok && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
@@ -302,18 +293,18 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 
 				// Take only <title> from <head> and ignore the rest <title> tags in the body
-				if cur == atom.Title.String() && parser.parent() != "" {
+				if cursor == atom.Title.String() && parser.parent() != "" {
 					continue
 				}
 
-				err := extParseText(cfg, exts, cur, token.Data, parser.lineIndex)
+				err := extParseText(cfg, exts, cursor, token.Data, parser.lineIndex)
 				if err != nil {
 					switch err.(type) {
 					case *HTMLParseEndError:
-						shouldStop = true
+						parser.stop()
 					}
 				}
-				contents.Append(parser.lineIndex, cur, []byte(token.Data))
+				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}
 	}
@@ -564,15 +555,27 @@ func (l *HTMLLine) sentences() []*HTMLLine {
 	return ret
 }
 
+type htmlParserNode struct {
+	name string
+	stop bool
+}
+
 // htmlParser keeps track of the current state of the HTML parser.
 type htmlParser struct {
 	lineIndex int
-	stack     []string
+	stack     []*htmlParserNode
 }
 
 func (p *htmlParser) current() string {
 	if len(p.stack) == 0 {
 		return ""
+	}
+	return p.stack[len(p.stack)-1].name
+}
+
+func (p *htmlParser) currentNode() *htmlParserNode {
+	if len(p.stack) == 0 {
+		return nil
 	}
 	return p.stack[len(p.stack)-1]
 }
@@ -581,11 +584,15 @@ func (p *htmlParser) parent() string {
 	if len(p.stack) < 2 {
 		return ""
 	}
-	return p.stack[len(p.stack)-2]
+	return p.stack[len(p.stack)-2].name
 }
 
 func (p *htmlParser) push(a string) {
-	p.stack = append(p.stack, a)
+	p.stack = append(p.stack, &htmlParserNode{name: a})
+}
+
+func (p *htmlParser) stop() {
+	p.currentNode().stop = true
 }
 
 func (p *htmlParser) pop() string {
@@ -595,7 +602,7 @@ func (p *htmlParser) pop() string {
 	last := len(p.stack) - 1
 	v := p.stack[last]
 	p.stack = p.stack[:last]
-	return v
+	return v.name
 }
 
 func (p *htmlParser) isEmpty() bool {
@@ -604,4 +611,12 @@ func (p *htmlParser) isEmpty() bool {
 
 func (p *htmlParser) isNotEmpty() bool {
 	return len(p.stack) > 0
+}
+
+func (p *htmlParser) shouldStop() bool {
+	node := p.currentNode()
+	if node == nil {
+		return false
+	}
+	return node.stop
 }
