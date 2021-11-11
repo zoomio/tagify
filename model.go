@@ -10,13 +10,15 @@ type Option = config.Option
 type ContentType = config.ContentType
 
 var (
-	Source                = config.Source
-	Query                 = config.Query
-	Content               = config.Content
-	TargetType            = config.TargetType
-	Limit                 = config.Limit
-	Verbose               = config.Verbose
-	NoStopWords           = config.NoStopWords
+	Source      = config.Source
+	Query       = config.Query
+	Content     = config.Content
+	TargetType  = config.TargetType
+	Limit       = config.Limit
+	Verbose     = config.Verbose
+	NoStopWords = config.NoStopWords
+	// ExtraStopWordsString  = config.ExtraStopWordsString
+	// ExtraStopWordsJSON    = config.ExtraStopWordsJSON
 	ContentOnly           = config.ContentOnly
 	FullSite              = config.FullSite
 	TagWeightsString      = config.TagWeightsString

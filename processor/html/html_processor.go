@@ -343,7 +343,7 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 		}
 
 		// run extensions if any
-		extTagify(cfg, exts, l)
+		extTagify(cfg, exts, l, tokenIndex)
 	}
 
 	// set total number of documents in the text.

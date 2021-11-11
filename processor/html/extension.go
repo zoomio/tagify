@@ -7,6 +7,7 @@ import (
 
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/extension"
+	"github.com/zoomio/tagify/model"
 )
 
 // HTMLExt ...
@@ -17,7 +18,7 @@ type HTMLExt interface {
 type HTMLExtParseTag interface {
 	HTMLExt
 
-	// ParseTag returns true in case if the contnets have been appended and false otherwise.
+	// ParseTag returns true in case if the contents have been appended and false otherwise.
 	ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error)
 }
 
@@ -30,7 +31,7 @@ type HTMLExtParseText interface {
 
 type HTMLExtTagify interface {
 	HTMLExt
-	Tagify(cfg *config.Config, line *HTMLLine) error
+	Tagify(cfg *config.Config, line *HTMLLine, tokenIndex map[string]*model.Tag) error
 }
 
 // HTMLExtensions ...
@@ -81,7 +82,7 @@ func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, line
 	}
 }
 
-func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine) {
+func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine, tokenIndex map[string]*model.Tag) {
 	for _, v := range exts {
 		e, ok := v.(HTMLExtTagify)
 		if !ok {
@@ -90,7 +91,7 @@ func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine) {
 		if cfg.Verbose {
 			fmt.Printf("tagifying %q %s\n", v.Name(), v.Version())
 		}
-		err := e.Tagify(cfg, line)
+		err := e.Tagify(cfg, line, tokenIndex)
 		if err != nil {
 			fmt.Printf("error in tagifying %q %s: %v\n", v.Name(), v.Version(), err)
 		}
