@@ -15,6 +15,7 @@ type HTMLExt interface {
 	extension.Extension
 }
 
+// HTMLExtParseTag executed at the HTML parsing phase when dealing with the HTML tag.
 type HTMLExtParseTag interface {
 	HTMLExt
 
@@ -22,6 +23,7 @@ type HTMLExtParseTag interface {
 	ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error)
 }
 
+// HTMLExtParseText executed at the HTML parsing phase when dealing with the text inside an HTML tag.
 type HTMLExtParseText interface {
 	HTMLExt
 
@@ -29,6 +31,7 @@ type HTMLExtParseText interface {
 	ParseText(cfg *config.Config, tagName, text string, lineIdx int) error
 }
 
+// HTMLExtParseText executed during token counting phase.
 type HTMLExtTagify interface {
 	HTMLExt
 	Tagify(cfg *config.Config, line *HTMLLine, tokenIndex map[string]*model.Tag) error

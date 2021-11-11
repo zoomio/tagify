@@ -259,8 +259,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					continue
 				}
 
-				contents.Append(parser.lineIndex, cur, []byte(token.Data))
 				extParseText(cfg, exts, cur, token.Data, parser.lineIndex)
+				contents.Append(parser.lineIndex, cur, []byte(token.Data))
 			}
 		}
 	}
