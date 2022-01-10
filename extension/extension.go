@@ -1,6 +1,10 @@
 package extension
 
-// Extension ...
+// Extension provides ability to extend Tagify workflow,
+// to be able to incorporate more functionality into the Tagify
+// and build such things like deeper more opinionated Tagify primitives
+// e.g. YouTube extension to get more data out of the YouTube videos and etc
+// (see testImgCrawlerExt inside the processor/html/extension_test.go).
 type Extension interface {
 	Name() string
 	Version() string
