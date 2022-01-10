@@ -6,6 +6,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_ForEach(t *testing.T) {
+	res := &Result{
+		Tags: []*Tag{{Value: "foo"}, {Value: "bar"}, {Value: "bee"}},
+	}
+
+	var count int
+
+	it := func(i int, tag *Tag) {
+		count++
+	}
+
+	res.ForEach(it)
+
+	assert.Equal(t, 3, count)
+}
+
 func Test_String(t *testing.T) {
 	tag := &Tag{
 		Value:     "foo",

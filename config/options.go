@@ -1,5 +1,14 @@
 package config
 
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/zoomio/tagify/extension"
+)
+
 // Option allows to customise configuration.
 type Option func(*Config)
 
@@ -67,23 +76,58 @@ var (
 		}
 	}
 
-	// TagWeights string with the custom tag weights for the HTML & Markdown tagging.
-	TagWeights = func(v string) Option {
+	// TagWeightsString ...
+	TagWeightsString = func(v string) Option {
 		return func(c *Config) {
-			c.TagWeights = v
+			c.TagWeights = ParseTagWeights(strings.NewReader(v), String)
 		}
 	}
 
-	// TagWeightsJSON JSON file with the custom tag weights for the HTML & Markdown tagging.
+	// TagWeightsJSON ...
 	TagWeightsJSON = func(v string) Option {
 		return func(c *Config) {
-			c.TagWeightsJSON = v
+			f, err := os.Open(v)
+			if err != nil {
+				println(fmt.Errorf("error: can't open JSON file [%s]: %w", v, err))
+				return
+			}
+			r := bufio.NewReader(f)
+			c.TagWeights = ParseTagWeights(r, JSON)
+			f.Close()
+		}
+	}
+
+	// ExtraTagWeightsString ...
+	ExtraTagWeightsString = func(v string) Option {
+		return func(c *Config) {
+			c.ExtraTagWeights = ParseTagWeights(strings.NewReader(v), String)
+		}
+	}
+
+	// TagWeightsJSON ...
+	ExtraTagWeightsJSON = func(v string) Option {
+		return func(c *Config) {
+			f, err := os.Open(v)
+			if err != nil {
+				println(fmt.Errorf("error: can't open JSON file [%s]: %w", v, err))
+				return
+			}
+			r := bufio.NewReader(f)
+			c.ExtraTagWeights = ParseTagWeights(r, JSON)
+			f.Close()
 		}
 	}
 
 	AdjustScores = func(v bool) Option {
 		return func(c *Config) {
 			c.AdjustScores = v
+		}
+	}
+
+	Extensions = func(v []extension.Extension) Option {
+		return func(c *Config) {
+			c.Extensions = make([]extension.Extension, len(v))
+			copy(c.Extensions, v)
 		}
 	}
 )

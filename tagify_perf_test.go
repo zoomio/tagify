@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkTagify(b *testing.B) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
+	defer stopServer(startServer(fmt.Sprintf(":%d", port), indexHTML))
 
 	b.ResetTimer()
 

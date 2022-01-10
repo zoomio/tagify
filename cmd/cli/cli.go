@@ -11,21 +11,22 @@ import (
 	"time"
 
 	"github.com/zoomio/tagify"
-	"github.com/zoomio/tagify/config"
 )
 
 var (
 	version = "tip"
 
-	source         = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
-	query          = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
-	limit          = flag.Int("l", 5, "number of tags to return")
-	verbose        = flag.Bool("v", false, "enables verbose mode")
-	contentType    = flag.String("t", config.Unknown.String(), "type of content type in the source (Text or HTML)")
-	noStopWords    = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
-	tagWeights     = flag.String("tag-weights", "", "string with the custom tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
-	tagWeightsJSON = flag.String("tag-weights-json", "", "JSON file with the custom tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
-	adjustScores   = flag.Bool("adjust-scores", false, "adjusts tags score to the interval 0.0 to 1.0")
+	source              = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
+	query               = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
+	limit               = flag.Int("l", 5, "number of tags to return")
+	verbose             = flag.Bool("v", false, "enables verbose mode")
+	contentType         = flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
+	noStopWords         = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
+	tagWeights          = flag.String("tag-weights", "", "string with the custom tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
+	tagWeightsJSON      = flag.String("tag-weights-json", "", "JSON file with the custom tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
+	adjustScores        = flag.Bool("adjust-scores", false, "adjusts tags score to the interval 0.0 to 1.0")
+	extraTagWeights     = flag.String("extra-tag-weights", "", "string with the additional tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
+	extraTagWeightsJSON = flag.String("extra-tag-weights-json", "", "JSON file with the additional tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
 
 	// EXPERIMENTAL
 	contentOnly = flag.Bool("content", false, "[EXPERIMENTAL] might not be included in next releases: ignore all none content related parts of the page (HTML only)")
@@ -58,35 +59,40 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	options := []config.Option{
-		config.TargetType(config.ContentTypeOf(*contentType)),
-		config.Limit(*limit),
+	options := []tagify.Option{
+		tagify.TargetType(tagify.ContentTypeOf(*contentType)),
+		tagify.Limit(*limit),
 	}
 	if *source != "" {
-		options = append(options, config.Source(*source))
+		options = append(options, tagify.Source(*source))
 	}
 	if *query != "" {
-		options = append(options, config.Query(*query))
+		options = append(options, tagify.Query(*query))
 	}
 	if *verbose {
-		options = append(options, config.Verbose(*verbose))
+		options = append(options, tagify.Verbose(*verbose))
 	}
 	if *noStopWords {
-		options = append(options, config.NoStopWords(*noStopWords))
+		options = append(options, tagify.NoStopWords(*noStopWords))
 	}
 	if *contentOnly {
-		options = append(options, config.ContentOnly(*contentOnly))
+		options = append(options, tagify.ContentOnly(*contentOnly))
 	}
 	if *fullSite {
-		options = append(options, config.FullSite(*fullSite))
+		options = append(options, tagify.FullSite(*fullSite))
 	}
 	if *tagWeights != "" {
-		options = append(options, config.TagWeights(*tagWeights))
+		options = append(options, tagify.TagWeightsString(*tagWeights))
 	} else if *tagWeightsJSON != "" {
-		options = append(options, config.TagWeightsJSON(*tagWeightsJSON))
+		options = append(options, tagify.TagWeightsJSON(*tagWeightsJSON))
 	}
 	if *adjustScores {
-		options = append(options, config.AdjustScores(*adjustScores))
+		options = append(options, tagify.AdjustScores(*adjustScores))
+	}
+	if *extraTagWeights != "" {
+		options = append(options, tagify.ExtraTagWeightsString(*extraTagWeights))
+	} else if *extraTagWeightsJSON != "" {
+		options = append(options, tagify.ExtraTagWeightsJSON(*extraTagWeightsJSON))
 	}
 
 	// print progress updates to terminal
@@ -107,7 +113,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	if res.Len() == 0 {
+	if res.RawLen() == 0 {
 		fmt.Println("found 0 tags")
 		return
 	}

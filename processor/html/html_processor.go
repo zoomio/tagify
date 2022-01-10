@@ -13,13 +13,14 @@ import (
 	"golang.org/x/net/html/atom"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/extension"
+	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 
 var (
 	// default weights for HTML tags
-	defaultTagWeights = model.TagWeights{
+	defaultTagWeights = config.TagWeights{
 		"h1":     2,
 		"title":  1.7,
 		"meta":   1.7,
@@ -39,8 +40,8 @@ var (
 	}
 )
 
-func isHTMLHeading(t atom.Atom) bool {
-	switch t {
+func isHTMLHeading(t string) bool {
+	switch atom.Lookup([]byte(t)) {
 	case atom.H1, atom.H2, atom.H3:
 		return true
 	default:
@@ -48,9 +49,18 @@ func isHTMLHeading(t atom.Atom) bool {
 	}
 }
 
-func isHTMLContent(t atom.Atom) bool {
-	switch t {
+func isHTMLContent(t string) bool {
+	switch atom.Lookup([]byte(t)) {
 	case atom.Title, atom.Meta, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
+		return true
+	default:
+		return false
+	}
+}
+
+func isNonClosingSingleTag(t string) bool {
+	switch atom.Lookup([]byte(t)) {
+	case atom.Meta, atom.Link:
 		return true
 	default:
 		return false
@@ -93,41 +103,38 @@ func isSameDomain(href, domain string) bool {
 // a title of the page as 2nd and
 // a version of the document based on the hashed contents as 3rd.
 //
-var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
+var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
-
-	pc := &model.ParseConfig{}
-
-	// apply custom configuration
-	for _, option := range options {
-		option(pc)
-	}
 
 	if c.Verbose {
 		fmt.Println("--> parsing HTML...")
 	}
 
 	var err error
-	var contents *htmlContents
+	var contents *HTMLContents
 	var parseFn parseFunc = parseHTML
-	var tagWeights model.TagWeights
 
-	if c.TagWeights == "" {
-		tagWeights = defaultTagWeights
-	} else {
-		tagWeights = pc.TagWeights
+	exts := extHTML(c.Extensions)
+
+	if c.TagWeights == nil {
+		c.TagWeights = defaultTagWeights
+	}
+	if c.ExtraTagWeights != nil {
+		for k, v := range c.ExtraTagWeights {
+			c.TagWeights[k] = v
+		}
 	}
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler
-		crawler, err = newWebCrawler(parseFn, tagWeights, c.Source, c.Verbose)
+		crawler, err = newWebCrawler(parseFn, exts, c.Source, c.Verbose)
 		if err != nil {
-			return &model.ParseOutput{Err: err}
+			return model.ErrResult(err)
 		}
 		contents = crawler.run(reader)
 	} else {
-		contents = parseFn(reader, tagWeights, nil)
+		contents = parseFn(reader, c, exts, nil)
 	}
 
 	if c.Verbose {
@@ -135,101 +142,176 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser, opt
 	}
 
 	if err != nil {
-		return &model.ParseOutput{Err: err}
+		return &model.Result{Err: err}
 	}
 
 	if len(contents.lines) == 0 {
-		return &model.ParseOutput{}
+		return model.EmptyResult()
 	}
 
-	tags, title, lang := tagifyHTML(contents, c, tagWeights)
+	tags, title, lang := tagifyHTML(contents, c, exts)
 
-	return &model.ParseOutput{Tags: tags, DocTitle: title, DocHash: contents.hash(), Lang: lang}
+	return &model.Result{
+		Meta: &model.Meta{
+			ContentType: config.HTML,
+			DocTitle:    title,
+			DocHash:     fmt.Sprintf("%x", contents.hash()),
+			Lang:        lang,
+		},
+		RawTags:    tags,
+		Extensions: extension.MapResults(c.Extensions),
+	}
 }
 
-func parseHTML(reader io.Reader, htmlTagWeights model.TagWeights, c *webCrawler) *htmlContents {
-	contents := &htmlContents{lines: make([]*htmlLine, 0), htmlTagWeights: htmlTagWeights}
+func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
+	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
-	var cur atom.Atom
+	var cursor string
 	z := html.NewTokenizer(reader)
 	for {
 		tt := z.Next()
 
-		switch {
-		case tt == html.ErrorToken:
+		switch tt {
+		case html.ErrorToken:
 			// end of the document, we're done
 			return contents
-		case tt == html.StartTagToken:
-			token := z.Token()
-			cur = token.DataAtom
-			if _, ok := htmlTagWeights[cur.String()]; ok {
-				parser.push(cur)
-
-				// handle <meta name="description" content="..." />
-				if cur == atom.Meta {
-					var name, content string
-					for _, a := range token.Attr {
-						if a.Key == "name" {
-							name = a.Val
-						}
-						if a.Key == "content" {
-							content = a.Val
-						}
-						if name != "" && content != "" {
-							break
-						}
-					}
-					if name == "description" {
-						contents.append(parser.lineIndex, cur, []byte(content))
-						parser.lineIndex++
-					}
-
-					parser.pop()
+		case html.SelfClosingTagToken:
+			if parser.shouldStop() {
+				// flag has been set to true, exiting
+				if cfg.Verbose {
+					fmt.Println(HTMLParseEndErrorMsg)
 				}
-
-				// go follow links in case if web crawler is ON.
-				if c != nil && cur == atom.A {
-					for _, a := range token.Attr {
-						if a.Key == "href" && isSameDomain(a.Val, c.domain) {
-							c.crawl(a.Val)
-							break
+				return contents
+			}
+			// e.g. <img ... />
+			token := z.Token()
+			if _, ok := cfg.TagWeights[token.Data]; ok {
+				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+				if err != nil {
+					switch err.(type) {
+					case *HTMLParseEndError:
+						if cfg.Verbose {
+							fmt.Println(err.Error())
 						}
+						return contents
 					}
 				}
 			}
-		case tt == html.EndTagToken:
+		case html.StartTagToken:
 			token := z.Token()
-			if _, ok := htmlTagWeights[token.DataAtom.String()]; ok {
+			cursor = token.Data
+			if _, ok := cfg.TagWeights[cursor]; !ok {
+				continue
+			}
+
+			parser.push(cursor)
+
+			// handle <meta name="description" content="...">
+			var appended bool
+			if cursor == atom.Meta.String() {
+				var name, content string
+				for _, a := range token.Attr {
+					if a.Key == "name" {
+						name = a.Val
+					}
+					if a.Key == "content" {
+						content = a.Val
+					}
+					if name != "" && content != "" {
+						break
+					}
+				}
+				if name == "description" {
+					contents.Append(parser.lineIndex, cursor, []byte(content))
+					appended = true
+				}
+			}
+
+			// allow for extensions
+			ok, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
+			if err != nil {
+				switch err.(type) {
+				case *HTMLParseEndError:
+					parser.stop()
+				}
+			}
+			if !appended && ok {
+				appended = true
+			}
+
+			// handle non-self-closing nor has closing tags, e.g. <link ...> & <meta ...>
+			if isNonClosingSingleTag(cursor) {
 				parser.pop()
-				cur = parser.current()
+				if appended {
+					parser.lineIndex++
+				}
+
+				if parser.shouldStop() {
+					// flag has been set to true, exiting
+					if cfg.Verbose {
+						fmt.Println(HTMLParseEndErrorMsg)
+					}
+					return contents
+				}
+			}
+
+			// go follow links in case if web crawler is ON.
+			if c != nil && cursor == atom.A.String() {
+				for _, a := range token.Attr {
+					if a.Key == "href" && isSameDomain(a.Val, c.domain) {
+						c.crawl(a.Val)
+						break
+					}
+				}
+			}
+
+		case html.EndTagToken:
+			token := z.Token()
+			if _, ok := cfg.TagWeights[token.Data]; ok {
+				parser.pop()
+				cursor = parser.current()
 				if parser.isEmpty() {
 					parser.lineIndex++
 				}
 			}
-		case tt == html.TextToken:
-			_, ok := htmlTagWeights[cur.String()]
-			if parser.isNotEmpty() && ok {
-				token := z.Token()
+
+			if parser.shouldStop() {
+				// flag has been set to true, exiting
+				if cfg.Verbose {
+					fmt.Println(HTMLParseEndErrorMsg)
+				}
+				return contents
+			}
+		case html.TextToken:
+			token := z.Token()
+			if _, ok := cfg.TagWeights[cursor]; ok && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
 					continue
 				}
 
-				// Take ony <title> from <head> and ignore the rest in the body
-				if cur == atom.Title && parser.parent() != 0 {
+				// Take only <title> from <head> and ignore the rest <title> tags in the body
+				if cursor == atom.Title.String() && parser.parent() != "" {
 					continue
 				}
 
-				contents.append(parser.lineIndex, cur, []byte(token.Data))
+				err := extParseText(cfg, exts, cursor, token.Data, parser.lineIndex)
+				if err != nil {
+					switch err.(type) {
+					case *HTMLParseEndError:
+						parser.stop()
+					}
+				}
+				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}
 	}
 }
 
-func tagifyHTML(contents *htmlContents, c *config.Config,
-	htmlTagWeights model.TagWeights) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyHTML(contents *HTMLContents, cfg *config.Config,
+	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = map[string]*model.Tag{}
 	var docsCount int
 	var reg *stopwords.Register
@@ -238,34 +320,35 @@ func tagifyHTML(contents *htmlContents, c *config.Config,
 		s := string(l.data)
 
 		// Title tags have special treatment
-		if (l.tag == atom.Title || l.tag == atom.H1) && len(pageTitle) < len(s) {
+		// if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
+		if l.tag == atom.Title.String() && pageTitle == "" {
 			pageTitle = s
 		} else if isHTMLHeading(l.tag) && s == pageTitle {
 			// avoid doubling of scores for duplicated page's title in headings
-			if c.Verbose {
-				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag.String())
+			if cfg.Verbose {
+				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag)
 			}
 			continue
 		}
 
 		// detect language and setup stop words for it
-		if c.StopWords == nil && s != "" {
+		if cfg.StopWords == nil && s != "" {
 			info := whatlanggo.Detect(s)
 			lang = info.Lang.String()
-			c.SetStopWords(info.Lang.Iso6391())
-			if c.Verbose {
+			cfg.SetStopWords(info.Lang.Iso6391())
+			if cfg.Verbose {
 				fmt.Printf("detected language: %s [%s] [%s]\n ",
 					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
 			}
-			if c.NoStopWords {
-				reg = c.StopWords
+			if cfg.NoStopWords {
+				reg = cfg.StopWords
 			}
 		}
 
 		sentences := l.sentences()
 		for _, snt := range sentences {
 			// skip random non-text related tags
-			if c.ContentOnly && !isHTMLContent(snt.tag) {
+			if cfg.ContentOnly && !isHTMLContent(snt.tag) {
 				continue
 			}
 
@@ -277,7 +360,12 @@ func tagifyHTML(contents *htmlContents, c *config.Config,
 			visited := map[string]bool{}
 
 			snt.forEach(func(i int, p *htmlPart) {
-				weight := htmlTagWeights[p.tag.String()]
+				var weight float64
+				if l.weightOverride {
+					weight = l.weight
+				} else {
+					weight = cfg.TagWeights[p.tag]
+				}
 				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
 
 				for _, token := range tokens {
@@ -297,6 +385,9 @@ func tagifyHTML(contents *htmlContents, c *config.Config,
 				tokenIndex[token].Docs++
 			}
 		}
+
+		// run extensions if any
+		extTagify(cfg, exts, l, tokenIndex)
 	}
 
 	// set total number of documents in the text.
@@ -307,33 +398,47 @@ func tagifyHTML(contents *htmlContents, c *config.Config,
 	return
 }
 
-// htmlContents stores text from target tags.
-type htmlContents struct {
-	lines          []*htmlLine
-	htmlTagWeights model.TagWeights
+// HTMLContents stores text from target tags.
+type HTMLContents struct {
+	lines          []*HTMLLine
+	htmlTagWeights config.TagWeights
 }
 
-func (cnt *htmlContents) append(lineIndex int, tag atom.Atom, data []byte) {
+func (cnt *HTMLContents) Len() int {
+	return len(cnt.lines)
+}
+
+func (cnt *HTMLContents) Append(lineIndex int, tag string, data []byte) {
 	for len(cnt.lines) <= lineIndex {
-		cnt.lines = append(cnt.lines, &htmlLine{tag: tag, parts: make([]*htmlPart, 0)})
+		cnt.lines = append(cnt.lines, &HTMLLine{tag: tag, parts: make([]*htmlPart, 0)})
 	}
 	line := cnt.lines[lineIndex]
 	line.add(tag, data)
 }
 
-func (cnt *htmlContents) forEach(it func(i int, line *htmlLine)) {
+func (cnt *HTMLContents) Weigh(lineIndex int, weight float64) {
+	if lineIndex >= len(cnt.lines) {
+		// silently ignore for now...
+		return
+	}
+	line := cnt.lines[lineIndex]
+	line.weightOverride = true
+	line.weight = weight
+}
+
+func (cnt *HTMLContents) forEach(it func(i int, line *HTMLLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
-		if _, ok := cnt.htmlTagWeights[l.tag.String()]; !ok {
+		if _, ok := cnt.htmlTagWeights[l.tag]; !ok {
 			continue
 		}
 		it(i, l)
 	}
 }
 
-func (cnt *htmlContents) String() string {
+func (cnt *HTMLContents) String() string {
 	var sb strings.Builder
-	cnt.forEach(func(i int, line *htmlLine) {
+	cnt.forEach(func(i int, line *HTMLLine) {
 		sb.WriteString(fmt.Sprintf("[%d] ", i))
 		sb.WriteString(line.String())
 		sb.WriteString("\n")
@@ -341,13 +446,13 @@ func (cnt *htmlContents) String() string {
 	return sb.String()
 }
 
-func (cnt *htmlContents) hash() []byte {
+func (cnt *HTMLContents) hash() []byte {
 	h := sha512.New()
-	cnt.forEach(func(i int, line *htmlLine) {
-		_, _ = h.Write([]byte(line.tag.String()))
+	cnt.forEach(func(i int, line *HTMLLine) {
+		_, _ = h.Write([]byte(line.tag))
 		_, _ = h.Write([]byte(":"))
 		line.forEach(func(i int, p *htmlPart) {
-			_, _ = h.Write([]byte(p.tag.String()))
+			_, _ = h.Write([]byte(p.tag))
 			_, _ = h.Write([]byte(":"))
 			_, _ = h.Write(line.pData(p))
 		})
@@ -357,28 +462,30 @@ func (cnt *htmlContents) hash() []byte {
 
 // htmlPart is a part of an HTML tag text.
 type htmlPart struct {
-	tag atom.Atom
+	tag string
 	pos int
 	len int
 }
 
 func (d *htmlPart) String() string {
-	return fmt.Sprintf("<%s>: pos - %d, len - %d", d.tag.String(), d.pos, d.len)
+	return fmt.Sprintf("<%s>: pos - %d, len - %d", d.tag, d.pos, d.len)
 }
 
-type htmlLine struct {
-	tag   atom.Atom
-	parts []*htmlPart
-	data  []byte
+type HTMLLine struct {
+	tag            string
+	parts          []*htmlPart
+	data           []byte
+	weightOverride bool
+	weight         float64
 }
 
-func (l *htmlLine) String() string {
+func (l *HTMLLine) String() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("<%s> - %d parts: [ ", l.tag.String(), len(l.parts)))
+	sb.WriteString(fmt.Sprintf("<%s> - %d parts: [ ", l.tag, len(l.parts)))
 	l.forEach(func(i int, p *htmlPart) {
 		sb.WriteString("'")
 		sb.WriteString("<")
-		sb.WriteString(p.tag.String())
+		sb.WriteString(p.tag)
 		sb.WriteString(">: ")
 		sb.WriteString(string(l.pData(p)))
 		sb.WriteString("' ")
@@ -387,28 +494,28 @@ func (l *htmlLine) String() string {
 	return sb.String()
 }
 
-func (l *htmlLine) forEach(it func(i int, p *htmlPart)) {
+func (l *HTMLLine) forEach(it func(i int, p *htmlPart)) {
 	for i, p := range l.parts {
 		it(i, p)
 	}
 }
 
-func (l *htmlLine) add(tag atom.Atom, data []byte) {
+func (l *HTMLLine) add(tag string, data []byte) {
 	l.parts = append(l.parts, &htmlPart{tag: tag, pos: len(l.data), len: len(data)})
 	l.data = append(l.data, data...)
 }
 
-func (l *htmlLine) pData(part *htmlPart) []byte {
+func (l *HTMLLine) pData(part *htmlPart) []byte {
 	return l.data[part.pos : part.pos+part.len]
 }
 
 // breaksdown an HTML line into a slice of HTML sentences.
-func (l *htmlLine) sentences() []*htmlLine {
-	ret := []*htmlLine{}
+func (l *HTMLLine) sentences() []*HTMLLine {
+	ret := []*HTMLLine{}
 	var offset, diff, pDiff, i, j int
 	sents := util.SplitToSentences(l.data)
 	for i < len(l.parts) && j < len(sents) {
-		s := &htmlLine{tag: l.tag, parts: []*htmlPart{}}
+		s := &HTMLLine{tag: l.tag, parts: []*htmlPart{}}
 		ret = append(ret, s)
 
 		sent := sents[j]
@@ -448,38 +555,54 @@ func (l *htmlLine) sentences() []*htmlLine {
 	return ret
 }
 
+type htmlParserNode struct {
+	name string
+	stop bool
+}
+
 // htmlParser keeps track of the current state of the HTML parser.
 type htmlParser struct {
 	lineIndex int
-	stack     []atom.Atom
+	stack     []*htmlParserNode
 }
 
-func (p *htmlParser) current() atom.Atom {
+func (p *htmlParser) current() string {
 	if len(p.stack) == 0 {
-		return 0
+		return ""
+	}
+	return p.stack[len(p.stack)-1].name
+}
+
+func (p *htmlParser) currentNode() *htmlParserNode {
+	if len(p.stack) == 0 {
+		return nil
 	}
 	return p.stack[len(p.stack)-1]
 }
 
-func (p *htmlParser) parent() atom.Atom {
+func (p *htmlParser) parent() string {
 	if len(p.stack) < 2 {
-		return 0
+		return ""
 	}
-	return p.stack[len(p.stack)-2]
+	return p.stack[len(p.stack)-2].name
 }
 
-func (p *htmlParser) push(a atom.Atom) {
-	p.stack = append(p.stack, a)
+func (p *htmlParser) push(a string) {
+	p.stack = append(p.stack, &htmlParserNode{name: a})
 }
 
-func (p *htmlParser) pop() atom.Atom {
+func (p *htmlParser) stop() {
+	p.currentNode().stop = true
+}
+
+func (p *htmlParser) pop() string {
 	if len(p.stack) == 0 {
-		return 0
+		return ""
 	}
 	last := len(p.stack) - 1
 	v := p.stack[last]
 	p.stack = p.stack[:last]
-	return v
+	return v.name
 }
 
 func (p *htmlParser) isEmpty() bool {
@@ -488,4 +611,12 @@ func (p *htmlParser) isEmpty() bool {
 
 func (p *htmlParser) isNotEmpty() bool {
 	return len(p.stack) > 0
+}
+
+func (p *htmlParser) shouldStop() bool {
+	node := p.currentNode()
+	if node == nil {
+		return false
+	}
+	return node.stop
 }

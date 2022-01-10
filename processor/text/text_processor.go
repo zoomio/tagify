@@ -11,19 +11,12 @@ import (
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/config"
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
 
 // ParseText parses given text lines of text into a slice of tags.
-var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser, options ...model.ParseOption) *model.ParseOutput {
-
-	/* pc := &model.ParseConfig{}
-
-	// apply custom configuration
-	for _, option := range options {
-		option(pc)
-	} */
+var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
 
 	if c.Verbose {
 		fmt.Println("parsing plain text...")
@@ -44,7 +37,7 @@ var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser, options
 	}
 
 	if len(lines) == 0 {
-		return &model.ParseOutput{}
+		return &model.Result{}
 	}
 
 	var lang string
@@ -92,7 +85,14 @@ var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser, options
 		v.DocsCount = docsCount
 	}
 
-	return &model.ParseOutput{Tags: tokenIndex, DocHash: hashTokens(tokens), Lang: lang}
+	return &model.Result{
+		RawTags: tokenIndex,
+		Meta: &model.Meta{
+			ContentType: config.Text,
+			DocHash:     fmt.Sprintf("%x", hashTokens(tokens)),
+			Lang:        lang,
+		},
+	}
 }
 
 func hashTokens(ts []string) []byte {

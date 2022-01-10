@@ -1,6 +1,10 @@
 package config
 
-import "github.com/zoomio/stopwords"
+import (
+	"github.com/zoomio/stopwords"
+
+	"github.com/zoomio/tagify/extension"
+)
 
 var (
 	allStopWords = map[string]stopwords.Option{
@@ -18,34 +22,6 @@ var (
 	}
 )
 
-// Config ...
-type Config struct {
-	Source  string
-	Query   string
-	Content string
-	ContentType
-	Limit          int
-	Verbose        bool
-	NoStopWords    bool
-	Lang           string
-	StopWords      *stopwords.Register
-	ContentOnly    bool
-	FullSite       bool
-	TagWeights     string
-	TagWeightsJSON string
-	AdjustScores   bool
-}
-
-// SetStopWords ...
-func (c *Config) SetStopWords(lang string) {
-	c.Lang = lang
-	if found, ok := allStopWords[lang]; ok {
-		c.StopWords = stopwords.Setup(found)
-	} else {
-		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWords))
-	}
-}
-
 // New ...
 func New(options ...Option) *Config {
 	c := &Config{}
@@ -56,4 +32,33 @@ func New(options ...Option) *Config {
 	}
 
 	return c
+}
+
+// Config ...
+type Config struct {
+	Source  string
+	Query   string
+	Content string
+	ContentType
+	Limit       int
+	Verbose     bool
+	NoStopWords bool
+	Lang        string
+	StopWords   *stopwords.Register
+	ContentOnly bool
+	FullSite    bool
+	TagWeights
+	ExtraTagWeights TagWeights
+	AdjustScores    bool
+	Extensions      []extension.Extension
+}
+
+// SetStopWords ...
+func (c *Config) SetStopWords(lang string) {
+	c.Lang = lang
+	if found, ok := allStopWords[lang]; ok {
+		c.StopWords = stopwords.Setup(found)
+	} else {
+		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWords))
+	}
 }

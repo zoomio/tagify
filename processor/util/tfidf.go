@@ -3,7 +3,7 @@ package util
 import (
 	"math"
 
-	"github.com/zoomio/tagify/processor/model"
+	"github.com/zoomio/tagify/model"
 )
 
 // TFIDF applies TF-IDF to given Tag

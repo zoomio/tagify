@@ -3,11 +3,18 @@ package tagify
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/html"
+
+	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
+	"github.com/zoomio/tagify/model"
+	thtml "github.com/zoomio/tagify/processor/html"
 )
 
 var ctx = context.TODO()
@@ -26,7 +33,7 @@ var runTests = []struct {
 			TargetType(HTML), Limit(5), NoStopWords(true), ContentOnly(true)},
 		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
 		"Test",
-		"bdb03356c79b2b1d9c69f4528ee398bbafc4a572629b713dcf4992bd43fd650ecedb4355ddd08fe1da748ac2c4babff71e3c425724793f0d4e636037121e123e",
+		"d91b531c92a14fe5556b9bf3e82ef6dac0da69914affca86795181d2ca9ca3046630a41eba734b146eec0c5e78c5780734dfb42bcef453cf1d9d20830b562dac",
 	},
 	{
 		"run with query",
@@ -40,7 +47,7 @@ var runTests = []struct {
 	{
 		"run custom weights",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
-			TargetType(HTML), Limit(5), NoStopWords(true), TagWeights("title:3")},
+			TargetType(HTML), Limit(5), NoStopWords(true), TagWeightsString("title:3")},
 		[]string{"test"},
 		"Test",
 		"20c62640489dbc272c51abfd1fbe7b5aa7280f814fbfdb2baf993fb1e8b4c860fb1f1c6964760144e2ef15849ef073f47cb89284481d17845565395d7574e2e7",
@@ -48,7 +55,7 @@ var runTests = []struct {
 }
 
 func Test_Run_HTML(t *testing.T) {
-	defer stopServer(startServer(fmt.Sprintf(":%d", port)))
+	defer stopServer(startServer(fmt.Sprintf(":%d", port), indexHTML))
 	for _, tt := range runTests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := Run(ctx, tt.in...)
@@ -88,12 +95,38 @@ func Test_ToStrings(t *testing.T) {
 	assert.Len(t, strs, 3)
 }
 
+func Test_CustomHTML(t *testing.T) {
+	ytPage, _ := ioutil.ReadFile("yt_page.html")
+	ext := &customHTML{}
+	defer stopServer(startServer(fmt.Sprintf(":%d", port), string(ytPage)))
+	res, err := Run(ctx,
+		Source(fmt.Sprintf("http://localhost:%d", port)),
+		Limit(2),
+		TargetType(HTML),
+		NoStopWords(true),
+		ExtraTagWeightsString("link:0"),
+		Extensions([]extension.Extension{ext}),
+	)
+	assert.Nil(t, err)
+	assert.Len(t, res.Extensions, 1)
+	assert.Equal(t, "Next Level Reynolds - YouTube", res.Meta.DocTitle)
+	assert.Equal(t, "Ryan Reynolds", ext.text)
+
+	var found int
+	res.ForEach(func(i int, tag *model.Tag) {
+		if tag.Value == "ryan" || tag.Value == "reynolds" {
+			found++
+		}
+	})
+	assert.Equal(t, 2, found)
+}
+
 // startServer is a simple HTTP server that displays the passed headers in the html.
-func startServer(addr string) *http.Server {
+func startServer(addr string, pageHTML string) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(res http.ResponseWriter, _ *http.Request) {
 		res.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(res, indexHTML)
+		fmt.Fprint(res, pageHTML)
 	})
 	srv := &http.Server{Addr: addr, Handler: mux}
 	go func() {
@@ -144,6 +177,11 @@ const (
 	<p class="line">And hungrily began to eat</p>
 	<p class="line">The Boy: beginning at his feet.</p>
   </div>
+  <foo-stuff>
+  	<bar-stuff>
+	  <a href="https://www.zoomio.org">Zoom IO is here</a>
+	</bar-stuff>
+  </foo-stuff>
   <script>
   	setTimeout(function() {
 		document.querySelector('#box3').style.display = '';
@@ -152,3 +190,48 @@ const (
 </body>
 </html>`
 )
+
+type customHTML struct {
+	text string
+}
+
+func (ext *customHTML) Name() string {
+	return "custom-html"
+}
+
+func (ext *customHTML) Version() string {
+	return "v0.0.1"
+}
+
+func (ext *customHTML) Result() *extension.Result {
+	return extension.NewResult(ext, map[string]interface{}{"text": ext.text}, nil)
+}
+
+func (ext *customHTML) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *thtml.HTMLContents) (bool, error) {
+	tag := token.Data
+	var appended bool
+	if ext.text == "" && tag == "link" {
+		var itemprop, content string
+		for _, v := range token.Attr {
+			if v.Key == "itemprop" {
+				itemprop = v.Val
+			}
+			if v.Key == "content" {
+				content = v.Val
+			}
+		}
+		if itemprop == "name" && content != "" {
+			// collect YouTube channel name
+			ext.text = content
+			// make it count as a tag too
+			// 1st check if line is there and append it if it is not
+			if lineIdx >= cnts.Len() {
+				cnts.Append(lineIdx, tag, []byte(content))
+				appended = true
+			}
+			// 2nd weight the line higher to boost its tags
+			cnts.Weigh(lineIdx, 6)
+		}
+	}
+	return appended, nil
+}

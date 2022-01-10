@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.50.0
+
+- [BREAKING CHANGE (most likely)] extensions (BETA) release - this is the BIGGEST RELEASE since the addition of the Markdown (documentation is in progress);
+
 ## v0.49.2
 
 - support backwards compatibility for `ContentTypeOf`.
