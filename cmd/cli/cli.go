@@ -113,7 +113,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	if res.Len() == 0 {
+	if res.RawLen() == 0 {
 		fmt.Println("found 0 tags")
 		return
 	}

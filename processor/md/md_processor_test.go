@@ -87,7 +87,7 @@ func Test_ParseMD(t *testing.T) {
 			out := ParseMD(config.New(config.NoStopWords(tt.noStopWords)), &inputReadCloser{strings.NewReader(tt.text)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
-			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.FlatTags()))
+			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.Flatten()))
 		})
 	}
 }

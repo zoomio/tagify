@@ -29,13 +29,13 @@ func Test_ParseText_Empty(t *testing.T) {
 func Test_ParseText_WithStopWords(t *testing.T) {
 	out := ParseText(config.New(), inout.NewFromString(text))
 	assert.Len(t, out.RawTags, 7)
-	assert.Subset(t, model.ToStrings(out.FlatTags()), []string{"there", "was", "a", "boy", "who's", "name", "jim"})
+	assert.Subset(t, model.ToStrings(out.Flatten()), []string{"there", "was", "a", "boy", "who's", "name", "jim"})
 }
 
 func Test_ParseText_NoStopWords(t *testing.T) {
 	out := ParseText(config.New(config.NoStopWords(true)), inout.NewFromString(text))
 	assert.Len(t, out.RawTags, 2)
-	assert.Subset(t, model.ToStrings(out.FlatTags()), []string{"boy", "jim"})
+	assert.Subset(t, model.ToStrings(out.Flatten()), []string{"boy", "jim"})
 }
 
 func Test_calculatesVersion(t *testing.T) {

@@ -35,12 +35,11 @@ func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 
 	res := processInput(&in, c)
 
-	// var tags []*model.Tag
 	if len(res.RawTags) > 0 {
 		if c.Verbose {
 			fmt.Println("tagifying...")
 		}
-		res.Tags = processor.Run(c, res.FlatTags())
+		res.Tags = processor.Run(c, res.Flatten())
 		if c.Verbose {
 			fmt.Printf("\n%v\n", res.Tags)
 		}

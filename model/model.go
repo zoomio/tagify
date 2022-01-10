@@ -28,6 +28,14 @@ type Tag struct {
 	DocsCount int
 }
 
+// Meta extra information.
+type Meta struct {
+	ContentType config.ContentType
+	DocTitle    string
+	DocHash     string
+	Lang        string
+}
+
 func (t *Tag) String() string {
 	return fmt.Sprintf("(%s - [score: %.2f, count: %d, docs: %d, docs_count: %d])",
 		t.Value, t.Score, t.Count, t.Docs, t.DocsCount)
@@ -45,13 +53,13 @@ func ErrResult(err error) *Result {
 type Result struct {
 	Meta       *Meta
 	RawTags    map[string]*Tag
-	Tags       []*Tag
+	Tags       []*Tag // processed slice of the result dictionary - RawTags
 	Extensions map[string]map[string]*extension.Result
 	Err        error
 }
 
 // FlatTags transforms internal token register into a slice.
-func (res *Result) FlatTags() []*Tag {
+func (res *Result) Flatten() []*Tag {
 	return flatten(res.RawTags)
 }
 
@@ -74,17 +82,14 @@ func (res *Result) FindExtResults(name, version string) []*extension.Result {
 	return list
 }
 
-// Meta extra information.
-type Meta struct {
-	ContentType config.ContentType
-	DocTitle    string
-	DocHash     string
-	Lang        string
+// RawLen returns count of the all (found) tags in the result.
+func (r *Result) RawLen() int {
+	return len(r.RawTags)
 }
 
-// Len returns count of tags in the result.
+// Len returns count of the processed (if any) tags in the result.
 func (r *Result) Len() int {
-	return len(r.RawTags)
+	return len(r.Tags)
 }
 
 // ForEach iterates through the slice of Tags
@@ -95,7 +100,7 @@ func (r *Result) ForEach(fn func(i int, tag *Tag)) {
 	}
 }
 
-// TagsStrings transforms slice of tags into a slice of strings.
+// TagsStrings returns slice of strings representing tags.
 func (r *Result) TagsStrings() []string {
 	return ToStrings(r.Tags)
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.49.3
+
+- extensions (BETA) release.
+
 ## v0.49.2
 
 - support backwards compatibility for `ContentTypeOf`.

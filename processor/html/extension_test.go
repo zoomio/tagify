@@ -71,7 +71,7 @@ func Test_Ext_ParseEnd(t *testing.T) {
 		config.NoStopWords(true),
 	)
 	out := ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
-	assert.Equal(t, 7, out.Len())
+	assert.Equal(t, 7, out.RawLen())
 
 	// Amount of tags when stopped is 3 (see assert.Len)
 	cfg = config.New(
@@ -80,7 +80,7 @@ func Test_Ext_ParseEnd(t *testing.T) {
 		config.NoStopWords(true),
 	)
 	out = ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
-	assert.Equal(t, 3, out.Len())
+	assert.Equal(t, 3, out.RawLen())
 }
 
 func newTestImgCrawlerExt() *testImgCrawlerExt {

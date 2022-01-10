@@ -310,7 +310,7 @@ func Test_ParseHTML(t *testing.T) {
 			out := ParseHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
-			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.FlatTags()))
+			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.Flatten()))
 		})
 	}
 }
@@ -321,7 +321,7 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		out.Meta.DocHash)
-	assert.Contains(t, out.FlatTags(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
+	assert.Contains(t, out.Flatten(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
@@ -330,7 +330,7 @@ func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		out.Meta.DocHash)
-	assert.NotContains(t, out.FlatTags(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
+	assert.NotContains(t, out.Flatten(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
 }
 
 func Test_parseHTML(t *testing.T) {
