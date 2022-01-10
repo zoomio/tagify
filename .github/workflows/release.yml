@@ -44,7 +44,7 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: Roang-zero1/github-create-release-action@v2
+      uses: Roang-zero1/github-create-release-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
