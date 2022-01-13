@@ -68,9 +68,6 @@ func extParseTag(cfg *config.Config, exts []HTMLExt, token *html.Token, lineIdx 
 		if !ok {
 			continue
 		}
-		if cfg.Verbose {
-			fmt.Printf("parsing HTML tag %q %s\n", v.Name(), v.Version())
-		}
 		ok, err := e.ParseTag(cfg, token, lineIdx, cnts)
 		if err != nil {
 			if cfg.Verbose {
@@ -91,9 +88,6 @@ func extParseText(cfg *config.Config, exts []HTMLExt, tagName, text string, line
 		if !ok {
 			continue
 		}
-		if cfg.Verbose {
-			fmt.Printf("parsing HTML text %q %s\n", v.Name(), v.Version())
-		}
 		err := e.ParseText(cfg, tagName, text, lineIdx)
 		if err != nil {
 			if cfg.Verbose {
@@ -110,9 +104,6 @@ func extTagify(cfg *config.Config, exts []HTMLExt, line *HTMLLine, tokenIndex ma
 		e, ok := v.(HTMLExtTagify)
 		if !ok {
 			continue
-		}
-		if cfg.Verbose {
-			fmt.Printf("tagifying %q %s\n", v.Name(), v.Version())
 		}
 		err := e.Tagify(cfg, line, tokenIndex)
 		if err != nil && cfg.Verbose {

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.51.0
+
+- HTML processor: fallback to <h1> tag (if any) in case if the <title> has not been provided for some reason;
+- HTML processor: use the longest parsed line in order to detect document language.
+
 ## v0.50.0
 
 - [BREAKING CHANGE (most likely)] extensions (BETA) release - this is the BIGGEST RELEASE since the addition of the Markdown (documentation is in progress);

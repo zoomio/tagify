@@ -167,6 +167,30 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
+	var controlStr string
+	updateDetectStr := func(candidate string) string {
+		if len(candidate) > len(controlStr) {
+			return candidate
+		}
+		return controlStr
+	}
+
+	defer func() {
+		// detect language and setup stop words for it
+		if cfg.StopWords == nil {
+			info := whatlanggo.Detect(controlStr)
+			contents.lang = info.Lang.String()
+			cfg.SetStopWords(info.Lang.Iso6391())
+			if cfg.Verbose {
+				fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
+					controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+			}
+			if cfg.NoStopWords {
+				contents.reg = cfg.StopWords
+			}
+		}
+	}()
+
 	var cursor string
 	z := html.NewTokenizer(reader)
 	for {
@@ -223,6 +247,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
+					controlStr = updateDetectStr(content)
 					contents.Append(parser.lineIndex, cursor, []byte(content))
 					appended = true
 				}
@@ -304,6 +329,8 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 						parser.stop()
 					}
 				}
+
+				controlStr = updateDetectStr(token.Data)
 				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}
@@ -312,37 +339,28 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 
 func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+
 	tokenIndex = map[string]*model.Tag{}
+	lang = contents.lang
+	reg := contents.reg
+
 	var docsCount int
-	var reg *stopwords.Register
 
 	for _, l := range contents.lines {
 		s := string(l.data)
 
 		// Title tags have special treatment
 		// if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
-		if l.tag == atom.Title.String() && pageTitle == "" {
+		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && pageTitle == "" {
 			pageTitle = s
-		} else if isHTMLHeading(l.tag) && s == pageTitle {
-			// avoid doubling of scores for duplicated page's title in headings
+		}
+
+		// avoid doubling of scores for duplicated page's title in headings
+		if isHTMLHeading(l.tag) && s == pageTitle {
 			if cfg.Verbose {
 				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag)
 			}
 			continue
-		}
-
-		// detect language and setup stop words for it
-		if cfg.StopWords == nil && s != "" {
-			info := whatlanggo.Detect(s)
-			lang = info.Lang.String()
-			cfg.SetStopWords(info.Lang.Iso6391())
-			if cfg.Verbose {
-				fmt.Printf("detected language: %s [%s] [%s]\n ",
-					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
-			}
-			if cfg.NoStopWords {
-				reg = cfg.StopWords
-			}
 		}
 
 		sentences := l.sentences()
@@ -402,6 +420,9 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 type HTMLContents struct {
 	lines          []*HTMLLine
 	htmlTagWeights config.TagWeights
+
+	lang string
+	reg  *stopwords.Register
 }
 
 func (cnt *HTMLContents) Len() int {
