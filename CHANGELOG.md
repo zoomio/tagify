@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.52.0
+
+- added URL sanitization in the texts, so it excludes things like http, https & www from them.
+
 ## v0.51.0
 
 - HTML processor: fallback to <h1> tag (if any) in case if the <title> has not been provided for some reason;

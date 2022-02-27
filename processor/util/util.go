@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -16,6 +17,8 @@ var (
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 
 	newLine = []byte("\n")
+
+	domains = stopwords.Setup(stopwords.WithDomains(true))
 )
 
 // SplitToSentences splits given text into slice of sentences.
@@ -28,9 +31,26 @@ func SplitToSentences(text []byte) [][]byte {
 func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
+		str := string(s)
+		// check if it is an URL
+		if u, ok := isURL(str); ok && len(u.Hostname()) > 0 {
+			str = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+			hostParts := strings.Split(str, ".")
+			lastIndex := -1
+			if len(hostParts) > 2 && domains.IsStopWord(hostParts[len(hostParts)-2]) {
+				lastIndex = len(hostParts) - 2
+			} else if len(hostParts) > 1 && domains.IsStopWord(hostParts[len(hostParts)-1]) {
+				lastIndex = len(hostParts) - 1
+			}
+			if lastIndex > 0 {
+				str = strings.Join(hostParts[:lastIndex], ".")
+			}
+		} else {
+			str = strings.ToLower(str)
+		}
 		// all letters to lower and with proper quote
-		s = bytes.ToLower(bytes.Replace(s, []byte("’"), []byte("'"), -1))
-		parts := notAWordRegex.Split(string(s), -1)
+		str = strings.Replace(str, "’", "'", -1)
+		parts := notAWordRegex.Split(str, -1)
 		for _, p := range parts {
 			normilized, ok := Normalize(p, reg)
 			if !ok {
@@ -73,4 +93,12 @@ func Normalize(word string, reg *stopwords.Register) (string, bool) {
 
 	// Allowed word
 	return word, true
+}
+
+func isURL(s string) (*url.URL, bool) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return nil, false
+	}
+	return u, true
 }
