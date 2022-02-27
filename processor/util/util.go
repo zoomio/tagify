@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -28,9 +29,16 @@ func SplitToSentences(text []byte) [][]byte {
 func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
+		str := string(s)
+		// check if it is an URL
+		if u, ok := isURL(str); ok && len(u.Hostname()) > 0 {
+			str = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+		} else {
+			str = strings.ToLower(str)
+		}
 		// all letters to lower and with proper quote
-		s = bytes.ToLower(bytes.Replace(s, []byte("’"), []byte("'"), -1))
-		parts := notAWordRegex.Split(string(s), -1)
+		str = strings.Replace(str, "’", "'", -1)
+		parts := notAWordRegex.Split(str, -1)
 		for _, p := range parts {
 			normilized, ok := Normalize(p, reg)
 			if !ok {
@@ -73,4 +81,12 @@ func Normalize(word string, reg *stopwords.Register) (string, bool) {
 
 	// Allowed word
 	return word, true
+}
+
+func isURL(s string) (*url.URL, bool) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return nil, false
+	}
+	return u, true
 }

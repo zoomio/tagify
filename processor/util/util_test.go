@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,6 +51,7 @@ var sanitizeTests = []struct {
 }{
 	{"splits", [][]byte{[]byte("Advertising?Programmes")}, []string{"advertising", "programmes"}, false},
 	{"apostrophe", [][]byte{[]byte("I’ve")}, []string{}, true},
+	{"URL", [][]byte{[]byte("https://www.youtube.com/watch?t=296s&v=HHVQUWnOqEU")}, []string{"youtube", "com"}, false},
 }
 
 func Test_sanitize(t *testing.T) {
@@ -60,6 +62,7 @@ func Test_sanitize(t *testing.T) {
 				reg = register
 			}
 			out := Sanitize(tt.in, reg)
+			fmt.Printf("Sanitize: %#v\n", out)
 			assert.ElementsMatch(t, tt.expect, out)
 		})
 	}
