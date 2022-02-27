@@ -50,7 +50,12 @@ var sanitizeTests = []struct {
 }{
 	{"splits", [][]byte{[]byte("Advertising?Programmes")}, []string{"advertising", "programmes"}, false},
 	{"apostrophe", [][]byte{[]byte("I’ve")}, []string{}, true},
-	{"URL", [][]byte{[]byte("https://www.youtube.com/watch?t=296s&v=HHVQUWnOqEU")}, []string{"youtube", "com"}, false},
+	{"URL", [][]byte{[]byte("https://www.youtube.com/watch?t=296s&v=HHVQUWnOqEU")}, []string{"youtube"}, false},
+	{"URL 2", [][]byte{[]byte("https://zoomio.org/foo/bar?bee=dog")}, []string{"zoomio"}, false},
+	{"URL 3", [][]byte{[]byte("https://abc.abc")}, []string{"abc"}, false},
+	{"URL 4", [][]byte{[]byte("https://abc.com.au")}, []string{"abc"}, false},
+	{"URL 5", [][]byte{[]byte("https://www.abc.com.au")}, []string{"abc"}, false},
+	{"URL 6", [][]byte{[]byte("https://my.gov.com.au")}, []string{"my", "gov"}, false},
 }
 
 func Test_sanitize(t *testing.T) {

@@ -17,6 +17,8 @@ var (
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
 
 	newLine = []byte("\n")
+
+	domains = stopwords.Setup(stopwords.WithDomains(true))
 )
 
 // SplitToSentences splits given text into slice of sentences.
@@ -33,6 +35,16 @@ func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 		// check if it is an URL
 		if u, ok := isURL(str); ok && len(u.Hostname()) > 0 {
 			str = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
+			hostParts := strings.Split(str, ".")
+			lastIndex := -1
+			if len(hostParts) > 2 && domains.IsStopWord(hostParts[len(hostParts)-2]) {
+				lastIndex = len(hostParts) - 2
+			} else if len(hostParts) > 1 && domains.IsStopWord(hostParts[len(hostParts)-1]) {
+				lastIndex = len(hostParts) - 1
+			}
+			if lastIndex > 0 {
+				str = strings.Join(hostParts[:lastIndex], ".")
+			}
 		} else {
 			str = strings.ToLower(str)
 		}
