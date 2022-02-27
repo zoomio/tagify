@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,7 +61,6 @@ func Test_sanitize(t *testing.T) {
 				reg = register
 			}
 			out := Sanitize(tt.in, reg)
-			fmt.Printf("Sanitize: %#v\n", out)
 			assert.ElementsMatch(t, tt.expect, out)
 		})
 	}
