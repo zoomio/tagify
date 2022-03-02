@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zoomio/stopwords"
 	"github.com/zoomio/tagify/extension"
 )
 
@@ -59,6 +60,13 @@ var (
 	NoStopWords = func(v bool) Option {
 		return func(c *Config) {
 			c.NoStopWords = v
+		}
+	}
+
+	// StopWords allows to provide a custom set of stop-words.
+	StopWords = func(v *stopwords.Register) Option {
+		return func(c *Config) {
+			c.StopWords = v
 		}
 	}
 

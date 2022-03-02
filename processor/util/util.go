@@ -18,7 +18,7 @@ var (
 
 	newLine = []byte("\n")
 
-	domains = stopwords.Setup(stopwords.WithDomains(true))
+	Domains = stopwords.Setup(stopwords.WithDomains(true))
 )
 
 // SplitToSentences splits given text into slice of sentences.
@@ -37,9 +37,9 @@ func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 			str = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
 			hostParts := strings.Split(str, ".")
 			lastIndex := -1
-			if len(hostParts) > 2 && domains.IsStopWord(hostParts[len(hostParts)-2]) {
+			if len(hostParts) > 2 && Domains.IsStopWord(hostParts[len(hostParts)-2]) {
 				lastIndex = len(hostParts) - 2
-			} else if len(hostParts) > 1 && domains.IsStopWord(hostParts[len(hostParts)-1]) {
+			} else if len(hostParts) > 1 && Domains.IsStopWord(hostParts[len(hostParts)-1]) {
 				lastIndex = len(hostParts) - 1
 			}
 			if lastIndex > 0 {

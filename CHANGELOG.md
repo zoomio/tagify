@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.53.0
+
+- added `Option` called `StopWords` to allow for custom stop-words setup, also made `Domains` variable public.
+
 ## v0.52.0
 
 - added URL sanitization in the texts, so it excludes things like http, https & www from them.

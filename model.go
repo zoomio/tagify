@@ -17,6 +17,7 @@ var (
 	Limit                 = config.Limit
 	Verbose               = config.Verbose
 	NoStopWords           = config.NoStopWords
+	StopWords             = config.StopWords
 	ContentOnly           = config.ContentOnly
 	FullSite              = config.FullSite
 	TagWeightsString      = config.TagWeightsString
