@@ -64,9 +64,9 @@ var (
 	}
 
 	// StopWords allows to provide a custom set of stop-words.
-	StopWords = func(v *stopwords.Register) Option {
+	StopWords = func(v []string) Option {
 		return func(c *Config) {
-			c.StopWords = v
+			c.StopWords = stopwords.Setup(stopwords.WordsSlice(v))
 		}
 	}
 

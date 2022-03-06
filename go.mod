@@ -5,7 +5,7 @@ require (
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
 	github.com/stretchr/testify v1.7.0
 	github.com/zoomio/inout v0.11.0
-	github.com/zoomio/stopwords v0.7.0
+	github.com/zoomio/stopwords v0.10.0
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
 )
 

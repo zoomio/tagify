@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.54.0
+
+- BREAKING FROM 0.53.0: changed `config.StopWords` option signature to expect a slice of strings instead of `*stopwords.Register`;
+- bumped `github.com/zoomio/stopwords` to `0.10.0`.
+
 ## v0.53.0
 
 - added `Option` called `StopWords` to allow for custom stop-words setup, also made `Domains` variable public.

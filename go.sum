@@ -39,8 +39,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/zoomio/inout v0.11.0 h1:hnIdXa3J4tTXmemCJJqsHemyF5+T52GAsGGTnQW9Tq4=
 github.com/zoomio/inout v0.11.0/go.mod h1:kDGEuyxH0chOEslentwiv9TxGELUZyX5eqS9UtYj9gI=
-github.com/zoomio/stopwords v0.7.0 h1:8U+BpGVXN7xA4/ZqBgucdNuEVHOhrWsIiAP2EePNSHQ=
-github.com/zoomio/stopwords v0.7.0/go.mod h1:gaosgTBK3xJE1dRenc/N4f/RnaKxjB1gfIqFSqtck+k=
+github.com/zoomio/stopwords v0.10.0 h1:HD2Sg+nC4aSPuKBth7Ll6M6nnCg6Epfl+KzTnOhEC50=
+github.com/zoomio/stopwords v0.10.0/go.mod h1:o4QuYCodF27JOxswxYtH5nD9DNXYRV4rrbMEoH3/zhQ=
 golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d h1:62NvYBuaanGXR2ZOfwDFkhhl6X1DUgf8qg3GuQvxZsE=
 golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
