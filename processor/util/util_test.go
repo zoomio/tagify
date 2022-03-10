@@ -56,6 +56,9 @@ var sanitizeTests = []struct {
 	{"URL 4", [][]byte{[]byte("https://abc.com.au")}, []string{"abc"}, false},
 	{"URL 5", [][]byte{[]byte("https://www.abc.com.au")}, []string{"abc"}, false},
 	{"URL 6", [][]byte{[]byte("https://my.gov.com.au")}, []string{"my", "gov"}, false},
+	{"Quoted Batman", [][]byte{[]byte("'the batman'")}, []string{"batman"}, true},
+	{"Quoted Batman w stopwords", [][]byte{[]byte("'the batman'")}, []string{"the", "batman"}, false},
+	{"City's", [][]byte{[]byte("city's")}, []string{"city's"}, true},
 }
 
 func Test_sanitize(t *testing.T) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.55.0
+
+- improved handling of the words with the "`" or "'" symbols.
+
 ## v0.54.0
 
 - BREAKING FROM 0.53.0: changed `config.StopWords` option signature to expect a slice of strings instead of `*stopwords.Register`;

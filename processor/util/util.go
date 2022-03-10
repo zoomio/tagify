@@ -12,6 +12,7 @@ import (
 var (
 	sanitizeRegex              = regexp.MustCompile(`([^\p{L}-']*)([\p{L}-']+)([^\p{L}-']*)`)
 	notAWordRegex              = regexp.MustCompile(`([^\p{L}'-]+)`)
+	simpleNotAWordRegex        = regexp.MustCompile(`([^\p{L}-]+)`)
 	noLetterWordRegex          = regexp.MustCompile(`[^\p{L}]`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^\p{L}]{2}`)
 	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
@@ -32,6 +33,7 @@ func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 	result := make([]string, 0)
 	for _, s := range strs {
 		str := string(s)
+
 		// check if it is an URL
 		if u, ok := isURL(str); ok && len(u.Hostname()) > 0 {
 			str = strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
@@ -48,11 +50,22 @@ func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 		} else {
 			str = strings.ToLower(str)
 		}
+
 		// all letters to lower and with proper quote
 		str = strings.Replace(str, "’", "'", -1)
-		parts := notAWordRegex.Split(str, -1)
+		var parts []string
+		idx := strings.Index(str, "'")
+		if idx > 0 && idx < len(str)-1 {
+			parts = notAWordRegex.Split(str, -1)
+		} else {
+			parts = simpleNotAWordRegex.Split(str, -1)
+		}
 		for _, p := range parts {
-			normilized, ok := Normalize(p, reg)
+			trimmed := strings.TrimSpace(p)
+			if trimmed == "" {
+				continue
+			}
+			normilized, ok := Normalize(trimmed, reg)
 			if !ok {
 				continue
 			}
@@ -96,7 +109,7 @@ func Normalize(word string, reg *stopwords.Register) (string, bool) {
 }
 
 func isURL(s string) (*url.URL, bool) {
-	u, err := url.Parse(s)
+	u, err := url.ParseRequestURI(s)
 	if err != nil {
 		return nil, false
 	}
