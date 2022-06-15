@@ -171,21 +171,23 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		return controlStr
 	}
 
-	defer func() {
-		// detect language and setup stop words for it
-		if cfg.StopWords == nil {
-			info := whatlanggo.Detect(controlStr)
-			contents.lang = info.Lang.String()
-			cfg.SetStopWords(info.Lang.Iso6391())
-			if cfg.Verbose {
-				fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
-					controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+	if !cfg.SkipLang {
+		defer func() {
+			// detect language and setup stop words for it
+			if cfg.StopWords == nil {
+				info := whatlanggo.Detect(controlStr)
+				contents.lang = info.Lang.String()
+				cfg.SetStopWords(info.Lang.Iso6391())
+				if cfg.Verbose {
+					fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
+						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+				}
+				if cfg.NoStopWords {
+					contents.reg = cfg.StopWords
+				}
 			}
-			if cfg.NoStopWords {
-				contents.reg = cfg.StopWords
-			}
-		}
-	}()
+		}()
+	}
 
 	var cursor string
 	z := html.NewTokenizer(reader)
@@ -205,7 +207,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				return contents
 			}
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok {
+			if _, ok := cfg.TagWeights[token.Data]; ok || cfg.AllTagWeights {
 				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
 				if err != nil {
 					switch err.(type) {
@@ -220,7 +222,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.StartTagToken:
 			token := z.Token()
 			cursor = token.Data
-			if _, ok := cfg.TagWeights[cursor]; !ok {
+			if _, ok := cfg.TagWeights[cursor]; !ok && !cfg.AllTagWeights {
 				continue
 			}
 
@@ -289,7 +291,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 
 		case html.EndTagToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok {
+			if _, ok := cfg.TagWeights[token.Data]; ok || cfg.AllTagWeights {
 				parser.pop()
 				cursor = parser.current()
 				if parser.isEmpty() {
@@ -306,7 +308,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		case html.TextToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[cursor]; ok && parser.isNotEmpty() {
+			if _, ok := cfg.TagWeights[cursor]; (ok || cfg.AllTagWeights) && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
@@ -331,6 +333,10 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		}
 	}
+}
+
+func ParseReaderHTML(reader io.Reader, exts []HTMLExt) *HTMLContents {
+	return ParseHTML(reader, &config.Config{Verbose: false, SkipLang: true, AllTagWeights: true}, exts, nil)
 }
 
 func tagifyHTML(contents *HTMLContents, cfg *config.Config,
