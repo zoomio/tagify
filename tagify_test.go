@@ -91,7 +91,7 @@ func Test_ToStrings(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	strs := ToStrings(res.Tags)
+	strs := model.ToStrings(res.Tags)
 	assert.Len(t, strs, 3)
 }
 

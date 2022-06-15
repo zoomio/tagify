@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.56.0
+
+- Bumped Go to 1.18;
+- [BREAKING CHANGE (most likely)] renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
+- Made public `ParseHTML` & `ParseMD` just for the parsing purposes.
+
 ## v0.55.0
 
 - improved handling of the words with the "`" or "'" symbols.

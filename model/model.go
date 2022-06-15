@@ -105,9 +105,9 @@ func (r *Result) TagsStrings() []string {
 	return ToStrings(r.Tags)
 }
 
-// ParseFunc represents an arbitrary handler,
+// ProcessFunc represents an arbitrary handler,
 // which goes through given reader and produces tags.
-type ParseFunc func(c *config.Config, reader io.ReadCloser) *Result
+type ProcessFunc func(c *config.Config, reader io.ReadCloser) *Result
 
 func flatten(dict map[string]*Tag) []*Tag {
 	flat := make([]*Tag, len(dict))

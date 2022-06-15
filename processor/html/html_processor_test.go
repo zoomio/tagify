@@ -307,7 +307,7 @@ func Test_ParseHTML(t *testing.T) {
 	for _, tt := range parseHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
-			out := ParseHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
+			out := ProcessHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.Flatten()))
@@ -316,7 +316,7 @@ func Test_ParseHTML(t *testing.T) {
 }
 
 func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
+	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
@@ -325,7 +325,7 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 }
 
 func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
+	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
@@ -341,7 +341,7 @@ func Test_parseHTML(t *testing.T) {
 	</body>
 	</html>
 `
-	contents := parseHTML(
+	contents := ParseHTML(
 		&inputReadCloser{strings.NewReader(htmlPage)},
 		&config.Config{TagWeights: defaultTagWeights},
 		nil,

@@ -99,11 +99,7 @@ func isSameDomain(href, domain string) bool {
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-// Returns a slice of tags as 1st result,
-// a title of the page as 2nd and
-// a version of the document based on the hashed contents as 3rd.
-//
-var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
+var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
 
@@ -113,7 +109,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 
 	var err error
 	var contents *HTMLContents
-	var parseFn parseFunc = parseHTML
+	var parseFn parseFunc = ParseHTML
 
 	exts := extHTML(c.Extensions)
 
@@ -163,7 +159,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 }
 
-func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
+func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
 	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
@@ -200,7 +196,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.ErrorToken:
 			// end of the document, we're done
 			return contents
-		case html.SelfClosingTagToken:
+		case html.SelfClosingTagToken: // e.g. <img ... />
 			if parser.shouldStop() {
 				// flag has been set to true, exiting
 				if cfg.Verbose {
@@ -208,7 +204,6 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 				return contents
 			}
-			// e.g. <img ... />
 			token := z.Token()
 			if _, ok := cfg.TagWeights[token.Data]; ok {
 				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
@@ -231,8 +226,9 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 
 			parser.push(cursor)
 
-			// handle <meta name="description" content="...">
 			var appended bool
+
+			// handle <meta name="description" content="...">
 			if cursor == atom.Meta.String() {
 				var name, content string
 				for _, a := range token.Attr {
