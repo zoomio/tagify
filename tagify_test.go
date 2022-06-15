@@ -203,7 +203,7 @@ func (ext *customHTML) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *customHTML) Result() *extension.Result {
+func (ext *customHTML) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{"text": ext.text}, nil)
 }
 

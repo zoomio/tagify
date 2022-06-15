@@ -54,7 +54,7 @@ type Result struct {
 	Meta       *Meta
 	RawTags    map[string]*Tag
 	Tags       []*Tag // processed slice of the result dictionary - RawTags
-	Extensions map[string]map[string]*extension.Result
+	Extensions map[string]map[string]*extension.ExtResult
 	Err        error
 }
 
@@ -64,12 +64,12 @@ func (res *Result) Flatten() []*Tag {
 }
 
 // FindExtResults finds requested extension result(s), in case if version is empty.
-func (res *Result) FindExtResults(name, version string) []*extension.Result {
+func (res *Result) FindExtResults(name, version string) []*extension.ExtResult {
 	vs, ok := res.Extensions[name]
 	if !ok {
 		return nil
 	}
-	list := []*extension.Result{}
+	list := []*extension.ExtResult{}
 	if version != "" {
 		if v, ok := vs[version]; ok {
 			list = append(list, v)

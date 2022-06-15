@@ -101,7 +101,7 @@ func (ext *testImgCrawlerExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testImgCrawlerExt) Result() *extension.Result {
+func (ext *testImgCrawlerExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{"images": ext.images}, nil)
 }
 
@@ -128,7 +128,7 @@ func (ext *testExtraStopWordsExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testExtraStopWordsExt) Result() *extension.Result {
+func (ext *testExtraStopWordsExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{"stopwords": ext.stopWords}, nil)
 }
 
@@ -150,7 +150,7 @@ func (ext *testStopExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testStopExt) Result() *extension.Result {
+func (ext *testStopExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{}, nil)
 }
 

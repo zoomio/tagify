@@ -380,10 +380,6 @@ type testCountingExt struct {
 	count int
 }
 
-func (ext *testCountingExt) Result() *extension.Result {
-	return extension.NewResult(ext, map[string]interface{}{"count": ext.count}, nil)
-}
-
 func (ext *testCountingExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
 	ext.count++
 	return false, nil
