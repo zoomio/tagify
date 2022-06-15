@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 	"github.com/zoomio/tagify/model"
 )
 
@@ -220,7 +222,7 @@ func (in *inputReadCloser) Close() error {
 }
 
 // table driven tests
-var parseHTMLTests = []struct {
+var processHTMLTests = []struct {
 	name        string
 	in          string
 	expect      []string
@@ -303,8 +305,8 @@ var parseHTMLTests = []struct {
 	},
 }
 
-func Test_ParseHTML(t *testing.T) {
-	for _, tt := range parseHTMLTests {
+func Test_ProcessHTML(t *testing.T) {
+	for _, tt := range processHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
 			out := ProcessHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
@@ -315,7 +317,7 @@ func Test_ParseHTML(t *testing.T) {
 	}
 }
 
-func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
+func Test_ProcessHTML_DedupeTitleAndHeading(t *testing.T) {
 	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
@@ -324,7 +326,7 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	assert.Contains(t, out.Flatten(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
 }
 
-func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
+func Test_ProcessHTML_NoSpecificStopWords(t *testing.T) {
 	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
@@ -333,7 +335,7 @@ func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	assert.NotContains(t, out.Flatten(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
 }
 
-func Test_parseHTML(t *testing.T) {
+func Test_ParseHTML(t *testing.T) {
 	const htmlPage = `
 	<html>
 	<body>
@@ -362,6 +364,36 @@ func Test_parseHTML(t *testing.T) {
 
 	assert.Equal(t, atom.P.String(), line.parts[2].tag)
 	assert.Equal(t, " name was Jim.", string(line.pData(line.parts[2])))
+}
+
+func Test_ParseReaderHTML_visits_all_tags(t *testing.T) {
+	counter := &testCountingExt{}
+	contents := ParseReaderHTML(io.NopCloser(strings.NewReader(theVergeHTMLWithMetaDescription)), []HTMLExt{counter})
+
+	assert.NotNil(t, contents)
+	assert.Len(t, contents.lines, 1)
+	assert.Equal(t, 37, counter.count)
+}
+
+type testCountingExt struct {
+	count int
+}
+
+func (ext *testCountingExt) Name() string {
+	return "test-counter"
+}
+
+func (ext *testCountingExt) Version() string {
+	return "v0.0.1"
+}
+
+func (ext *testCountingExt) Result() *extension.Result {
+	return extension.NewResult(ext, map[string]interface{}{"count": ext.count}, nil)
+}
+
+func (ext *testCountingExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
+	ext.count++
+	return false, nil
 }
 
 // table driven tests
