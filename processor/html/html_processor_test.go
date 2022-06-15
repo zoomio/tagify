@@ -367,7 +367,7 @@ func Test_ParseHTML(t *testing.T) {
 }
 
 func Test_ParseReaderHTML_visits_all_tags(t *testing.T) {
-	counter := &testCountingExt{}
+	counter := &testCountingExt{BaseExtension: extension.NewExtension("testCountingExt", "1")}
 	contents := ParseReaderHTML(io.NopCloser(strings.NewReader(theVergeHTMLWithMetaDescription)), []HTMLExt{counter})
 
 	assert.NotNil(t, contents)
@@ -376,15 +376,8 @@ func Test_ParseReaderHTML_visits_all_tags(t *testing.T) {
 }
 
 type testCountingExt struct {
+	*extension.BaseExtension
 	count int
-}
-
-func (ext *testCountingExt) Name() string {
-	return "test-counter"
-}
-
-func (ext *testCountingExt) Version() string {
-	return "v0.0.1"
 }
 
 func (ext *testCountingExt) Result() *extension.Result {

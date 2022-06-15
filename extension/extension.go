@@ -11,6 +11,28 @@ type Extension interface {
 	Result() *Result
 }
 
+type BaseExtension struct {
+	name    string
+	version string
+	result  *Result
+}
+
+func NewExtension(name, version string) *BaseExtension {
+	return &BaseExtension{name: name, version: version}
+}
+
+func (ext *BaseExtension) Name() string {
+	return ext.name
+}
+
+func (ext *BaseExtension) Version() string {
+	return ext.version
+}
+
+func (ext *BaseExtension) Result() string {
+	return ext.Result()
+}
+
 // ExtResult ...
 type Result struct {
 	Name    string                 `json:"name"`
