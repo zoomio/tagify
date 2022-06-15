@@ -3,7 +3,8 @@
 ## v0.56.0
 
 - Bumped Go to 1.18;
-- [BREAKING CHANGE (most likely)] renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
+- BREAKING: renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
+- BREAKING: renamed `extension.Result` to `extension.ExtResult`;
 - Made public `ParseHTML` & `ParseMD` just for the parsing purposes.
 
 ## v0.55.0
