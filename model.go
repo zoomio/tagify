@@ -24,6 +24,7 @@ var (
 	TagWeightsJSON        = config.TagWeightsJSON
 	ExtraTagWeightsString = config.ExtraTagWeightsString
 	ExtraTagWeightsJSON   = config.ExtraTagWeightsJSON
+	AllTagWeights         = config.AllTagWeights
 	AdjustScores          = config.AdjustScores
 	Extensions            = config.Extensions
 
