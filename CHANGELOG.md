@@ -5,6 +5,7 @@
 - Bumped Go to 1.18;
 - BREAKING: renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
 - BREAKING: renamed `extension.Result` to `extension.ExtResult`;
+- New option `AllTagWeights` for enabling parsing through everything;
 - Made public `ParseHTML` & `ParseMD` just for the parsing purposes.
 
 ## v0.55.0
