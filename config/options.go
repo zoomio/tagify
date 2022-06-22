@@ -126,6 +126,13 @@ var (
 		}
 	}
 
+	// AllTagWeights ...
+	AllTagWeights = func(v bool) Option {
+		return func(c *Config) {
+			c.AllTagWeights = v
+		}
+	}
+
 	AdjustScores = func(v bool) Option {
 		return func(c *Config) {
 			c.AdjustScores = v

@@ -86,6 +86,13 @@ func isSameDomain(href, domain string) bool {
 	return strings.HasSuffix(dest[:i], host)
 }
 
+func updateDetectStr(candidate, controlStr string) string {
+	if len(candidate) > len(controlStr) {
+		return candidate
+	}
+	return controlStr
+}
+
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
 // based on the importance of HTML tags which wrap sentences.
@@ -120,6 +127,10 @@ var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser)
 		for k, v := range c.ExtraTagWeights {
 			c.TagWeights[k] = v
 		}
+	}
+
+	if c.Verbose {
+		fmt.Printf("using configuration: %#v\n", c)
 	}
 
 	if c.FullSite && c.Source != "" {
@@ -164,12 +175,6 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 	parser := &htmlParser{}
 
 	var controlStr string
-	updateDetectStr := func(candidate string) string {
-		if len(candidate) > len(controlStr) {
-			return candidate
-		}
-		return controlStr
-	}
 
 	if !cfg.SkipLang {
 		defer func() {
@@ -245,7 +250,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					controlStr = updateDetectStr(content)
+					controlStr = updateDetectStr(content, controlStr)
 					contents.Append(parser.lineIndex, cursor, []byte(content))
 					appended = true
 				}
@@ -328,15 +333,11 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				controlStr = updateDetectStr(token.Data)
+				controlStr = updateDetectStr(token.Data, controlStr)
 				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}
 	}
-}
-
-func ParseReaderHTML(reader io.Reader, exts []HTMLExt) *HTMLContents {
-	return ParseHTML(reader, &config.Config{Verbose: false, SkipLang: true, AllTagWeights: true}, exts, nil)
 }
 
 func tagifyHTML(contents *HTMLContents, cfg *config.Config,

@@ -368,7 +368,12 @@ func Test_ParseHTML(t *testing.T) {
 
 func Test_ParseReaderHTML_visits_all_tags(t *testing.T) {
 	counter := &testCountingExt{BaseExtension: extension.NewExtension("testCountingExt", "1")}
-	contents := ParseReaderHTML(io.NopCloser(strings.NewReader(theVergeHTMLWithMetaDescription)), []HTMLExt{counter})
+	contents := ParseHTML(
+		io.NopCloser(strings.NewReader(theVergeHTMLWithMetaDescription)),
+		&config.Config{Verbose: false, SkipLang: true, AllTagWeights: true},
+		[]HTMLExt{counter},
+		nil,
+	)
 
 	assert.NotNil(t, contents)
 	assert.Len(t, contents.lines, 1)
