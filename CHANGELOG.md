@@ -6,6 +6,7 @@
 - BREAKING: renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
 - BREAKING: renamed `extension.Result` to `extension.ExtResult`;
 - New option `AllTagWeights` for enabling parsing through everything;
+- New option `ExcludeTagsString` for prohibitting some of the tags;
 - Made public `ParseHTML` & `ParseMD` just for the parsing purposes.
 
 ## v0.55.0

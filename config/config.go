@@ -51,6 +51,7 @@ type Config struct {
 	AllTagWeights bool
 	TagWeights
 	ExtraTagWeights TagWeights
+	ExcludeTags     TagWeights
 	AdjustScores    bool
 	Extensions      []extension.Extension
 }

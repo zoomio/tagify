@@ -212,7 +212,9 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				return contents
 			}
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok || cfg.AllTagWeights {
+			_, hasWeight := cfg.TagWeights[token.Data]
+			_, isExcluded := cfg.ExcludeTags[token.Data]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded {
 				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
 				if err != nil {
 					switch err.(type) {
@@ -227,7 +229,9 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.StartTagToken:
 			token := z.Token()
 			cursor = token.Data
-			if _, ok := cfg.TagWeights[cursor]; !ok && !cfg.AllTagWeights {
+			_, hasWeight := cfg.TagWeights[cursor]
+			_, isExcluded := cfg.ExcludeTags[cursor]
+			if (!hasWeight && !cfg.AllTagWeights) || isExcluded {
 				continue
 			}
 
@@ -296,7 +300,9 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 
 		case html.EndTagToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok || cfg.AllTagWeights {
+			_, hasWeight := cfg.TagWeights[token.Data]
+			_, isExcluded := cfg.ExcludeTags[token.Data]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded {
 				parser.pop()
 				cursor = parser.current()
 				if parser.isEmpty() {
@@ -313,7 +319,9 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		case html.TextToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[cursor]; (ok || cfg.AllTagWeights) && parser.isNotEmpty() {
+			_, hasWeight := cfg.TagWeights[cursor]
+			_, isExcluded := cfg.ExcludeTags[cursor]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
