@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/extension"
