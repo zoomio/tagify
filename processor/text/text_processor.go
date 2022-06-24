@@ -22,9 +22,9 @@ var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mo
 		fmt.Println("parsing plain text...")
 	}
 
-	if c.Verbose {
-		fmt.Printf("using configuration: %#v\n", c)
-	}
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
 
 	var docsCount int
 

@@ -129,9 +129,9 @@ var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser)
 		}
 	}
 
-	if c.Verbose {
-		fmt.Printf("using configuration: %#v\n", c)
-	}
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler

@@ -125,9 +125,9 @@ var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mode
 		}
 	}
 
-	if c.Verbose {
-		fmt.Printf("using configuration: %#v\n", c)
-	}
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
 
 	tags, title, lang := tagifyMD(contents, c)
 
