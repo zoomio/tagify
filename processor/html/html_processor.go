@@ -86,8 +86,8 @@ func isSameDomain(href, domain string) bool {
 	return strings.HasSuffix(dest[:i], host)
 }
 
-func updateDetectStr(candidate, controlStr string) string {
-	if len(candidate) > len(controlStr) {
+func updateDetectStr(cursor, candidate, controlStr string) string {
+	if isHTMLContent(cursor) && len(candidate) > len(controlStr) {
 		return candidate
 	}
 	return controlStr
@@ -250,7 +250,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					controlStr = updateDetectStr(content, controlStr)
+					controlStr = updateDetectStr(cursor, content, controlStr)
 					contents.Append(parser.lineIndex, cursor, []byte(content))
 					appended = true
 				}
@@ -333,7 +333,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				controlStr = updateDetectStr(token.Data, controlStr)
+				controlStr = updateDetectStr(cursor, token.Data, controlStr)
 				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}
