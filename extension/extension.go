@@ -8,11 +8,33 @@ package extension
 type Extension interface {
 	Name() string
 	Version() string
-	Result() *Result
+	Result() *ExtResult
+}
+
+type BaseExtension struct {
+	name    string
+	version string
+	*ExtResult
+}
+
+func NewExtension(name, version string) *BaseExtension {
+	return &BaseExtension{name: name, version: version}
+}
+
+func (ext *BaseExtension) Name() string {
+	return ext.name
+}
+
+func (ext *BaseExtension) Version() string {
+	return ext.version
+}
+
+func (ext *BaseExtension) Result() *ExtResult {
+	return ext.ExtResult
 }
 
 // ExtResult ...
-type Result struct {
+type ExtResult struct {
 	Name    string                 `json:"name"`
 	Version string                 `json:"version"`
 	Err     error                  `json:"error,omitempty"`
@@ -20,8 +42,8 @@ type Result struct {
 }
 
 // NewResult ...
-func NewResult(ext Extension, data map[string]interface{}, err error) *Result {
-	return &Result{
+func NewResult(ext Extension, data map[string]interface{}, err error) *ExtResult {
+	return &ExtResult{
 		Name:    ext.Name(),
 		Version: ext.Version(),
 		Err:     err,
@@ -30,12 +52,12 @@ func NewResult(ext Extension, data map[string]interface{}, err error) *Result {
 }
 
 // MapResults ...
-func MapResults(exts []Extension) map[string]map[string]*Result {
-	res := map[string]map[string]*Result{}
+func MapResults(exts []Extension) map[string]map[string]*ExtResult {
+	res := map[string]map[string]*ExtResult{}
 	for _, v := range exts {
 		e, ok := res[v.Name()]
 		if !ok {
-			e = map[string]*Result{}
+			e = map[string]*ExtResult{}
 			res[v.Name()] = e
 		}
 		e[v.Version()] = v.Result()

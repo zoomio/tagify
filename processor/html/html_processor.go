@@ -86,6 +86,13 @@ func isSameDomain(href, domain string) bool {
 	return strings.HasSuffix(dest[:i], host)
 }
 
+func updateDetectStr(cursor, candidate, controlStr string) string {
+	if isHTMLContent(cursor) && len(candidate) > len(controlStr) {
+		return candidate
+	}
+	return controlStr
+}
+
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
 // based on the importance of HTML tags which wrap sentences.
@@ -99,11 +106,7 @@ func isSameDomain(href, domain string) bool {
 // Result:
 //	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
-// Returns a slice of tags as 1st result,
-// a title of the page as 2nd and
-// a version of the document based on the hashed contents as 3rd.
-//
-var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
+var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
 
@@ -113,7 +116,7 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 
 	var err error
 	var contents *HTMLContents
-	var parseFn parseFunc = parseHTML
+	var parseFn parseFunc = ParseHTML
 
 	exts := extHTML(c.Extensions)
 
@@ -125,6 +128,10 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 			c.TagWeights[k] = v
 		}
 	}
+
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
 
 	if c.FullSite && c.Source != "" {
 		var crawler *webCrawler
@@ -163,33 +170,29 @@ var ParseHTML model.ParseFunc = func(c *config.Config, reader io.ReadCloser) *mo
 	}
 }
 
-func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
+func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawler) *HTMLContents {
 	contents := &HTMLContents{lines: make([]*HTMLLine, 0), htmlTagWeights: cfg.TagWeights}
 	parser := &htmlParser{}
 
 	var controlStr string
-	updateDetectStr := func(candidate string) string {
-		if len(candidate) > len(controlStr) {
-			return candidate
-		}
-		return controlStr
-	}
 
-	defer func() {
-		// detect language and setup stop words for it
-		if cfg.StopWords == nil {
-			info := whatlanggo.Detect(controlStr)
-			contents.lang = info.Lang.String()
-			cfg.SetStopWords(info.Lang.Iso6391())
-			if cfg.Verbose {
-				fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
-					controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+	if !cfg.SkipLang {
+		defer func() {
+			// detect language and setup stop words for it
+			if cfg.StopWords == nil {
+				info := whatlanggo.Detect(controlStr)
+				contents.lang = info.Lang.String()
+				cfg.SetStopWords(info.Lang.Iso6391())
+				if cfg.Verbose {
+					fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
+						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+				}
+				if cfg.NoStopWords {
+					contents.reg = cfg.StopWords
+				}
 			}
-			if cfg.NoStopWords {
-				contents.reg = cfg.StopWords
-			}
-		}
-	}()
+		}()
+	}
 
 	var cursor string
 	z := html.NewTokenizer(reader)
@@ -200,7 +203,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.ErrorToken:
 			// end of the document, we're done
 			return contents
-		case html.SelfClosingTagToken:
+		case html.SelfClosingTagToken: // e.g. <img ... />
 			if parser.shouldStop() {
 				// flag has been set to true, exiting
 				if cfg.Verbose {
@@ -208,9 +211,10 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 				}
 				return contents
 			}
-			// e.g. <img ... />
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok {
+			_, hasWeight := cfg.TagWeights[token.Data]
+			_, isExcluded := cfg.ExcludeTags[token.Data]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded {
 				_, err := extParseTag(cfg, exts, &token, parser.lineIndex, contents)
 				if err != nil {
 					switch err.(type) {
@@ -225,14 +229,17 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.StartTagToken:
 			token := z.Token()
 			cursor = token.Data
-			if _, ok := cfg.TagWeights[cursor]; !ok {
+			_, hasWeight := cfg.TagWeights[cursor]
+			_, isExcluded := cfg.ExcludeTags[cursor]
+			if (!hasWeight && !cfg.AllTagWeights) || isExcluded {
 				continue
 			}
 
 			parser.push(cursor)
 
-			// handle <meta name="description" content="...">
 			var appended bool
+
+			// handle <meta name="description" content="...">
 			if cursor == atom.Meta.String() {
 				var name, content string
 				for _, a := range token.Attr {
@@ -247,7 +254,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					controlStr = updateDetectStr(content)
+					controlStr = updateDetectStr(cursor, content, controlStr)
 					contents.Append(parser.lineIndex, cursor, []byte(content))
 					appended = true
 				}
@@ -293,7 +300,9 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 
 		case html.EndTagToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[token.Data]; ok {
+			_, hasWeight := cfg.TagWeights[token.Data]
+			_, isExcluded := cfg.ExcludeTags[token.Data]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded {
 				parser.pop()
 				cursor = parser.current()
 				if parser.isEmpty() {
@@ -310,7 +319,9 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		case html.TextToken:
 			token := z.Token()
-			if _, ok := cfg.TagWeights[cursor]; ok && parser.isNotEmpty() {
+			_, hasWeight := cfg.TagWeights[cursor]
+			_, isExcluded := cfg.ExcludeTags[cursor]
+			if (hasWeight || cfg.AllTagWeights) && !isExcluded && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
@@ -330,7 +341,7 @@ func parseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				controlStr = updateDetectStr(token.Data)
+				controlStr = updateDetectStr(cursor, token.Data, controlStr)
 				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
 			}
 		}

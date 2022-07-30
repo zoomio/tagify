@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
 	"github.com/zoomio/tagify/config"
+	"github.com/zoomio/tagify/extension"
 	"github.com/zoomio/tagify/model"
 )
 
@@ -220,7 +222,7 @@ func (in *inputReadCloser) Close() error {
 }
 
 // table driven tests
-var parseHTMLTests = []struct {
+var processHTMLTests = []struct {
 	name        string
 	in          string
 	expect      []string
@@ -303,11 +305,11 @@ var parseHTMLTests = []struct {
 	},
 }
 
-func Test_ParseHTML(t *testing.T) {
-	for _, tt := range parseHTMLTests {
+func Test_ProcessHTML(t *testing.T) {
+	for _, tt := range processHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
-			out := ParseHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
+			out := ProcessHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.Flatten()))
@@ -315,8 +317,8 @@ func Test_ParseHTML(t *testing.T) {
 	}
 }
 
-func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
-	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
+func Test_ProcessHTML_DedupeTitleAndHeading(t *testing.T) {
+	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
@@ -324,8 +326,8 @@ func Test_ParseHTML_DedupeTitleAndHeading(t *testing.T) {
 	assert.Contains(t, out.Flatten(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
 }
 
-func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
-	out := ParseHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
+func Test_ProcessHTML_NoSpecificStopWords(t *testing.T) {
+	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
@@ -333,7 +335,7 @@ func Test_ParseHTML_NoSpecificStopWords(t *testing.T) {
 	assert.NotContains(t, out.Flatten(), &model.Tag{Value: "part", Score: 1.4, Count: 1})
 }
 
-func Test_parseHTML(t *testing.T) {
+func Test_ParseHTML(t *testing.T) {
 	const htmlPage = `
 	<html>
 	<body>
@@ -341,7 +343,7 @@ func Test_parseHTML(t *testing.T) {
 	</body>
 	</html>
 `
-	contents := parseHTML(
+	contents := ParseHTML(
 		&inputReadCloser{strings.NewReader(htmlPage)},
 		&config.Config{TagWeights: defaultTagWeights},
 		nil,
@@ -362,6 +364,30 @@ func Test_parseHTML(t *testing.T) {
 
 	assert.Equal(t, atom.P.String(), line.parts[2].tag)
 	assert.Equal(t, " name was Jim.", string(line.pData(line.parts[2])))
+}
+
+func Test_ParseReaderHTML_visits_all_tags(t *testing.T) {
+	counter := &testCountingExt{BaseExtension: extension.NewExtension("testCountingExt", "1")}
+	contents := ParseHTML(
+		io.NopCloser(strings.NewReader(theVergeHTMLWithMetaDescription)),
+		&config.Config{Verbose: false, SkipLang: true, AllTagWeights: true},
+		[]HTMLExt{counter},
+		nil,
+	)
+
+	assert.NotNil(t, contents)
+	assert.Len(t, contents.lines, 1)
+	assert.Equal(t, 37, counter.count)
+}
+
+type testCountingExt struct {
+	*extension.BaseExtension
+	count int
+}
+
+func (ext *testCountingExt) ParseTag(cfg *config.Config, token *html.Token, lineIdx int, cnts *HTMLContents) (bool, error) {
+	ext.count++
+	return false, nil
 }
 
 // table driven tests

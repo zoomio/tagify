@@ -84,7 +84,7 @@ var parseMDTests = []struct {
 func Test_ParseMD(t *testing.T) {
 	for _, tt := range parseMDTests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := ParseMD(config.New(config.NoStopWords(tt.noStopWords)), &inputReadCloser{strings.NewReader(tt.text)})
+			out := ProcessMD(config.New(config.NoStopWords(tt.noStopWords)), &inputReadCloser{strings.NewReader(tt.text)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.tags, model.ToStrings(out.Flatten()))
@@ -93,7 +93,7 @@ func Test_ParseMD(t *testing.T) {
 }
 
 func Test_mdContents_sentences(t *testing.T) {
-	contents := &mdContents{
+	contents := &MDContents{
 		lines: []*mdLine{
 			{tag: paragraph, data: []byte("There was a boy"), parts: []*mdPart{{tag: paragraph, pos: 0, len: 18}}},
 			{tag: paragraph, data: []byte("Whose name was Jim.	"), parts: []*mdPart{{tag: paragraph, pos: 0, len: 21}}},

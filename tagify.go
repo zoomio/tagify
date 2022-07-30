@@ -48,18 +48,13 @@ func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 	return res, nil
 }
 
-// ToStrings transforms a list of tags into a list of strings.
-func ToStrings(items []*model.Tag) []string {
-	return model.ToStrings(items)
-}
-
 func processInput(in *in, c *Config) *model.Result {
 	switch in.ContentType {
 	case HTML:
-		return html.ParseHTML(c, in)
+		return html.ProcessHTML(c, in)
 	case Markdown:
-		return md.ParseMD(c, in)
+		return md.ProcessMD(c, in)
 	default:
-		return text.ParseText(c, in)
+		return text.ProcessText(c, in)
 	}
 }

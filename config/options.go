@@ -126,6 +126,20 @@ var (
 		}
 	}
 
+	// ExcludeTagsString ...
+	ExcludeTagsString = func(v string) Option {
+		return func(c *Config) {
+			c.ExcludeTags = ParseTagWeights(strings.NewReader(v), String)
+		}
+	}
+
+	// AllTagWeights ...
+	AllTagWeights = func(v bool) Option {
+		return func(c *Config) {
+			c.AllTagWeights = v
+		}
+	}
+
 	AdjustScores = func(v bool) Option {
 		return func(c *Config) {
 			c.AdjustScores = v

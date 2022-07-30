@@ -15,12 +15,16 @@ import (
 	"github.com/zoomio/tagify/processor/util"
 )
 
-// ParseText parses given text lines of text into a slice of tags.
-var ParseText model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
+// ProcessText parses given text lines of text into a slice of tags.
+var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
 
 	if c.Verbose {
 		fmt.Println("parsing plain text...")
 	}
+
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
 
 	var docsCount int
 

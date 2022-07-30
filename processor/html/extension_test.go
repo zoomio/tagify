@@ -32,7 +32,7 @@ func Test_Ext_Parse_img(t *testing.T) {
 		config.TagWeightsString("h2:1|img:0"),
 		config.Extensions([]extension.Extension{newTestImgCrawlerExt()}),
 	)
-	out := ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	out := ProcessHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
 	assert.Len(t, out.Extensions, 1)
 	results := out.FindExtResults("test-img-crawler", "v0.0.1") //Extensions["test-img-crawler"]
 	assert.Len(t, results, 1)
@@ -49,10 +49,10 @@ func Test_Ext_Parse_img(t *testing.T) {
 
 func Test_Ext_Tagify_stopwords(t *testing.T) {
 	cfg1 := config.New()
-	out1 := ParseHTML(cfg1, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	out1 := ProcessHTML(cfg1, &inputReadCloser{strings.NewReader(htmlWithImg)})
 
 	cfg2 := config.New(config.Extensions([]extension.Extension{&testExtraStopWordsExt{stopWords: []string{"day", "sunset"}}}))
-	out2 := ParseHTML(cfg2, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	out2 := ProcessHTML(cfg2, &inputReadCloser{strings.NewReader(htmlWithImg)})
 
 	assert.Len(t, out1.Extensions, 0)
 	assert.Len(t, out2.Extensions, 1)
@@ -70,7 +70,7 @@ func Test_Ext_ParseEnd(t *testing.T) {
 		config.ExtraTagWeightsString("img:0"),
 		config.NoStopWords(true),
 	)
-	out := ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	out := ProcessHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
 	assert.Equal(t, 7, out.RawLen())
 
 	// Amount of tags when stopped is 3 (see assert.Len)
@@ -79,7 +79,7 @@ func Test_Ext_ParseEnd(t *testing.T) {
 		config.Extensions([]extension.Extension{&testStopExt{}}),
 		config.NoStopWords(true),
 	)
-	out = ParseHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
+	out = ProcessHTML(cfg, &inputReadCloser{strings.NewReader(htmlWithImg)})
 	assert.Equal(t, 3, out.RawLen())
 }
 
@@ -101,7 +101,7 @@ func (ext *testImgCrawlerExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testImgCrawlerExt) Result() *extension.Result {
+func (ext *testImgCrawlerExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{"images": ext.images}, nil)
 }
 
@@ -128,7 +128,7 @@ func (ext *testExtraStopWordsExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testExtraStopWordsExt) Result() *extension.Result {
+func (ext *testExtraStopWordsExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{"stopwords": ext.stopWords}, nil)
 }
 
@@ -150,7 +150,7 @@ func (ext *testStopExt) Version() string {
 	return "v0.0.1"
 }
 
-func (ext *testStopExt) Result() *extension.Result {
+func (ext *testStopExt) Result() *extension.ExtResult {
 	return extension.NewResult(ext, map[string]interface{}{}, nil)
 }
 

@@ -101,15 +101,15 @@ func (t mdType) String() string {
 	return mdTypes[t]
 }
 
-// ParseMD parses given Markdown document input into a slice of tags.
-var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
+// ProcessMD parses given Markdown document input into a slice of tags.
+var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
 
 	if c.Verbose {
 		fmt.Println("--> parsing Markdown...")
 	}
 
 	defer in.Close()
-	contents := parseMD(in)
+	contents := ParseMD(in)
 
 	if c.Verbose {
 		fmt.Println("--> parsed")
@@ -125,6 +125,10 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Re
 		}
 	}
 
+	// if c.Verbose {
+	// 	fmt.Printf("using configuration: %#v\n", c)
+	// }
+
 	tags, title, lang := tagifyMD(contents, c)
 
 	return &model.Result{
@@ -138,9 +142,9 @@ var ParseMD model.ParseFunc = func(c *config.Config, in io.ReadCloser) *model.Re
 	}
 }
 
-func parseMD(reader io.Reader) *mdContents {
+func ParseMD(reader io.Reader) *MDContents {
 
-	contents := &mdContents{lines: make([]*mdLine, 0)}
+	contents := &MDContents{lines: make([]*mdLine, 0)}
 	scanner := bufio.NewScanner(reader)
 
 	index := -1
@@ -208,7 +212,7 @@ func parseMD(reader io.Reader) *mdContents {
 	return contents
 }
 
-func tagifyMD(contents *mdContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
 	tokenIndex = make(map[string]*model.Tag)
 	var docsCount int
 	var reg *stopwords.Register
@@ -291,7 +295,7 @@ func isMDHeading(t mdType) bool {
 	}
 }
 
-func appendLine(lineIndex int, line []byte, handlers map[int]*mdPartHandler, cnt *mdContents) {
+func appendLine(lineIndex int, line []byte, handlers map[int]*mdPartHandler, cnt *MDContents) {
 	i := 0
 	p := []byte{}
 	for i < len(line) {
@@ -329,12 +333,12 @@ type mdPartHandler struct {
 	re    *regexp.Regexp
 }
 
-// mdContents stores text from target tags.
-type mdContents struct {
+// MDContents stores text from target tags.
+type MDContents struct {
 	lines []*mdLine
 }
 
-func (cnt *mdContents) append(index int, tag mdType, data []byte) {
+func (cnt *MDContents) append(index int, tag mdType, data []byte) {
 	for len(cnt.lines) <= index {
 		cnt.lines = append(cnt.lines, &mdLine{tag: tag, parts: make([]*mdPart, 0)})
 	}
@@ -342,13 +346,13 @@ func (cnt *mdContents) append(index int, tag mdType, data []byte) {
 	line.add(tag, data)
 }
 
-func (cnt *mdContents) forEach(it func(i int, line *mdLine)) {
+func (cnt *MDContents) forEach(it func(i int, line *mdLine)) {
 	for k, v := range cnt.lines {
 		it(k, v)
 	}
 }
 
-func (cnt *mdContents) String() string {
+func (cnt *MDContents) String() string {
 	var sb strings.Builder
 	cnt.forEach(func(i int, line *mdLine) {
 		sb.WriteString(fmt.Sprintf("[%d] ", i))
@@ -358,7 +362,7 @@ func (cnt *mdContents) String() string {
 	return sb.String()
 }
 
-func (cnt *mdContents) hash() []byte {
+func (cnt *MDContents) hash() []byte {
 	h := sha512.New()
 	cnt.forEach(func(i int, line *mdLine) {
 		_, _ = h.Write([]byte(line.tag.String()))

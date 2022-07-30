@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.56.0
+
+- Bumped Go to 1.18;
+- BREAKING: renamed `ParseHTML`, `ParseMD` & `ParseText` to `ProcessHTML`, `ProcessMD` & `ProcessText` respectively;
+- BREAKING: renamed `extension.Result` to `extension.ExtResult`;
+- New option `AllTagWeights` for enabling parsing through everything;
+- New option `ExcludeTagsString` for prohibitting some of the tags;
+- `ParseHTML` & `ParseMD` are made public to open up parsing capabilities.
+
 ## v0.55.0
 
 - improved handling of the words with the "`" or "'" symbols.
