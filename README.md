@@ -39,13 +39,13 @@ source html plain supports tags
 
 In a code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
 
-Use `-no-stop` flag to disable filtering out of the [stop-words](https://github.com/zoomio/stopwords/blob/master/stopwords.go).
+Use `-no-stop` flag to disable filtering out of the [stop-words](https://github.com/zoomio/stopwords).
 
 ## Installation
 
 ### Binary
 
-Get the latest [release](https://github.com/zoomio/tagify/releases/latest) of the Tagify by running this command in your shell:
+Get the latest [release](https://github.com/zoomio/tagify/releases/latest) by running this command in your shell:
 
 For MacOS:
 ```bash

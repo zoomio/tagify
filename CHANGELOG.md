@@ -7,7 +7,7 @@
 - BREAKING: renamed `extension.Result` to `extension.ExtResult`;
 - New option `AllTagWeights` for enabling parsing through everything;
 - New option `ExcludeTagsString` for prohibitting some of the tags;
-- Made public `ParseHTML` & `ParseMD` just for the parsing purposes.
+- `ParseHTML` & `ParseMD` are made public to open up parsing capabilities.
 
 ## v0.55.0
 
