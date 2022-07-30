@@ -1,6 +1,6 @@
 .PHONY: deps clean build
 
-TAG=0.56.0
+TAG=0.56.1
 
 deps:
 	go get -u ./...
@@ -23,3 +23,6 @@ profile:
 
 tag:
 	./_bin/tag.sh ${TAG}
+
+install:
+	./_bin/install.sh darwin arm64

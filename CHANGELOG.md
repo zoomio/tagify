@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.56.1
+
+- Added Darwing ARM64 release.
+
 ## v0.56.0
 
 - Bumped Go to 1.18;

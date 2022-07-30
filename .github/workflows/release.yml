@@ -39,6 +39,7 @@ jobs:
       run: |
         ./_bin/build.sh linux ${{ steps.get_version.outputs.VERSION }}
         ./_bin/build.sh darwin ${{ steps.get_version.outputs.VERSION }}
+        ./_bin/build.sh darwin ${{ steps.get_version.outputs.VERSION }} arm64
         ./_bin/build.sh windows ${{ steps.get_version.outputs.VERSION }}
       shell: bash
 
