@@ -15,7 +15,7 @@ if [ -z "$ARCH" ]; then
     ARCH="amd64"
 fi
 
-link=$(curl -s https://api.github.com/repos/zoomio/tagify/releases/latest | grep "browser_download_url.*tagify_${OS}_${ARCH}" | cut -d : -f 2,3 | tr -d \")
+link=$(curl -s "https://api.github.com/repos/zoomio/tagify/releases/latest" | grep "browser_download_url.*tagify_${OS}_${ARCH}" | cut -d ":" -f 2,3 | tr -d \")
 
 echo "downloading ${BINARY} from $link"
 

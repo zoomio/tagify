@@ -2,7 +2,7 @@
 
 ## v0.56.1
 
-- Added Darwing ARM64 release.
+- Added macOS (darwin) ARM64 release.
 
 ## v0.56.0
 

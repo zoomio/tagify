@@ -52,6 +52,11 @@ For MacOS:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" darwin
 ```
 
+For MacOS (arm64):
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" darwin arm64
+```
+
 For Linux:
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" linux
