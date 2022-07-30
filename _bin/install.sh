@@ -1,6 +1,4 @@
-#!/bin/sh
-
-set -e
+#!/bin/bash
 
 BINARY="tagify"
 USER_BIN=$HOME/bin
@@ -16,6 +14,10 @@ if [ -z "$ARCH" ]; then
 fi
 
 link=$(curl -s "https://api.github.com/repos/zoomio/tagify/releases/latest" | grep "browser_download_url.*tagify_${OS}_${ARCH}" | cut -d ":" -f 2,3 | tr -d \")
+if [ -z "$link" ]; then
+    echo "can't find tagify binary"
+    exit 1
+fi
 
 echo "downloading ${BINARY} from $link"
 
