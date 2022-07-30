@@ -15,7 +15,7 @@ fi
 
 echo "installing tagify for ${OS} ${ARCH}"
 
-link=$(curl -s "https://api.github.com/repos/zoomio/tagify/releases/latest" | grep "browser_download_url.*tagify_${OS}_${ARCH}" | cut -d ":" -f 2,3 | tr -d \")
+link=$(curl -s "https://api.github.com/repos/zoomio/tagify/releases/latest" | grep "browser_download_url.*tagify_${OS}_${ARCH}" | cut -d : -f 2,3 | tr -d \" | tr -d ' ')
 if [ -z "$link" ]; then
     echo "can't find tagify binary"
     exit 1
