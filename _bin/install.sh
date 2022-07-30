@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 BINARY="tagify"
 USER_BIN=$HOME/bin
 OS="$1"
