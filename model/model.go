@@ -34,6 +34,7 @@ type Meta struct {
 	DocTitle    string
 	DocHash     string
 	Lang        string
+	Screenshot  []byte // bytes of the viewport screenshot in png
 }
 
 func (t *Tag) String() string {

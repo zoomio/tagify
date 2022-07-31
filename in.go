@@ -20,22 +20,25 @@ type in struct {
 //
 // source - the filename or web page source, reads from STDIN if source is empty.
 // Panics on errors.
-func newIn(ctx context.Context, source, query string, verbose bool) (in, error) {
-	in := in{source: source}
+func newIn(ctx context.Context, c *Config) (in, error) {
+	in := in{source: c.Source}
 	r, err := inout.NewInOut(ctx,
-		inout.Source(source),
-		inout.Query(query),
+		inout.Source(c.Source),
+		inout.Query(c.Query),
+		inout.WaitFor(c.WaitFor),
+		inout.WaitUntil(c.WaitUntil),
+		inout.Screenshot(c.Screenshot),
 		inout.Timeout(0),
-		inout.Verbose(verbose))
+		inout.Verbose(c.Verbose))
 	if err != nil {
 		return in, err
 	}
 
 	in.reader = &r
 
-	if strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "https://") || query != "" {
+	if strings.HasPrefix(c.Source, "http://") || strings.HasPrefix(c.Source, "https://") || c.Query != "" {
 		in.ContentType = HTML
-	} else if strings.ToLower(filepath.Ext(source)) == ".md" {
+	} else if strings.ToLower(filepath.Ext(c.Source)) == ".md" {
 		in.ContentType = Markdown
 	}
 

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/extension"
@@ -36,8 +38,14 @@ func New(options ...Option) *Config {
 
 // Config ...
 type Config struct {
-	Source  string
-	Query   string
+	Source string
+
+	// headless
+	Query      string
+	WaitFor    string
+	WaitUntil  time.Duration
+	Screenshot bool
+
 	Content string
 	ContentType
 	Limit         int

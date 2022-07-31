@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/zoomio/stopwords"
 	"github.com/zoomio/tagify/extension"
@@ -25,6 +26,27 @@ var (
 	Query = func(v string) Option {
 		return func(c *Config) {
 			c.Query = v
+		}
+	}
+
+	// WaitFor sets CSS query for the target of In-Out.
+	WaitFor = func(query string) Option {
+		return func(c *Config) {
+			c.WaitFor = query
+		}
+	}
+
+	// WaitUntil sets page load duration to wait for.
+	WaitUntil = func(d time.Duration) Option {
+		return func(c *Config) {
+			c.WaitUntil = d
+		}
+	}
+
+	// Screenshot captures screenshot, Reader will ImgBytes of the image populated.
+	Screenshot = func(v bool) Option {
+		return func(c *Config) {
+			c.Screenshot = v
 		}
 	}
 
