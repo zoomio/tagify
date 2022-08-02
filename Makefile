@@ -1,6 +1,6 @@
 .PHONY: deps clean build
 
-TAG=0.56.1
+TAG=0.57.0
 
 deps:
 	go get -u ./...
