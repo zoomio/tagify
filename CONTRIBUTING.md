@@ -15,7 +15,8 @@
 
 ## Release
 
-* All notable changes comming with the new version should be documented in [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md).
-* Run tests with `./_bin/test.sh`, make sure everything is passing.
-* Tag, push and trigger new binary release on GitHub `./_bin/tag.sh [version]`.
-* To perform Brew release, use `./_bin/brew_release.sh v[version]`, then submit a PR to Homebrew repo with the file from `./_templates/tagify.rb`.
+1. All notable changes comming with the new version should be documented in [CHANGELOG.md](https://raw.githubusercontent.com/zoomio/tagify/master/CHANGELOG.md).
+2. Run tests with `./_bin/test.sh`, make sure everything is passing.
+3. Bump the `TAG` variable inside the `Makefile` to the desired version, 
+4. Push and trigger new binary release on GitHub via `make tag`.
+5. To perform Brew release, use `./_bin/brew_release.sh v[version]`, then submit a PR to Homebrew repo with the file from `./_templates/tagify.rb`.
