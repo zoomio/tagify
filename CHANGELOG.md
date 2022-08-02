@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.58.0
+
+- stopped ignoring `<h1>` in cases when they are equal to the `<title>`, as in now they are included.
+
 ## v0.57.0
 
 - Bumped `github.com/zoomio/inout` to `0.12.0`;

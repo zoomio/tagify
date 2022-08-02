@@ -40,14 +40,14 @@ var (
 	}
 )
 
-func isHTMLHeading(t string) bool {
+/* func isHTMLHeading(t string) bool {
 	switch atom.Lookup([]byte(t)) {
 	case atom.H1, atom.H2, atom.H3:
 		return true
 	default:
 		return false
 	}
-}
+} */
 
 func isHTMLContent(t string) bool {
 	switch atom.Lookup([]byte(t)) {
@@ -367,12 +367,12 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 		}
 
 		// avoid doubling of scores for duplicated page's title in headings
-		if isHTMLHeading(l.tag) && s == pageTitle {
-			if cfg.Verbose {
-				fmt.Printf("<%s>: skipped equal to <title>\n", l.tag)
-			}
-			continue
-		}
+		// if isHTMLHeading(l.tag) && s == pageTitle {
+		// 	if cfg.Verbose {
+		// 		fmt.Printf("<%s>: skipped equal to <title>\n", l.tag)
+		// 	}
+		// 	continue
+		// }
 
 		sentences := l.sentences()
 		for _, snt := range sentences {

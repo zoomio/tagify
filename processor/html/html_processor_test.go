@@ -317,14 +317,14 @@ func Test_ProcessHTML(t *testing.T) {
 	}
 }
 
-func Test_ProcessHTML_DedupeTitleAndHeading(t *testing.T) {
+/* func Test_ProcessHTML_DedupeTitleAndHeading(t *testing.T) {
 	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
 	assert.Equal(t, "A story about a boy", out.Meta.DocTitle)
 	assert.Equal(t,
 		"4f652c47205d3b922115eef155c484cf81096351696413c86277fa0ed89ebfefe30f81ef6fc6a9d7d654a9292c3cb7aa6f3696052e53c113785a9b1b3be7d4a8",
 		out.Meta.DocHash)
 	assert.Contains(t, out.Flatten(), &model.Tag{Value: "story", Score: defaultTagWeights[atom.Title.String()], Count: 1, Docs: 1, DocsCount: 4})
-}
+} */
 
 func Test_ProcessHTML_NoSpecificStopWords(t *testing.T) {
 	out := ProcessHTML(config.New(config.NoStopWords(true)), &inputReadCloser{strings.NewReader(htmlDupedString)})
