@@ -23,7 +23,7 @@ func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 	if c.Content != "" {
 		in = newInFromString(c.Content, c.ContentType)
 	} else {
-		in, err = newIn(ctx, c.Source, c.Query, c.Verbose)
+		in, err = newIn(ctx, c)
 		if c.ContentType > Unknown {
 			in.ContentType = c.ContentType
 		}
@@ -51,7 +51,11 @@ func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 func processInput(in *in, c *Config) *model.Result {
 	switch in.ContentType {
 	case HTML:
-		return html.ProcessHTML(c, in)
+		res := html.ProcessHTML(c, in)
+		if c.Screenshot && len(in.reader.ImgBytes) > 0 {
+			res.Meta.Screenshot = in.reader.ImgBytes
+		}
+		return res
 	case Markdown:
 		return md.ProcessMD(c, in)
 	default:

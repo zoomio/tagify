@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.57.0
+
+- Bumped `github.com/zoomio/inout` to `0.12.0`;
+- Fixed `-q` option or `Query` in the code (HTTP/HTML mode only), so now it actually works and retrieves contents of the DOM element for the query;
+- Introduced `-r` option or `WaitFor` (HTTP/HTML mode only) to allow for waiting for certain DOM element to be ready before getting HTML;
+- Introduced `-u` option or `WaitUntil` (HTTP/HTML mode only) to allow to wait for a certain delay before getting HTML;
+- Introduced `-i` option or `Screenshot` (HTTP/HTML mode only) to capture a full screenshot of HTML in the given path.
+
 ## v0.56.1
 
 - Added macOS (darwin) ARM64 release.

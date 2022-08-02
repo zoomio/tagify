@@ -10,16 +10,26 @@ type Option = config.Option
 type ContentType = config.ContentType
 
 var (
-	Source                = config.Source
-	Query                 = config.Query
-	Content               = config.Content
-	TargetType            = config.TargetType
-	Limit                 = config.Limit
-	Verbose               = config.Verbose
-	NoStopWords           = config.NoStopWords
-	StopWords             = config.StopWords
-	ContentOnly           = config.ContentOnly
-	FullSite              = config.FullSite
+	Source = config.Source
+
+	// headless
+	Query      = config.Query
+	WaitFor    = config.WaitFor
+	WaitUntil  = config.WaitUntil
+	Screenshot = config.Screenshot
+
+	Content = config.Content
+
+	// misc
+	TargetType  = config.TargetType
+	Limit       = config.Limit
+	Verbose     = config.Verbose
+	NoStopWords = config.NoStopWords
+	StopWords   = config.StopWords
+	ContentOnly = config.ContentOnly
+	FullSite    = config.FullSite
+
+	// weighing
 	TagWeightsString      = config.TagWeightsString
 	TagWeightsJSON        = config.TagWeightsJSON
 	ExtraTagWeightsString = config.ExtraTagWeightsString
@@ -27,7 +37,8 @@ var (
 	ExcludeTagsString     = config.ExcludeTagsString
 	AllTagWeights         = config.AllTagWeights
 	AdjustScores          = config.AdjustScores
-	Extensions            = config.Extensions
+
+	Extensions = config.Extensions
 
 	Unknown  = config.Unknown
 	Text     = config.Text

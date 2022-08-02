@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"strings"
@@ -16,8 +17,14 @@ import (
 var (
 	version = "tip"
 
-	source              = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
-	query               = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
+	source = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
+
+	// headless
+	query = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
+	ready = flag.String("r", "", "DOM CSS query, waits until certain element available, but fetches contents of the whole HTML document")
+	until = flag.Duration("u", 0, "duration to wait before getting HTML contents, handy for SPAs, because they keep loading in browsers for some time")
+	img   = flag.String("i", "", "enables capturing screenshot in the provided path")
+
 	limit               = flag.Int("l", 5, "number of tags to return")
 	verbose             = flag.Bool("v", false, "enables verbose mode")
 	contentType         = flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
@@ -66,9 +73,21 @@ func main() {
 	if *source != "" {
 		options = append(options, tagify.Source(*source))
 	}
-	if *query != "" {
+
+	// headless
+	if len(*query) > 0 {
 		options = append(options, tagify.Query(*query))
 	}
+	if len(*ready) > 0 {
+		options = append(options, tagify.WaitFor(*ready))
+	}
+	if *until > 0 {
+		options = append(options, tagify.WaitUntil(*until))
+	}
+	if len(*img) > 0 {
+		options = append(options, tagify.Screenshot(true))
+	}
+
 	if *verbose {
 		options = append(options, tagify.Verbose(*verbose))
 	}
@@ -111,6 +130,14 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to get tags: %v\n", err)
 		}
 		os.Exit(2)
+	}
+
+	if len(*img) > 0 && len(res.Meta.Screenshot) > 0 {
+		err = ioutil.WriteFile(*img, res.Meta.Screenshot, 0644)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to store captured screenshot at %s: %v\n", *img, err)
+			os.Exit(3)
+		}
 	}
 
 	if res.RawLen() == 0 {

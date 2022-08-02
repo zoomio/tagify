@@ -41,6 +41,10 @@ In a code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/
 
 Use `-no-stop` flag to disable filtering out of the [stop-words](https://github.com/zoomio/stopwords).
 
+## Extensions
+
+There is support extensions. See `extension/extension.go` and its usages and implementations in `processor/html/extension.go`. For examples you can have a look at `processor/html/extension_test.go`.
+
 ## Installation
 
 ### Binary
