@@ -2,7 +2,8 @@
 
 ## v0.59.0
 
-- improved HTML parser logic again, specifically in the case of how it collects contents of a document.
+- improved HTML parser logic again, specifically in the case of how it collects contents of a document;
+- fallbakc to the English language for the stop words in cases when language detection is not reliable.
 
 ## v0.58.0
 
