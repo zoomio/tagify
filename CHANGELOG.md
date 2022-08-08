@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.59.0
+
+- improved HTML parser logic again, specifically in the case of how it collects contents of a document.
+
 ## v0.58.0
 
 - stopped ignoring `<h1>` in cases when they are equal to the `<title>`, as in now they are included.

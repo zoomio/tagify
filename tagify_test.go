@@ -31,9 +31,9 @@ var runTests = []struct {
 		"run",
 		[]Option{Source(fmt.Sprintf("http://localhost:%d", port)),
 			TargetType(HTML), Limit(5), NoStopWords(true), ContentOnly(true)},
-		[]string{"test", "boy", "cakes", "chocolate", "delicious"},
+		[]string{"test", "boy", "bang", "befell", "began"},
 		"Test",
-		"d91b531c92a14fe5556b9bf3e82ef6dac0da69914affca86795181d2ca9ca3046630a41eba734b146eec0c5e78c5780734dfb42bcef453cf1d9d20830b562dac",
+		"07b4291477fc6404cc89497b5665464c0d07c7e3358f4b84e3df4b9793d4aaa0787b0980b99649285c0aa08e30c9910f092a6b47ed48385555b65c34c6e82af4",
 	},
 	{
 		"run with query",
@@ -96,7 +96,7 @@ func Test_ToStrings(t *testing.T) {
 }
 
 func Test_CustomHTML(t *testing.T) {
-	ytPage, _ := os.ReadFile("yt_page.html")
+	ytPage, _ := os.ReadFile("_resources_test/html/yt_page.html")
 	ext := &customHTML{}
 	defer stopServer(startServer(fmt.Sprintf(":%d", port), string(ytPage)))
 	res, err := Run(ctx,
@@ -161,7 +161,7 @@ const (
 	  <p>And slices of delicious Ham,</p>
 	  <p>And Chocolate with pink inside,</p>
 	  <p>And little Tricycles to ride,</p>
-	  <p>Andread him Stories through and through,</p>
+	  <p>And read him Stories through and through,</p>
 	  <p>And even took him to the Zoo—</p>
 	  <p>But there it was the dreadful Fate</p>
 	  <p>Befell him, which I now relate.</p>
