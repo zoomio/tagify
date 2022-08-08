@@ -27,9 +27,7 @@ Supported languages:
 - French
 - Korean
 
-Visit Tagify playground [here](https://www.zoomio.org/tagify):
-
-![ZoomIO Tagify](https://storage.googleapis.com/www.zoomio.org/ZoomIO_tagify.png)
+Want to see it in action? Visit [Tagify Playground](https://www.zoomio.org/tagify).
 
 Example, "tagify" this repository (with the limit of 5 tags):
 ```bash

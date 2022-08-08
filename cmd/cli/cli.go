@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"strings"
@@ -133,7 +132,7 @@ func main() {
 	}
 
 	if len(*img) > 0 && len(res.Meta.Screenshot) > 0 {
-		err = ioutil.WriteFile(*img, res.Meta.Screenshot, 0644)
+		err = os.WriteFile(*img, res.Meta.Screenshot, 0644)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to store captured screenshot at %s: %v\n", *img, err)
 			os.Exit(3)

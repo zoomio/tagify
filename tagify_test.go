@@ -3,9 +3,9 @@ package tagify
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,7 +96,7 @@ func Test_ToStrings(t *testing.T) {
 }
 
 func Test_CustomHTML(t *testing.T) {
-	ytPage, _ := ioutil.ReadFile("yt_page.html")
+	ytPage, _ := os.ReadFile("yt_page.html")
 	ext := &customHTML{}
 	defer stopServer(startServer(fmt.Sprintf(":%d", port), string(ytPage)))
 	res, err := Run(ctx,

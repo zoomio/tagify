@@ -29,14 +29,35 @@ var (
 		"h4":     1.3,
 		"h5":     1.2,
 		"h6":     1.1,
-		"p":      1.0,
 		"b":      1.2,
 		"u":      1.2,
 		"strong": 1.2,
 		"i":      1.1,
+		"p":      1.0,
 		"li":     1.0,
+		"td":     1.0,
+		"th":     1.0,
 		"code":   0.7,
 		"a":      0.6,
+		"span":   0.6,
+		"div":    0.6,
+	}
+
+	htmlContentTags = map[atom.Atom]bool{
+		atom.Title:  true,
+		atom.Meta:   true,
+		atom.H1:     true,
+		atom.H2:     true,
+		atom.H3:     true,
+		atom.H4:     true,
+		atom.H5:     true,
+		atom.H6:     true,
+		atom.P:      true,
+		atom.Strong: true,
+		atom.B:      true,
+		atom.U:      true,
+		atom.I:      true,
+		atom.Em:     true,
 	}
 )
 
@@ -50,12 +71,7 @@ var (
 } */
 
 func isHTMLContent(t string) bool {
-	switch atom.Lookup([]byte(t)) {
-	case atom.Title, atom.Meta, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
-		return true
-	default:
-		return false
-	}
+	return htmlContentTags[atom.Lookup([]byte(t))]
 }
 
 func isNonClosingSingleTag(t string) bool {
@@ -87,7 +103,7 @@ func isSameDomain(href, domain string) bool {
 }
 
 func updateDetectStr(cursor, candidate, controlStr string) string {
-	if isHTMLContent(cursor) && len(candidate) > len(controlStr) {
+	if /* isHTMLContent(cursor) &&  */ len(candidate) > len(controlStr) {
 		return candidate
 	}
 	return controlStr
@@ -98,14 +114,15 @@ func updateDetectStr(cursor, candidate, controlStr string) string {
 // based on the importance of HTML tags which wrap sentences.
 //
 // Example:
+//
 //	<h1>A story about foo
 //	<p> Foo was a good guy but, had a quite poor time management skills,
 //	therefore he had issues with shipping all his tasks. Though foo had heaps
 //	of other amazing skills, which gained him a fortune.
 //
 // Result:
-//	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
+//	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
@@ -181,11 +198,16 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			// detect language and setup stop words for it
 			if cfg.StopWords == nil {
 				info := whatlanggo.Detect(controlStr)
-				contents.lang = info.Lang.String()
-				cfg.SetStopWords(info.Lang.Iso6391())
 				if cfg.Verbose {
-					fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
-						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
+					fmt.Printf("detected language based on %q: %s [%s] [%s], confidence %2.f\n ",
+						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
+				}
+				if info.IsReliable() {
+					contents.lang = info.Lang.String()
+					cfg.SetStopWords(info.Lang.Iso6391())
+				} else {
+					contents.lang = "English"
+					cfg.SetStopWords("en")
 				}
 				if cfg.NoStopWords {
 					contents.reg = cfg.StopWords
@@ -362,7 +384,7 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 
 		// Title tags have special treatment
 		// if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
-		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && pageTitle == "" {
+		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) == 0 {
 			pageTitle = s
 		}
 
