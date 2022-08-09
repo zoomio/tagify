@@ -197,7 +197,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			if cfg.StopWords == nil {
 				info := whatlanggo.Detect(controlStr)
 				if cfg.Verbose {
-					fmt.Printf("detected language based on %q: %s [%s] [%s], confidence %2.f\n ",
+					fmt.Printf("detected language based on %q: %s [%s] [%s], confidence %2.f\n",
 						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
 				}
 				if info.IsReliable() {
