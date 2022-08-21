@@ -15,7 +15,7 @@ var (
 	simpleNotAWordRegex        = regexp.MustCompile(`([^\p{L}-]+)`)
 	noLetterWordRegex          = regexp.MustCompile(`[^\p{L}]`)
 	doubleNotWordySymbolsRegex = regexp.MustCompile(`[^\p{L}]{2}`)
-	punctuationRegex           = regexp.MustCompile(`[.,!;:]+`)
+	punctuationRegex           = regexp.MustCompile(`[.,!?;:]+`)
 
 	newLine = []byte("\n")
 
@@ -25,7 +25,16 @@ var (
 // SplitToSentences splits given text into slice of sentences.
 func SplitToSentences(text []byte) [][]byte {
 	split := punctuationRegex.ReplaceAll(bytes.TrimSpace(text), newLine)
-	return bytes.Split(split, newLine)
+	sentences := bytes.Split(split, newLine)
+	result := [][]byte{}
+	for _, v := range sentences {
+		bs := bytes.TrimSpace(v)
+		if len(bs) == 0 {
+			continue
+		}
+		result = append(result, bs)
+	}
+	return result
 }
 
 // Sanitize ...
@@ -62,14 +71,14 @@ func Sanitize(strs [][]byte, reg *stopwords.Register) []string {
 		}
 		for _, p := range parts {
 			trimmed := strings.TrimSpace(p)
-			if trimmed == "" {
+			if len(trimmed) == 0 {
 				continue
 			}
-			normilized, ok := Normalize(trimmed, reg)
+			normalized, ok := Normalize(trimmed, reg)
 			if !ok {
 				continue
 			}
-			result = append(result, normilized)
+			result = append(result, normalized)
 		}
 	}
 	return result
@@ -106,6 +115,13 @@ func Normalize(word string, reg *stopwords.Register) (string, bool) {
 
 	// Allowed word
 	return word, true
+}
+
+func UpdateControlStr(candidate, control string) string {
+	if len(candidate) > len(control) {
+		return candidate
+	}
+	return control
 }
 
 func isURL(s string) (*url.URL, bool) {

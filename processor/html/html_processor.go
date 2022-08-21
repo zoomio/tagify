@@ -1,13 +1,11 @@
 package html
 
 import (
-	"bytes"
 	"crypto/sha512"
 	"fmt"
 	"io"
 	"strings"
 
-	"github.com/abadojack/whatlanggo"
 	"github.com/zoomio/stopwords"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -29,14 +27,33 @@ var (
 		"h4":     1.3,
 		"h5":     1.2,
 		"h6":     1.1,
-		"p":      1.0,
 		"b":      1.2,
 		"u":      1.2,
 		"strong": 1.2,
 		"i":      1.1,
+		"p":      1.0,
 		"li":     1.0,
-		"code":   0.7,
-		"a":      0.6,
+		// "td":     1.0,
+		// "th":     1.0,
+		"code": 0.7,
+		"a":    0.6,
+	}
+
+	htmlContentTags = map[atom.Atom]bool{
+		atom.Title:  true,
+		atom.Meta:   true,
+		atom.H1:     true,
+		atom.H2:     true,
+		atom.H3:     true,
+		atom.H4:     true,
+		atom.H5:     true,
+		atom.H6:     true,
+		atom.P:      true,
+		atom.Strong: true,
+		atom.B:      true,
+		atom.U:      true,
+		atom.I:      true,
+		atom.Em:     true,
 	}
 )
 
@@ -50,12 +67,7 @@ var (
 } */
 
 func isHTMLContent(t string) bool {
-	switch atom.Lookup([]byte(t)) {
-	case atom.Title, atom.Meta, atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6, atom.P:
-		return true
-	default:
-		return false
-	}
+	return htmlContentTags[atom.Lookup([]byte(t))]
 }
 
 func isNonClosingSingleTag(t string) bool {
@@ -86,26 +98,20 @@ func isSameDomain(href, domain string) bool {
 	return strings.HasSuffix(dest[:i], host)
 }
 
-func updateDetectStr(cursor, candidate, controlStr string) string {
-	if isHTMLContent(cursor) && len(candidate) > len(controlStr) {
-		return candidate
-	}
-	return controlStr
-}
-
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
 // plus list of prioritised tags (if tagify == true)
 // based on the importance of HTML tags which wrap sentences.
 //
 // Example:
+//
 //	<h1>A story about foo
 //	<p> Foo was a good guy but, had a quite poor time management skills,
 //	therefore he had issues with shipping all his tasks. Though foo had heaps
 //	of other amazing skills, which gained him a fortune.
 //
 // Result:
-//	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 //
+//	foo: 2 + 1 = 3, story: 2, management: 1 + 1 = 2, skills: 1 + 1 = 2.
 var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser) *model.Result {
 
 	defer reader.Close()
@@ -145,7 +151,7 @@ var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser)
 	}
 
 	if c.Verbose {
-		fmt.Println("--> parsed")
+		fmt.Printf("--> parsed: %s\n", contents)
 	}
 
 	if err != nil {
@@ -180,21 +186,13 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		defer func() {
 			// detect language and setup stop words for it
 			if cfg.StopWords == nil {
-				info := whatlanggo.Detect(controlStr)
-				contents.lang = info.Lang.String()
-				cfg.SetStopWords(info.Lang.Iso6391())
-				if cfg.Verbose {
-					fmt.Printf("detected language based on %q: %s [%s] [%s]\n ",
-						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
-				}
-				if cfg.NoStopWords {
-					contents.reg = cfg.StopWords
-				}
+				config.DetectLang(cfg, controlStr, contents)
 			}
 		}()
 	}
 
 	var cursor string
+
 	z := html.NewTokenizer(reader)
 	for {
 		tt := z.Next()
@@ -240,7 +238,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			var appended bool
 
 			// handle <meta name="description" content="...">
-			if cursor == atom.Meta.String() {
+			if parser.current() == atom.Meta.String() {
 				var name, content string
 				for _, a := range token.Attr {
 					if a.Key == "name" {
@@ -254,8 +252,8 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					controlStr = updateDetectStr(cursor, content, controlStr)
-					contents.Append(parser.lineIndex, cursor, []byte(content))
+					controlStr = util.UpdateControlStr(content, controlStr)
+					contents.Append(parser.lineIndex, parser.current(), []byte(content))
 					appended = true
 				}
 			}
@@ -273,7 +271,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 
 			// handle non-self-closing nor has closing tags, e.g. <link ...> & <meta ...>
-			if isNonClosingSingleTag(cursor) {
+			if isNonClosingSingleTag(parser.current()) {
 				parser.pop()
 				if appended {
 					parser.lineIndex++
@@ -289,7 +287,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 
 			// go follow links in case if web crawler is ON.
-			if c != nil && cursor == atom.A.String() {
+			if c != nil && parser.current() == atom.A.String() {
 				for _, a := range token.Attr {
 					if a.Key == "href" && isSameDomain(a.Val, c.domain) {
 						c.crawl(a.Val)
@@ -304,7 +302,6 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			_, isExcluded := cfg.ExcludeTags[token.Data]
 			if (hasWeight || cfg.AllTagWeights) && !isExcluded {
 				parser.pop()
-				cursor = parser.current()
 				if parser.isEmpty() {
 					parser.lineIndex++
 				}
@@ -319,21 +316,21 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 			}
 		case html.TextToken:
 			token := z.Token()
-			_, hasWeight := cfg.TagWeights[cursor]
-			_, isExcluded := cfg.ExcludeTags[cursor]
+			_, hasWeight := cfg.TagWeights[parser.current()]
+			_, isExcluded := cfg.ExcludeTags[parser.current()]
 			if (hasWeight || cfg.AllTagWeights) && !isExcluded && parser.isNotEmpty() {
 
 				// skip empty or unknown lines
 				if len(strings.TrimSpace(token.Data)) == 0 {
+					// increase the text line in case if we've reached interruption,
+					// as in no text in the current TextToken & previous one had text.
+					if contents.Len() > 0 && !contents.Last().isEmpty() && contents.Len() > parser.lineIndex {
+						parser.lineIndex++
+					}
 					continue
 				}
 
-				// Take only <title> from <head> and ignore the rest <title> tags in the body
-				if cursor == atom.Title.String() && parser.parent() != "" {
-					continue
-				}
-
-				err := extParseText(cfg, exts, cursor, token.Data, parser.lineIndex)
+				err := extParseText(cfg, exts, parser.current(), token.Data, parser.lineIndex)
 				if err != nil {
 					switch err.(type) {
 					case *HTMLParseEndError:
@@ -341,8 +338,8 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				controlStr = updateDetectStr(cursor, token.Data, controlStr)
-				contents.Append(parser.lineIndex, cursor, []byte(token.Data))
+				controlStr = util.UpdateControlStr(token.Data, controlStr)
+				contents.Append(parser.lineIndex, parser.current(), []byte(token.Data))
 			}
 		}
 	}
@@ -362,7 +359,7 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 
 		// Title tags have special treatment
 		// if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) < len(s) {
-		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && pageTitle == "" {
+		if (l.tag == atom.Title.String() || l.tag == atom.H1.String()) && len(pageTitle) == 0 {
 			pageTitle = s
 		}
 
@@ -395,7 +392,8 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 				} else {
 					weight = cfg.TagWeights[p.tag]
 				}
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
+
+				tokens := util.SplitToTokens(snt.pData(p), cfg, lang, reg)
 
 				for _, token := range tokens {
 					visited[token] = true
@@ -440,6 +438,14 @@ func (cnt *HTMLContents) Len() int {
 	return len(cnt.lines)
 }
 
+func (cnt *HTMLContents) Last() *HTMLLine {
+	size := len(cnt.lines)
+	if size == 0 {
+		return nil
+	}
+	return cnt.lines[size-1]
+}
+
 func (cnt *HTMLContents) Append(lineIndex int, tag string, data []byte) {
 	for len(cnt.lines) <= lineIndex {
 		cnt.lines = append(cnt.lines, &HTMLLine{tag: tag, parts: make([]*htmlPart, 0)})
@@ -456,6 +462,14 @@ func (cnt *HTMLContents) Weigh(lineIndex int, weight float64) {
 	line := cnt.lines[lineIndex]
 	line.weightOverride = true
 	line.weight = weight
+}
+
+func (cnt *HTMLContents) SetLang(l string) {
+	cnt.lang = l
+}
+
+func (cnt *HTMLContents) SetReg(reg *stopwords.Register) {
+	cnt.reg = reg
 }
 
 func (cnt *HTMLContents) forEach(it func(i int, line *HTMLLine)) {
@@ -518,12 +532,16 @@ func (l *HTMLLine) String() string {
 		sb.WriteString("'")
 		sb.WriteString("<")
 		sb.WriteString(p.tag)
-		sb.WriteString(">: ")
+		sb.WriteString(">: \"")
 		sb.WriteString(string(l.pData(p)))
-		sb.WriteString("' ")
+		sb.WriteString("\"' ")
 	})
 	sb.WriteString("]")
 	return sb.String()
+}
+
+func (l *HTMLLine) isEmpty() bool {
+	return len(l.parts) == 0
 }
 
 func (l *HTMLLine) forEach(it func(i int, p *htmlPart)) {
@@ -612,12 +630,12 @@ func (p *htmlParser) currentNode() *htmlParserNode {
 	return p.stack[len(p.stack)-1]
 }
 
-func (p *htmlParser) parent() string {
+/* func (p *htmlParser) parent() string {
 	if len(p.stack) < 2 {
 		return ""
 	}
 	return p.stack[len(p.stack)-2].name
-}
+} */
 
 func (p *htmlParser) push(a string) {
 	p.stack = append(p.stack, &htmlParserNode{name: a})

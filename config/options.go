@@ -22,6 +22,13 @@ var (
 		}
 	}
 
+	// Language ...
+	Language = func(v string) Option {
+		return func(c *Config) {
+			c.Lang = v
+		}
+	}
+
 	// Query sets CSS query for the target.
 	Query = func(v string) Option {
 		return func(c *Config) {

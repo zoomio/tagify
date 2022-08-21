@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/abadojack/whatlanggo"
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/config"
@@ -109,7 +108,7 @@ var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mode
 	}
 
 	defer in.Close()
-	contents := ParseMD(in)
+	contents := ParseMD(in, c)
 
 	if c.Verbose {
 		fmt.Println("--> parsed")
@@ -129,7 +128,7 @@ var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mode
 	// 	fmt.Printf("using configuration: %#v\n", c)
 	// }
 
-	tags, title, lang := tagifyMD(contents, c)
+	tags, title := tagifyMD(contents, c)
 
 	return &model.Result{
 		RawTags: tags,
@@ -137,19 +136,35 @@ var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mode
 			ContentType: config.Markdown,
 			DocTitle:    title,
 			DocHash:     fmt.Sprintf("%x", contents.hash()),
-			Lang:        lang,
+			Lang:        contents.lang,
 		},
 	}
 }
 
-func ParseMD(reader io.Reader) *MDContents {
+func ParseMD(reader io.Reader, cfg *config.Config) *MDContents {
 
 	contents := &MDContents{lines: make([]*mdLine, 0)}
 	scanner := bufio.NewScanner(reader)
 
+	var controlStr string
+
+	if !cfg.SkipLang {
+		defer func() {
+			// detect language and setup stop words for it
+			if cfg.StopWords == nil {
+				config.DetectLang(cfg, controlStr, contents)
+			}
+		}()
+	}
+
 	index := -1
 
 	for scanner.Scan() {
+
+		if len(contents.lines) > 0 && len(contents.lines[index].data) > 0 {
+			l := contents.lines[index]
+			controlStr = util.UpdateControlStr(string(l.data), controlStr)
+		}
 
 		line := bytes.TrimSpace(scanner.Bytes())
 		// skip empty line
@@ -212,10 +227,9 @@ func ParseMD(reader io.Reader) *MDContents {
 	return contents
 }
 
-func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*model.Tag, pageTitle string) {
 	tokenIndex = make(map[string]*model.Tag)
 	var docsCount int
-	var reg *stopwords.Register
 
 	for _, line := range contents.lines {
 		// skip empty lines
@@ -224,20 +238,6 @@ func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*mo
 		}
 
 		s := string(line.data)
-
-		// detect language and setup stop words for it
-		if c.StopWords == nil && s != "" {
-			info := whatlanggo.Detect(s)
-			lang = info.Lang.String()
-			c.SetStopWords(info.Lang.Iso6391())
-			if c.Verbose {
-				fmt.Printf("detected language: %s [%s] [%s]\n ",
-					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
-			}
-			if c.NoStopWords {
-				reg = c.StopWords
-			}
-		}
 
 		if isMDHeading(line.tag) && pageTitle == "" {
 			pageTitle = s
@@ -254,7 +254,7 @@ func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*mo
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := c.TagWeights[p.tag.String()]
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
+				tokens := util.SplitToTokens(snt.pData(p), c, contents.lang, contents.reg)
 				if c.Verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
@@ -336,6 +336,17 @@ type mdPartHandler struct {
 // MDContents stores text from target tags.
 type MDContents struct {
 	lines []*mdLine
+
+	lang string
+	reg  *stopwords.Register
+}
+
+func (cnt *MDContents) SetLang(l string) {
+	cnt.lang = l
+}
+
+func (cnt *MDContents) SetReg(reg *stopwords.Register) {
+	cnt.reg = reg
 }
 
 func (cnt *MDContents) append(index int, tag mdType, data []byte) {

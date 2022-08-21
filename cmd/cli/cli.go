@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"strings"
@@ -18,6 +17,7 @@ var (
 	version = "tip"
 
 	source = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
+	lang   = flag.String("lang", "", "language of the source, e.g. \"en\"")
 
 	// headless
 	query = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
@@ -72,6 +72,9 @@ func main() {
 	}
 	if *source != "" {
 		options = append(options, tagify.Source(*source))
+	}
+	if *lang != "" {
+		options = append(options, tagify.Language(*lang))
 	}
 
 	// headless
@@ -133,7 +136,7 @@ func main() {
 	}
 
 	if len(*img) > 0 && len(res.Meta.Screenshot) > 0 {
-		err = ioutil.WriteFile(*img, res.Meta.Screenshot, 0644)
+		err = os.WriteFile(*img, res.Meta.Screenshot, 0644)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to store captured screenshot at %s: %v\n", *img, err)
 			os.Exit(3)

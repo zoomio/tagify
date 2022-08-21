@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.59.0
+
+- use different segmentation logic based on the `github.com/go-ego/gse` segmenter for Chinese & Japanese languages;
+- improved HTML parser logic: optimised the way it collects contents of a document and improved logic for splitting into sentences;
+- fallback to the English language for the stop words in cases when language detection is not reliable;
+- added `lang` option to the CLI to be able to provide the language of the document;
+- bumped `github.com/zoomio/stopwords` to `0.11.0`.
+
 ## v0.58.0
 
 - stopped ignoring `<h1>` in cases when they are equal to the `<title>`, as in now they are included.

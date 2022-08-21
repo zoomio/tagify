@@ -7,13 +7,25 @@ import (
 	"io"
 	"strings"
 
-	"github.com/abadojack/whatlanggo"
 	"github.com/zoomio/stopwords"
 
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
 )
+
+type TxtContents struct {
+	lang string
+	reg  *stopwords.Register
+}
+
+func (cnt *TxtContents) SetLang(l string) {
+	cnt.lang = l
+}
+
+func (cnt *TxtContents) SetReg(reg *stopwords.Register) {
+	cnt.reg = reg
+}
 
 // ProcessText parses given text lines of text into a slice of tags.
 var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *model.Result {
@@ -44,28 +56,18 @@ var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mo
 		return &model.Result{}
 	}
 
-	var lang string
-	var reg *stopwords.Register
+	contents := &TxtContents{}
 	tokenIndex := make(map[string]*model.Tag)
 	tokens := make([]string, 0)
 	for _, l := range lines {
 		// detect language and setup stop words for it
-		if c.StopWords == nil && l != "" {
-			info := whatlanggo.Detect(l)
-			lang = info.Lang.String()
-			c.SetStopWords(info.Lang.Iso6391())
-			if c.Verbose {
-				fmt.Printf("detected language: %s [%s] [%s]\n ",
-					info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393())
-			}
-			if c.NoStopWords {
-				reg = c.StopWords
-			}
+		if !c.SkipLang && c.StopWords == nil && len(l) > 0 {
+			config.DetectLang(c, l, contents)
 		}
 		sentences := util.SplitToSentences([]byte(l))
 		for _, s := range sentences {
 			docsCount++
-			tokens = append(tokens, util.Sanitize(bytes.Fields(s), reg)...)
+			tokens = append(tokens, util.Sanitize(bytes.Fields(s), contents.reg)...)
 			visited := map[string]bool{}
 			for _, token := range tokens {
 				visited[token] = true
@@ -94,7 +96,7 @@ var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mo
 		Meta: &model.Meta{
 			ContentType: config.Text,
 			DocHash:     fmt.Sprintf("%x", hashTokens(tokens)),
-			Lang:        lang,
+			Lang:        contents.lang,
 		},
 	}
 }
