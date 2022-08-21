@@ -1,13 +1,11 @@
 package html
 
 import (
-	"bytes"
 	"crypto/sha512"
 	"fmt"
 	"io"
 	"strings"
 
-	"github.com/abadojack/whatlanggo"
 	"github.com/zoomio/stopwords"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -35,10 +33,10 @@ var (
 		"i":      1.1,
 		"p":      1.0,
 		"li":     1.0,
-		"td":     1.0,
-		"th":     1.0,
-		"code":   0.7,
-		"a":      0.6,
+		// "td":     1.0,
+		// "th":     1.0,
+		"code": 0.7,
+		"a":    0.6,
 	}
 
 	htmlContentTags = map[atom.Atom]bool{
@@ -98,13 +96,6 @@ func isSameDomain(href, domain string) bool {
 	}
 
 	return strings.HasSuffix(dest[:i], host)
-}
-
-func updateDetectStr(candidate, controlStr string) string {
-	if len(candidate) > len(controlStr) {
-		return candidate
-	}
-	return controlStr
 }
 
 // ParseHTML receives lines of raw HTML markup text from the Web and returns simple text,
@@ -195,24 +186,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		defer func() {
 			// detect language and setup stop words for it
 			if cfg.StopWords == nil {
-				info := whatlanggo.Detect(controlStr)
-				if cfg.Verbose {
-					fmt.Printf("detected language based on %q: %s [%s] [%s], confidence %2.f\n",
-						controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
-				}
-				if info.IsReliable() {
-					contents.lang = info.Lang.String()
-					cfg.SetStopWords(info.Lang.Iso6391())
-				} else {
-					contents.lang = "English"
-					cfg.SetStopWords("en")
-					if cfg.Verbose {
-						fmt.Println("use English language hence detection is not reliable")
-					}
-				}
-				if cfg.NoStopWords {
-					contents.reg = cfg.StopWords
-				}
+				config.DetectLang(cfg, controlStr, contents)
 			}
 		}()
 	}
@@ -278,7 +252,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 				if name == "description" {
-					controlStr = updateDetectStr(content, controlStr)
+					controlStr = util.UpdateControlStr(content, controlStr)
 					contents.Append(parser.lineIndex, parser.current(), []byte(content))
 					appended = true
 				}
@@ -364,7 +338,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 					}
 				}
 
-				controlStr = updateDetectStr(token.Data, controlStr)
+				controlStr = util.UpdateControlStr(token.Data, controlStr)
 				contents.Append(parser.lineIndex, parser.current(), []byte(token.Data))
 			}
 		}
@@ -418,7 +392,8 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 				} else {
 					weight = cfg.TagWeights[p.tag]
 				}
-				tokens := util.Sanitize(bytes.Fields(snt.pData(p)), reg)
+
+				tokens := util.SplitToTokens(snt.pData(p), cfg, lang, reg)
 
 				for _, token := range tokens {
 					visited[token] = true
@@ -489,6 +464,14 @@ func (cnt *HTMLContents) Weigh(lineIndex int, weight float64) {
 	line.weight = weight
 }
 
+func (cnt *HTMLContents) SetLang(l string) {
+	cnt.lang = l
+}
+
+func (cnt *HTMLContents) SetReg(reg *stopwords.Register) {
+	cnt.reg = reg
+}
+
 func (cnt *HTMLContents) forEach(it func(i int, line *HTMLLine)) {
 	for i, l := range cnt.lines {
 		// skip unsupported tags
@@ -549,9 +532,9 @@ func (l *HTMLLine) String() string {
 		sb.WriteString("'")
 		sb.WriteString("<")
 		sb.WriteString(p.tag)
-		sb.WriteString(">: ")
+		sb.WriteString(">: \"")
 		sb.WriteString(string(l.pData(p)))
-		sb.WriteString("' ")
+		sb.WriteString("\"' ")
 	})
 	sb.WriteString("]")
 	return sb.String()

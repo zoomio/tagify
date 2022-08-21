@@ -10,7 +10,7 @@ import (
 
 var (
 	allStopWords = map[string]stopwords.Option{
-		"en": stopwords.Words(stopwords.StopWords),
+		"en": stopwords.Words(stopwords.StopWordsEn),
 		"ru": stopwords.Words(stopwords.StopWordsRu),
 		"zh": stopwords.Words(stopwords.StopWordsZh),
 		"ja": stopwords.Words(stopwords.StopWordsJa),
@@ -70,6 +70,6 @@ func (c *Config) SetStopWords(lang string) {
 	if found, ok := allStopWords[lang]; ok {
 		c.StopWords = stopwords.Setup(found)
 	} else {
-		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWords))
+		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWordsEn))
 	}
 }

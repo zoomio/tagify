@@ -17,6 +17,7 @@ var (
 	version = "tip"
 
 	source = flag.String("s", "", "source, could be URL (e.g. http://... and https://...) or file path")
+	lang   = flag.String("lang", "", "language of the source, e.g. \"en\"")
 
 	// headless
 	query = flag.String("q", "", "DOM CSS query, e.g. `-q p` will fetch contents of all <p> tags from the given source")
@@ -71,6 +72,9 @@ func main() {
 	}
 	if *source != "" {
 		options = append(options, tagify.Source(*source))
+	}
+	if *lang != "" {
+		options = append(options, tagify.Language(*lang))
 	}
 
 	// headless

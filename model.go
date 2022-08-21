@@ -10,7 +10,8 @@ type Option = config.Option
 type ContentType = config.ContentType
 
 var (
-	Source = config.Source
+	Source   = config.Source
+	Language = config.Language
 
 	// headless
 	Query      = config.Query

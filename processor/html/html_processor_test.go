@@ -120,7 +120,7 @@ var processHTMLTests = []struct {
 		string(complexTextHTML),
 		[]string{"document", "tags", "funny", "thing", "funtivity", "fun", "drag", "extra", "complex", "text", "testing", "hussle", "yup", "lotsa"},
 		"Complex text line",
-		"3e0b8facce5b614d1f7553924736f68382cd38dd4e5845646c8dc66959934a41ebab4883885f4a3edbf0cbf4885f28a4c894a0f3b81d2378fdb136227cd15038",
+		"8200fbd4839ec87a58faf5eb889cbf1542b18645fba96230a171daa27175a282b0109215fdab04692b148e6908c1a72eb9f1ff969d975eaba16b6a394f6559bd",
 		true,
 		true,
 	},
@@ -129,8 +129,8 @@ var processHTMLTests = []struct {
 func Test_ProcessHTML(t *testing.T) {
 	for _, tt := range processHTMLTests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
-			out := ProcessHTML(c, &inputReadCloser{strings.NewReader(tt.in)})
+			cfg := config.New(config.NoStopWords(tt.noStopWords), config.ContentOnly(tt.contentOnly))
+			out := ProcessHTML(cfg, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.Flatten()))

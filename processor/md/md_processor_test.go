@@ -107,9 +107,8 @@ func Test_mdContents_sentences(t *testing.T) {
 
 	l2 := contents.lines[1]
 	ss2 := l2.sentences()
-	assert.Len(t, ss2, 2)
+	assert.Len(t, ss2, 1)
 	assert.Equal(t, "Whose name was Jim", string(ss2[0].data))
-	assert.Equal(t, "", string(ss2[1].data))
 }
 
 func Test_mdContents_sentences2(t *testing.T) {
@@ -123,6 +122,10 @@ func Test_mdContents_sentences2(t *testing.T) {
 	}
 
 	sents := line.sentences()
-	assert.Len(t, sents, 6)
-	assert.Equal(t, "", string(sents[5].data))
+	assert.Len(t, sents, 5)
+	assert.Equal(t, "**Sentence number one", string(sents[0].data))
+	assert.Equal(t, "And then", string(sents[1].data))
+	assert.Equal(t, "number two", string(sents[2].data))
+	assert.Equal(t, "*** And finally", string(sents[3].data))
+	assert.Equal(t, "three", string(sents[4].data))
 }

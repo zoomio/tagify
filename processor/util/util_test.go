@@ -1,6 +1,7 @@
 package util
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,7 @@ var normalizeTests = []struct {
 	{"1)", "1)", false, false},
 	{"-no-stop", "-no-stop", false, false},
 	{"2018-02-24T12:00:49Z", "--TZ", false, false},
+	{"yeah", "yeah", true, false},
 }
 
 func Test_normalize(t *testing.T) {
@@ -59,6 +61,7 @@ var sanitizeTests = []struct {
 	{"Quoted Batman", [][]byte{[]byte("'the batman'")}, []string{"batman"}, true},
 	{"Quoted Batman w stopwords", [][]byte{[]byte("'the batman'")}, []string{"the", "batman"}, false},
 	{"City's", [][]byte{[]byte("city's")}, []string{"city's"}, true},
+	{"Yeah", [][]byte{[]byte(", oh yeah lotsa fun and sometimes ")}, []string{"yeah", "lotsa", "fun"}, true},
 }
 
 func Test_sanitize(t *testing.T) {
@@ -74,17 +77,33 @@ func Test_sanitize(t *testing.T) {
 	}
 }
 
-func Test_SplitToSentences(t *testing.T) {
-	text := "This sentence has a comma, so it'll be split into two halves. This sentence has nothing. Should it though?"
-	sentences := SplitToSentences([]byte(text))
-	assert.Len(t, sentences, 4)
+var splitToSentencesTests = []struct {
+	name   string
+	in     string
+	expect string
+}{
+	{
+		"Split",
+		"This sentence has a comma, so it'll be split into two halves. This sentence has nothing. Should it though?",
+		"This sentence has a comma|so it'll be split into two halves|This sentence has nothing|Should it though",
+	},
+	{
+		"Multiple commas",
+		"Natural language processing includes: tokeniziation, term frequency - inverse term frequency, nearest neighbors, part of speech tagging and many more.",
+		"Natural language processing includes|tokeniziation|term frequency - inverse term frequency|nearest neighbors|part of speech tagging and many more",
+	},
+	{
+		"Split with word \"yeah\"",
+		"Testing is a funny thing, sometimes it is a funtivity, oh yeah lotsa fun and sometimes it is just a drag and an extra hussle. Yup funny, isn't it?",
+		"Testing is a funny thing|sometimes it is a funtivity|oh yeah lotsa fun and sometimes it is just a drag and an extra hussle|Yup funny|isn't it",
+	},
 }
 
-func Test_SplitToSentences_MultipleCommas(t *testing.T) {
-	text := `
-	Natural language processing includes: tokeniziation, term frequency - inverse term frequency, nearest neighbors, part of speech tagging and many more.
-	`
-	sentences := SplitToSentences([]byte(text))
-	assert.Len(t, sentences, 6)
-	assert.Equal(t, " part of speech tagging and many more", string(sentences[4]))
+func Test_SplitToSentences(t *testing.T) {
+	for _, tt := range splitToSentencesTests {
+		t.Run(tt.name, func(t *testing.T) {
+			sentences := SplitToSentences([]byte(tt.in))
+			assert.Equal(t, tt.expect, strings.Join(BytesToStrings(sentences), "|"))
+		})
+	}
 }
