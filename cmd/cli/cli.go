@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/zoomio/tagify"
+	"github.com/zoomio/tagify/config"
 )
 
 var (
@@ -25,10 +26,13 @@ var (
 	until = flag.Duration("u", 0, "duration to wait before getting HTML contents, handy for SPAs, because they keep loading in browsers for some time")
 	img   = flag.String("i", "", "enables capturing screenshot in the provided path")
 
-	limit               = flag.Int("l", 5, "number of tags to return")
-	verbose             = flag.Bool("v", false, "enables verbose mode")
-	contentType         = flag.String("t", tagify.Unknown.String(), "type of content type in the source (Text or HTML)")
-	noStopWords         = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
+	limit       = flag.Int("l", 5, "number of tags to return")
+	verbose     = flag.Bool("v", false, "enables verbose mode")
+	contentType = flag.String("t", tagify.Unknown.String(), fmt.Sprintf("content type of the source, allowed values: %s", strings.Join(config.ContentTypes[:], ", ")))
+	noStopWords = flag.Bool("no-stop", true, "removes stop-words from results (see https://github.com/zoomio/stopwords)")
+	contentOnly = flag.Bool("content", true, "tagify only content")
+
+	// weighing
 	tagWeights          = flag.String("tag-weights", "", "string with the custom tag weights for HTML & Markdown tagging in the form of <tag1>:<score1>|<tag2>:<score2>")
 	tagWeightsJSON      = flag.String("tag-weights-json", "", "JSON file with the custom tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
 	adjustScores        = flag.Bool("adjust-scores", false, "adjusts tags score to the interval 0.0 to 1.0")
@@ -36,8 +40,7 @@ var (
 	extraTagWeightsJSON = flag.String("extra-tag-weights-json", "", "JSON file with the additional tag weights for HTML & Markdown tagging in the form of { \"<tag1>\": <score1>, \"<tag2>\": <score2> }")
 
 	// EXPERIMENTAL
-	contentOnly = flag.Bool("content", false, "[EXPERIMENTAL] might not be included in next releases: ignore all none content related parts of the page (HTML only)")
-	fullSite    = flag.Bool("site", false, "[EXPERIMENTAL] might not be included in next releases: allows to tagify full site (HTML only)")
+	fullSite = flag.Bool("site", false, "[EXPERIMENTAL] might not be included in next releases: allows to tagify full site (HTML only)")
 
 	// Utility
 	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")

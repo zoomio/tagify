@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.60.0
+
+- BREAKING: graduated `ContentOnly` option (`-content` in the CLI mode), from now on it is ENABLED by default.
+
 ## v0.59.0
 
 - use different segmentation logic based on the `github.com/go-ego/gse` segmenter for Chinese & Japanese languages;
