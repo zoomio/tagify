@@ -9,7 +9,7 @@ const (
 )
 
 var (
-	contentTypes = [...]string{
+	ContentTypes = [...]string{
 		"Unknown",
 		"Text",
 		"HTML",
@@ -22,7 +22,7 @@ type ContentType byte
 
 // ContentTypeOf returns ContentType based on string value.
 func ContentTypeOf(contentType string) ContentType {
-	for i, key := range contentTypes {
+	for i, key := range ContentTypes {
 		if key == contentType {
 			return ContentType(i)
 		}
@@ -35,5 +35,5 @@ func (ct ContentType) String() string {
 	if ct < Text || ct > Markdown {
 		return "Unknown"
 	}
-	return contentTypes[ct]
+	return ContentTypes[ct]
 }

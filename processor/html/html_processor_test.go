@@ -73,7 +73,7 @@ var processHTMLTests = []struct {
 	{
 		"complex",
 		string(complexHTML),
-		[]string{"go", "golang", "html", "extract", "all", "certain", "parse", "content", "from", "tags", "theme"},
+		[]string{"go", "golang", "html", "extract", "all", "certain", "parse", "content", "from", "tags", "theme", "blog", "help"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
 		"04c09437103091df65d3c8d464017156bd181951adf614bccf30c5b40332641a7bd3d9a3a5042119d9e72312e2ce545c4522a546f9e869fe5d0c2dc6c988ab13",
 		false,
@@ -82,7 +82,7 @@ var processHTMLTests = []struct {
 	{
 		"complex exclude stopWords",
 		string(complexHTML),
-		[]string{"parse", "html", "extract", "content", "tags", "theme", "golang"},
+		[]string{"parse", "html", "extract", "content", "tags", "theme", "golang", "blog", "help"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
 		"04c09437103091df65d3c8d464017156bd181951adf614bccf30c5b40332641a7bd3d9a3a5042119d9e72312e2ce545c4522a546f9e869fe5d0c2dc6c988ab13",
 		true,

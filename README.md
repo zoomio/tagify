@@ -31,8 +31,7 @@ Want to see it in action? Visit [Tagify Playground](https://www.zoomio.org/tagif
 
 Example, "tagify" this repository (with the limit of 5 tags):
 ```bash
-$ tagify -s=https://github.com/zoomio/tagify -l=5
-source html plain supports tags
+$ tagify -s https://github.com/zoomio/tagify -l 5
 ```
 
 In a code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
@@ -49,25 +48,26 @@ Since `v0.50.0` Tagify has added support for extensions. See `extension/extensio
 
 Get the latest [release](https://github.com/zoomio/tagify/releases/latest) by running this command in your shell:
 
-For MacOS:
+__For MacOS:__
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" -o darwin
 ```
 
-For MacOS (arm64):
+__For MacOS (arm64):__
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" -o darwin arm64
 ```
 
-For Linux:
+__For Linux:__
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" -o linux
 ```
 
-For Windows:
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" -o windows
-```
+__For Windows:__
+
+I didn't have time to automate Windows installation, but there is a binary for Windows platform too in the [releases](https://github.com/zoomio/tagify/releases/latest). So feel free to download it and install your own way. 
+
+PRs are also welcomed :)
 
 ### Go dependency
 
@@ -86,3 +86,5 @@ See [CONTRIBUTING.md](https://raw.githubusercontent.com/zoomio/tagify/master/CON
 ## License
 
 Released under the [Apache License 2.0](https://raw.githubusercontent.com/zoomio/tagify/master/LICENSE).
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/smeshkov)
