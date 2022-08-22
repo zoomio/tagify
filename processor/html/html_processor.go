@@ -55,6 +55,7 @@ var (
 		atom.I:      true,
 		atom.Em:     true,
 		atom.A:      true,
+		atom.Span:   true,
 	}
 )
 
