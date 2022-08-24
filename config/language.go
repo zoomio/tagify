@@ -21,7 +21,7 @@ func DetectLang(cfg *Config, controlStr string, contents Vocabulary) {
 				controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
 		}
 		if info.IsReliable() {
-			contents.SetLang(info.Lang.String())
+			contents.SetLang(info.Lang.Iso6391())
 			cfg.SetStopWords(info.Lang.Iso6391())
 		} else {
 			contents.SetLang("English")
