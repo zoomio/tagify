@@ -67,7 +67,7 @@ var ProcessText model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mo
 		sentences := util.SplitToSentences([]byte(l))
 		for _, s := range sentences {
 			docsCount++
-			tokens = append(tokens, util.Sanitize(bytes.Fields(s), contents.reg)...)
+			tokens = append(tokens, util.SplitToTokens(s, c, contents.lang, contents.reg)...)
 			visited := map[string]bool{}
 			for _, token := range tokens {
 				visited[token] = true
