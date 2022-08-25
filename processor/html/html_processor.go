@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/zoomio/stopwords"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 
@@ -55,6 +54,7 @@ var (
 		atom.I:      true,
 		atom.Em:     true,
 		atom.A:      true,
+		atom.Span:   true,
 	}
 )
 
@@ -163,14 +163,14 @@ var ProcessHTML model.ProcessFunc = func(c *config.Config, reader io.ReadCloser)
 		return model.EmptyResult()
 	}
 
-	tags, title, lang := tagifyHTML(contents, c, exts)
+	tags, title := tagifyHTML(contents, c, exts)
 
 	return &model.Result{
 		Meta: &model.Meta{
 			ContentType: config.HTML,
 			DocTitle:    title,
 			DocHash:     fmt.Sprintf("%x", contents.hash()),
-			Lang:        lang,
+			Lang:        c.Lang,
 		},
 		RawTags:    tags,
 		Extensions: extension.MapResults(c.Extensions),
@@ -187,7 +187,7 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		defer func() {
 			// detect language and setup stop words for it
 			if cfg.StopWords == nil {
-				config.DetectLang(cfg, controlStr, contents)
+				config.DetectLang(cfg, controlStr)
 			}
 		}()
 	}
@@ -347,11 +347,9 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 }
 
 func tagifyHTML(contents *HTMLContents, cfg *config.Config,
-	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string, lang string) {
+	exts []HTMLExt) (tokenIndex map[string]*model.Tag, pageTitle string) {
 
 	tokenIndex = map[string]*model.Tag{}
-	lang = contents.lang
-	reg := contents.reg
 
 	var docsCount int
 
@@ -394,7 +392,7 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 					weight = cfg.TagWeights[p.tag]
 				}
 
-				tokens := util.SplitToTokens(snt.pData(p), cfg, lang, reg)
+				tokens := util.SplitToTokens(snt.pData(p), cfg)
 
 				for _, token := range tokens {
 					visited[token] = true
@@ -430,9 +428,6 @@ func tagifyHTML(contents *HTMLContents, cfg *config.Config,
 type HTMLContents struct {
 	lines          []*HTMLLine
 	htmlTagWeights config.TagWeights
-
-	lang string
-	reg  *stopwords.Register
 }
 
 func (cnt *HTMLContents) Len() int {
@@ -463,14 +458,6 @@ func (cnt *HTMLContents) Weigh(lineIndex int, weight float64) {
 	line := cnt.lines[lineIndex]
 	line.weightOverride = true
 	line.weight = weight
-}
-
-func (cnt *HTMLContents) SetLang(l string) {
-	cnt.lang = l
-}
-
-func (cnt *HTMLContents) SetReg(reg *stopwords.Register) {
-	cnt.reg = reg
 }
 
 func (cnt *HTMLContents) forEach(it func(i int, line *HTMLLine)) {

@@ -4,16 +4,10 @@ import (
 	"fmt"
 
 	"github.com/abadojack/whatlanggo"
-	"github.com/zoomio/stopwords"
 )
 
-type Vocabulary interface {
-	SetLang(l string)
-	SetReg(r *stopwords.Register)
-}
-
 // DetectLang detects language and setups the stop words for it.
-func DetectLang(cfg *Config, controlStr string, contents Vocabulary) {
+func DetectLang(cfg *Config, controlStr string) {
 	if len(cfg.Lang) == 0 {
 		info := whatlanggo.Detect(controlStr)
 		if cfg.Verbose {
@@ -21,21 +15,19 @@ func DetectLang(cfg *Config, controlStr string, contents Vocabulary) {
 				controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
 		}
 		if info.IsReliable() {
-			contents.SetLang(info.Lang.Iso6391())
-			cfg.SetStopWords(info.Lang.Iso6391())
+			setLang(cfg, info.Lang.Iso6391())
 		} else {
-			contents.SetLang("English")
-			cfg.SetStopWords("en")
-			if cfg.Verbose {
-				fmt.Println("use English language hence detection is not reliable")
-			}
+			setLang(cfg, "en")
 		}
 	} else {
-		contents.SetLang(cfg.Lang)
-		cfg.SetStopWords(cfg.Lang)
+		setLang(cfg, cfg.Lang)
 	}
-	if cfg.NoStopWords {
-		contents.SetReg(cfg.StopWords)
-	}
+}
 
+func setLang(cfg *Config, lang string) {
+	cfg.Lang = lang
+	cfg.SetStopWords(lang)
+	if cfg.Verbose {
+		fmt.Printf("language to use: %s\n", lang)
+	}
 }

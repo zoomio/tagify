@@ -26,7 +26,9 @@ var (
 
 // New ...
 func New(options ...Option) *Config {
-	c := &Config{}
+	c := &Config{
+		ContentOnly: true,
+	}
 
 	// apply custom configuration
 	for _, option := range options {
@@ -39,6 +41,9 @@ func New(options ...Option) *Config {
 // Config ...
 type Config struct {
 	Source string
+	Lang   string
+	ContentType
+	Content string
 
 	// headless
 	Query      string
@@ -46,22 +51,25 @@ type Config struct {
 	WaitUntil  time.Duration
 	Screenshot bool
 
-	Content string
-	ContentType
-	Limit         int
-	Verbose       bool
-	NoStopWords   bool
-	SkipLang      bool
-	Lang          string
-	StopWords     *stopwords.Register
-	ContentOnly   bool
-	FullSite      bool
+	// misc
+	Limit       int
+	Verbose     bool
+	NoStopWords bool
+	SkipLang    bool
+	StopWords   *stopwords.Register
+	ContentOnly bool
+	FullSite    bool
+
+	// weighing
 	AllTagWeights bool
 	TagWeights
 	ExtraTagWeights TagWeights
 	ExcludeTags     TagWeights
 	AdjustScores    bool
-	Extensions      []extension.Extension
+
+	Extensions []extension.Extension
+
+	seg Segmenter
 }
 
 // SetStopWords ...
@@ -72,4 +80,12 @@ func (c *Config) SetStopWords(lang string) {
 	} else {
 		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWordsEn))
 	}
+}
+
+// Segmenter ...
+func (c *Config) Segment(text []byte) [][]byte {
+	if c.seg == nil {
+		c.seg = NewDefaultSegmenter(c)
+	}
+	return c.seg.Segment(text)
 }

@@ -12,14 +12,13 @@ type ContentType = config.ContentType
 var (
 	Source   = config.Source
 	Language = config.Language
+	Content  = config.Content
 
 	// headless
 	Query      = config.Query
 	WaitFor    = config.WaitFor
 	WaitUntil  = config.WaitUntil
 	Screenshot = config.Screenshot
-
-	Content = config.Content
 
 	// misc
 	TargetType  = config.TargetType

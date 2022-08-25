@@ -1,6 +1,6 @@
 .PHONY: deps clean build
 
-TAG=0.60.0
+TAG=0.60.1
 BINARY=tagify
 DIST_DIR=_dist
 OS=darwin
@@ -30,9 +30,9 @@ profile:
 tag:
 	./_bin/tag.sh ${TAG}
 
-install:
-	./_bin/install.sh ${OS} ${ARCH}
+# install:
+# 	./_bin/install.sh ${OS} ${ARCH}
 
-install_local: build
+install: build
 	chmod +x ${DIST_DIR}/${BINARY}_${OS}_${ARCH}_${VERSION}
 	mv ${DIST_DIR}/${BINARY}_${OS}_${ARCH}_${VERSION} ${USER_BIN}/${BINARY}

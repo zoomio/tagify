@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/zoomio/stopwords"
-
 	"github.com/zoomio/tagify/config"
 	"github.com/zoomio/tagify/model"
 	"github.com/zoomio/tagify/processor/util"
@@ -136,7 +134,7 @@ var ProcessMD model.ProcessFunc = func(c *config.Config, in io.ReadCloser) *mode
 			ContentType: config.Markdown,
 			DocTitle:    title,
 			DocHash:     fmt.Sprintf("%x", contents.hash()),
-			Lang:        contents.lang,
+			Lang:        c.Lang,
 		},
 	}
 }
@@ -152,7 +150,7 @@ func ParseMD(reader io.Reader, cfg *config.Config) *MDContents {
 		defer func() {
 			// detect language and setup stop words for it
 			if cfg.StopWords == nil {
-				config.DetectLang(cfg, controlStr, contents)
+				config.DetectLang(cfg, controlStr)
 			}
 		}()
 	}
@@ -254,7 +252,7 @@ func tagifyMD(contents *MDContents, c *config.Config) (tokenIndex map[string]*mo
 
 			snt.forEach(func(i int, p *mdPart) {
 				weight := c.TagWeights[p.tag.String()]
-				tokens := util.SplitToTokens(snt.pData(p), c, contents.lang, contents.reg)
+				tokens := util.SplitToTokens(snt.pData(p), c)
 				if c.Verbose && len(tokens) > 0 {
 					fmt.Printf("<%s>: %v\n", line.tag.String(), tokens)
 				}
@@ -336,17 +334,6 @@ type mdPartHandler struct {
 // MDContents stores text from target tags.
 type MDContents struct {
 	lines []*mdLine
-
-	lang string
-	reg  *stopwords.Register
-}
-
-func (cnt *MDContents) SetLang(l string) {
-	cnt.lang = l
-}
-
-func (cnt *MDContents) SetReg(reg *stopwords.Register) {
-	cnt.reg = reg
 }
 
 func (cnt *MDContents) append(index int, tag mdType, data []byte) {

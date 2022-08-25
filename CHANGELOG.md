@@ -1,8 +1,16 @@
 # Changelog
 
+## v0.60.1
+
+- BREAKING: from now on `ContentOnly` option is set to `true` by default;
+- optimization: moved segmenter inside the config with the lazy initialization so now it happens only once;
+- fix: in cases when language detection is reliable it is now using correct value;
+- fix: use the same segmenter logic in the plain text processor.
+
 ## v0.60.0
 
-- BREAKING: graduated `ContentOnly` option (`-content` in the CLI mode), from now on it is ENABLED by default.
+- graduated `ContentOnly` option (`-content` option in the CLI mode); 
+- BREAKING: from now on `-content` option in the CLI mode is set to `true` by default.
 
 ## v0.59.0
 
