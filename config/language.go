@@ -28,6 +28,6 @@ func setLang(cfg *Config, lang string) {
 	cfg.Lang = lang
 	cfg.SetStopWords(lang)
 	if cfg.Verbose {
-		fmt.Printf("language to use: %s", lang)
+		fmt.Printf("language to use: %s\n", lang)
 	}
 }
