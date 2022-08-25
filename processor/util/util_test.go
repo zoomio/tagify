@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/zoomio/stopwords"
+
+	"github.com/zoomio/tagify/config"
 )
 
 var register = stopwords.Setup()
@@ -103,7 +105,7 @@ func Test_SplitToSentences(t *testing.T) {
 	for _, tt := range splitToSentencesTests {
 		t.Run(tt.name, func(t *testing.T) {
 			sentences := SplitToSentences([]byte(tt.in))
-			assert.Equal(t, tt.expect, strings.Join(BytesToStrings(sentences), "|"))
+			assert.Equal(t, tt.expect, strings.Join(config.BytesToStrings(sentences), "|"))
 		})
 	}
 }

@@ -68,6 +68,8 @@ type Config struct {
 	AdjustScores    bool
 
 	Extensions []extension.Extension
+
+	seg Segmenter
 }
 
 // SetStopWords ...
@@ -78,4 +80,12 @@ func (c *Config) SetStopWords(lang string) {
 	} else {
 		c.StopWords = stopwords.Setup(stopwords.Words(stopwords.StopWordsEn))
 	}
+}
+
+// Segmenter ...
+func (c *Config) Segment(text []byte) [][]byte {
+	if c.seg == nil {
+		c.seg = NewDefaultSegmenter(c)
+	}
+	return c.seg.Segment(text)
 }
