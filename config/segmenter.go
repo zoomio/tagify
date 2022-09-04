@@ -24,7 +24,7 @@ func NewDefaultSegmenter(c *Config) *DefaultSegmenter {
 			seg.StopWordMap = c.StopWords.Index()
 		}
 	}
-	seg.LoadDict()
+	seg.LoadDictEmbed()
 	s := &DefaultSegmenter{seg: seg}
 	if c != nil {
 		s.lang = c.Lang
