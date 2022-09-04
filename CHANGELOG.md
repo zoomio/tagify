@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.60.2
+
+- fixed dictionary loader for segmenter for Chinese & Japanese languages.
+
 ## v0.60.1
 
 - BREAKING: from now on `ContentOnly` option is set to `true` by default;
