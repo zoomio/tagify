@@ -15,16 +15,17 @@ func DetectLang(cfg *Config, controlStr string) {
 				controlStr, info.Lang.String(), info.Lang.Iso6391(), info.Lang.Iso6393(), info.Confidence)
 		}
 		if info.IsReliable() {
-			setLang(cfg, info.Lang.Iso6391())
+			SetLang(cfg, info.Lang.Iso6391())
 		} else {
-			setLang(cfg, "en")
+			SetLang(cfg, "en")
 		}
 	} else {
-		setLang(cfg, cfg.Lang)
+		SetLang(cfg, cfg.Lang)
 	}
 }
 
-func setLang(cfg *Config, lang string) {
+// SetLang - updates language in configuration & sets corresponding stop-words.
+func SetLang(cfg *Config, lang string) {
 	cfg.Lang = lang
 	cfg.SetStopWords(lang)
 	if cfg.Verbose {
