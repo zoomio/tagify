@@ -228,6 +228,20 @@ func ParseHTML(reader io.Reader, cfg *config.Config, exts []HTMLExt, c *webCrawl
 		case html.StartTagToken:
 			token := z.Token()
 			cursor = token.Data
+
+			// try to detect language based on the <html lang="...">
+			if !cfg.SkipLang && len(cfg.Lang) == 0 && token.Data == atom.Html.String() {
+				for _, v := range token.Attr {
+					if v.Key == "lang" && len(v.Val) > 0 {
+						lang := strings.Split(v.Val, "-")[0]
+						if cfg.Verbose {
+							fmt.Printf("detected language in html: %s\n", lang)
+						}
+						config.SetLang(cfg, lang)
+					}
+				}
+			}
+
 			_, hasWeight := cfg.TagWeights[cursor]
 			_, isExcluded := cfg.ExcludeTags[cursor]
 			if (!hasWeight && !cfg.AllTagWeights) || isExcluded {

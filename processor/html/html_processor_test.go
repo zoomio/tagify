@@ -40,6 +40,7 @@ var processHTMLTests = []struct {
 	expect      []string
 	title       string
 	hash        string
+	lang        string
 	noStopWords bool
 	contentOnly bool
 }{
@@ -47,6 +48,7 @@ var processHTMLTests = []struct {
 		"empty",
 		"",
 		[]string{},
+		"",
 		"",
 		"",
 		false,
@@ -58,6 +60,7 @@ var processHTMLTests = []struct {
 		[]string{"there", "was", "a", "boy", "whose", "name", "jim"},
 		"",
 		"1f4911e9a610990862bbdf6fe1196a4d4003f12896ab0ed20ece0b97fae54bd798ee349bde89e2fd23ccca0063feccd109a4d0d6514f2f0839ff6ac76489bc87",
+		"en",
 		false,
 		true,
 	},
@@ -67,6 +70,7 @@ var processHTMLTests = []struct {
 		[]string{"boy", "jim"},
 		"",
 		"1f4911e9a610990862bbdf6fe1196a4d4003f12896ab0ed20ece0b97fae54bd798ee349bde89e2fd23ccca0063feccd109a4d0d6514f2f0839ff6ac76489bc87",
+		"en",
 		true,
 		true,
 	},
@@ -76,6 +80,7 @@ var processHTMLTests = []struct {
 		[]string{"go", "golang", "html", "extract", "all", "certain", "parse", "content", "from", "tags", "theme", "blog", "help"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
 		"04c09437103091df65d3c8d464017156bd181951adf614bccf30c5b40332641a7bd3d9a3a5042119d9e72312e2ce545c4522a546f9e869fe5d0c2dc6c988ab13",
+		"en",
 		false,
 		true,
 	},
@@ -85,6 +90,7 @@ var processHTMLTests = []struct {
 		[]string{"parse", "html", "extract", "content", "tags", "theme", "golang", "blog", "help"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
 		"04c09437103091df65d3c8d464017156bd181951adf614bccf30c5b40332641a7bd3d9a3a5042119d9e72312e2ce545c4522a546f9e869fe5d0c2dc6c988ab13",
+		"en",
 		true,
 		true,
 	},
@@ -94,6 +100,7 @@ var processHTMLTests = []struct {
 		[]string{"tags", "help", "blog", "html", "content", "extract", "theme", "golang", "parse"},
 		"go - Golang parse HTML, extract all content from certain HTML tags",
 		"04c09437103091df65d3c8d464017156bd181951adf614bccf30c5b40332641a7bd3d9a3a5042119d9e72312e2ce545c4522a546f9e869fe5d0c2dc6c988ab13",
+		"en",
 		true,
 		false,
 	},
@@ -103,6 +110,7 @@ var processHTMLTests = []struct {
 		[]string{"stuff", "foo", "texty", "text", "people", "cool"},
 		"People are looking for cool stuff",
 		"09e63717d8ea919f68c3f8cc9403ebe5d119baf924e3bb0d7e7db7d317f6c3ba46f1319da2857f0fe965ff06a4bb5ee17e35bdd1c16d2402b8a5a6d3748b49e4",
+		"en",
 		true,
 		false,
 	},
@@ -112,6 +120,7 @@ var processHTMLTests = []struct {
 		[]string{"longer", "title", "verge"},
 		"Hi This is Slightly Longer Title",
 		"13ea1c679ec7d1678d60b614f595192c47907fed5ea0e2883de001e3e2bcfd4fea61dea4a9cfa5f9a8f91a575c181a582577987d7938e062b1820da80cfb64dd",
+		"en",
 		true,
 		false,
 	},
@@ -121,6 +130,7 @@ var processHTMLTests = []struct {
 		[]string{"document", "tags", "funny", "thing", "funtivity", "fun", "drag", "extra", "complex", "text", "testing", "hussle", "yup", "lotsa"},
 		"Complex text line",
 		"8200fbd4839ec87a58faf5eb889cbf1542b18645fba96230a171daa27175a282b0109215fdab04692b148e6908c1a72eb9f1ff969d975eaba16b6a394f6559bd",
+		"en",
 		true,
 		true,
 	},
@@ -133,6 +143,7 @@ func Test_ProcessHTML(t *testing.T) {
 			out := ProcessHTML(cfg, &inputReadCloser{strings.NewReader(tt.in)})
 			assert.Equal(t, tt.title, out.Meta.DocTitle)
 			assert.Equal(t, tt.hash, out.Meta.DocHash)
+			assert.Equal(t, tt.lang, out.Meta.Lang)
 			assert.ElementsMatch(t, tt.expect, model.ToStrings(out.Flatten()))
 		})
 	}
