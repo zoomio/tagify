@@ -31,7 +31,7 @@ Want to see it in action? Visit [Tagify Playground](https://www.zoomio.org/tagif
 
 Example, "tagify" this repository (with the limit of 5 tags):
 ```bash
-$ tagify -s https://github.com/zoomio/tagify -l 5
+tagify -s https://github.com/zoomio/tagify -l 5
 ```
 
 In a code (see [cmd/cli/cli.go](https://raw.githubusercontent.com/zoomio/tagify/master/cmd/cli/cli.go)).
