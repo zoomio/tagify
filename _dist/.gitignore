@@ -1,6 +1,6 @@
 /tagify*
 *.out
-coverage.txt
+*.txt
 *.prof
 *.svg
 *.png
