@@ -64,10 +64,9 @@ __For Linux:__
 ```
 
 __For Windows:__
-
-I didn't have time to automate Windows installation, but there is a binary for Windows platform too in the [releases](https://github.com/zoomio/tagify/releases/latest). So feel free to download it and install your own way. 
-
-PRs are also welcomed :)
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/zoomio/tagify/master/_bin/install.sh)" -o windows
+```
 
 ### Go dependency
 
