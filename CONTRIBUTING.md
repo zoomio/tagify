@@ -1,5 +1,9 @@
 # Contributing
 
+## Testing
+
+- benchmarks are `func BenchmarkXxx(b *testing.B) {` use `go test -v -run=^$ -bench=<BenchmarkXxx> -cpuprofile=prof.cpu ./<path_to_package>`, then profiling `go tool pprof <package>.test prof.cpu`
+
 ## Guidelines for pull requests
 
 - Write tests for any changes.

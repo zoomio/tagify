@@ -38,12 +38,12 @@ var (
 	AllTagWeights         = config.AllTagWeights
 	AdjustScores          = config.AdjustScores
 
-	Extensions = config.Extensions
-
-	Unknown  = config.Unknown
-	Text     = config.Text
-	HTML     = config.HTML
-	Markdown = config.Markdown
-
+	// content types
+	Unknown       = config.Unknown
+	Text          = config.Text
+	HTML          = config.HTML
+	Markdown      = config.Markdown
 	ContentTypeOf = config.ContentTypeOf
+
+	Extensions = config.Extensions
 )

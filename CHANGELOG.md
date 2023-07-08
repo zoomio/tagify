@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.61.0
+
+- bumped Go to 1.20;
+- bumped `github.com/zoomio/inout` to v0.13.0.
+
 ## v0.60.2
 
 - fixed dictionary loader for segmenter for Chinese & Japanese languages.

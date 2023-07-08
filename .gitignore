@@ -3,4 +3,6 @@
 /cli
 vendor/
 *.out
+*.test
+*.cpu
 coverage.txt
