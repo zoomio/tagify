@@ -1,6 +1,6 @@
 .PHONY: deps clean build
 
-TAG=0.60.2
+TAG=0.61.0
 BINARY=tagify
 DIST_DIR=_dist
 OS=darwin

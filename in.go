@@ -22,6 +22,13 @@ type in struct {
 // Panics on errors.
 func newIn(ctx context.Context, c *Config) (in, error) {
 	in := in{source: c.Source}
+
+	if strings.HasPrefix(c.Source, "http://") || strings.HasPrefix(c.Source, "https://") || c.Query != "" {
+		in.ContentType = HTML
+	} else if strings.ToLower(filepath.Ext(c.Source)) == ".md" {
+		in.ContentType = Markdown
+	}
+
 	r, err := inout.NewInOut(ctx,
 		inout.Source(c.Source),
 		inout.Query(c.Query),
@@ -35,12 +42,6 @@ func newIn(ctx context.Context, c *Config) (in, error) {
 	}
 
 	in.reader = &r
-
-	if strings.HasPrefix(c.Source, "http://") || strings.HasPrefix(c.Source, "https://") || c.Query != "" {
-		in.ContentType = HTML
-	} else if strings.ToLower(filepath.Ext(c.Source)) == ".md" {
-		in.ContentType = Markdown
-	}
 
 	return in, err
 }
