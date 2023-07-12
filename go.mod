@@ -5,7 +5,7 @@ require (
 	github.com/go-ego/gse v0.70.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
 	github.com/stretchr/testify v1.8.4
-	github.com/zoomio/inout v0.13.1-0.20230711023208-fe77e643343b
+	github.com/zoomio/inout v0.13.1-0.20230712024226-5b01f39132f4
 	github.com/zoomio/stopwords v0.11.0
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
 )

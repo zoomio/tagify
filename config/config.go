@@ -45,6 +45,8 @@ type Config struct {
 	ContentType
 	Content string
 
+	Timeout time.Duration
+
 	// headless
 	Query      string
 	WaitFor    string

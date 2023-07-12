@@ -40,8 +40,8 @@ github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXl
 github.com/vcaesar/cedar v0.20.1 h1:cDOmYWdprO7ZW8cngJrDi8Zivnscj9dA/y8Y+2SB1P0=
 github.com/vcaesar/cedar v0.20.1/go.mod h1:iMDweyuW76RvSrCkQeZeQk4iCbshiPzcCvcGCtpM7iI=
 github.com/vcaesar/tt v0.20.0 h1:9t2Ycb9RNHcP0WgQgIaRKJBB+FrRdejuaL6uWIHuoBA=
-github.com/zoomio/inout v0.13.1-0.20230711023208-fe77e643343b h1:6sMweGP+zMKuUNas45+dl56U73BOx2uZI6ie5YJg7p8=
-github.com/zoomio/inout v0.13.1-0.20230711023208-fe77e643343b/go.mod h1:AsWnkek4KPEEtIxv5L2yIUbrBDIDRdWOnDD/Mgt55Rk=
+github.com/zoomio/inout v0.13.1-0.20230712024226-5b01f39132f4 h1:pcTuVcHLHKlxUVcXrFPHRU/GPesKj5t275EIkQvw5tQ=
+github.com/zoomio/inout v0.13.1-0.20230712024226-5b01f39132f4/go.mod h1:AsWnkek4KPEEtIxv5L2yIUbrBDIDRdWOnDD/Mgt55Rk=
 github.com/zoomio/stopwords v0.11.0 h1:O2JY3zFymge1u/9FkEjG7PtloJMiqWH+P6NKtTDKvLY=
 github.com/zoomio/stopwords v0.11.0/go.mod h1:G4EP6eLrE9A9HhG0JcOVcv9UdPpjthtqaA5MpgkKmoc=
 golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d h1:62NvYBuaanGXR2ZOfwDFkhhl6X1DUgf8qg3GuQvxZsE=
