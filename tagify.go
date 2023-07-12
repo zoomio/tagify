@@ -15,17 +15,17 @@ import (
 // Run produces slice of tags ordered by frequency.
 func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 
-	c := config.New(options...)
+	cfg := config.New(options...)
 
 	var in in
 	var err error
 
-	if c.Content != "" {
-		in = newInFromString(c.Content, c.ContentType)
+	if cfg.Content != "" {
+		in = newInFromString(cfg.Content, cfg.ContentType)
 	} else {
-		in, err = newIn(ctx, c)
-		if c.ContentType > Unknown {
-			in.ContentType = c.ContentType
+		in, err = newIn(ctx, cfg)
+		if cfg.ContentType > Unknown {
+			in.ContentType = cfg.ContentType
 		}
 	}
 
@@ -33,14 +33,14 @@ func Run(ctx context.Context, options ...Option) (*model.Result, error) {
 		return nil, err
 	}
 
-	res := processInput(&in, c)
+	res := processInput(&in, cfg)
 
 	if len(res.RawTags) > 0 {
-		if c.Verbose {
+		if cfg.Verbose {
 			fmt.Println("tagifying...")
 		}
-		res.Tags = processor.Run(c, res.Flatten())
-		if c.Verbose {
+		res.Tags = processor.Run(cfg, res.Flatten())
+		if cfg.Verbose {
 			fmt.Printf("\n%v\n", res.Tags)
 		}
 	}
