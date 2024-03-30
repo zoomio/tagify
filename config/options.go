@@ -36,6 +36,13 @@ var (
 		}
 	}
 
+	// Timeout sets the overall deadline for the operation.
+	Timeout = func(d time.Duration) Option {
+		return func(c *Config) {
+			c.Timeout = d
+		}
+	}
+
 	// WaitFor sets CSS query for the target of In-Out.
 	WaitFor = func(query string) Option {
 		return func(c *Config) {
@@ -54,6 +61,13 @@ var (
 	Screenshot = func(v bool) Option {
 		return func(c *Config) {
 			c.Screenshot = v
+		}
+	}
+
+	// UserAgent allows to specify custom User Agent of the HTTP headless calls.
+	UserAgent = func(ua string) Option {
+		return func(c *Config) {
+			c.UserAgent = ua
 		}
 	}
 

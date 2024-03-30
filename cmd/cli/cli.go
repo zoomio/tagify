@@ -25,6 +25,7 @@ var (
 	ready = flag.String("r", "", "DOM CSS query, waits until certain element available, but fetches contents of the whole HTML document")
 	until = flag.Duration("u", 0, "duration to wait before getting HTML contents, handy for SPAs, because they keep loading in browsers for some time")
 	img   = flag.String("i", "", "enables capturing screenshot in the provided path")
+	ua    = flag.String("ua", "", "provide a custom user agent for headless HTTP calls")
 
 	limit       = flag.Int("l", 5, "number of tags to return")
 	verbose     = flag.Bool("v", false, "enables verbose mode")
@@ -92,6 +93,9 @@ func main() {
 	}
 	if len(*img) > 0 {
 		options = append(options, tagify.Screenshot(true))
+	}
+	if *ua != "" {
+		options = append(options, tagify.UserAgent(*ua))
 	}
 
 	if *verbose {

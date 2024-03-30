@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.62.0
+
+- bumped Go to 1.22;
+- bumped `github.com/zoomio/inout` to v0.14.0;
+- introduced `UserAgent` (`-ua` in CLI mode) to allow to pass a custom user agent for headless HTTP calls.
+
 ## v0.61.0
 
 - bumped Go to 1.20;

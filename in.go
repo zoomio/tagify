@@ -20,23 +20,25 @@ type in struct {
 //
 // source - the filename or web page source, reads from STDIN if source is empty.
 // Panics on errors.
-func newIn(ctx context.Context, c *Config) (in, error) {
-	in := in{source: c.Source}
+func newIn(ctx context.Context, cfg *Config) (in, error) {
+	in := in{source: cfg.Source}
 
-	if strings.HasPrefix(c.Source, "http://") || strings.HasPrefix(c.Source, "https://") || c.Query != "" {
+	if strings.HasPrefix(cfg.Source, "http://") || strings.HasPrefix(cfg.Source, "https://") || cfg.Query != "" {
 		in.ContentType = HTML
-	} else if strings.ToLower(filepath.Ext(c.Source)) == ".md" {
+	} else if strings.ToLower(filepath.Ext(cfg.Source)) == ".md" {
 		in.ContentType = Markdown
 	}
 
 	r, err := inout.NewInOut(ctx,
-		inout.Source(c.Source),
-		inout.Query(c.Query),
-		inout.WaitFor(c.WaitFor),
-		inout.WaitUntil(c.WaitUntil),
-		inout.Screenshot(c.Screenshot),
-		inout.Timeout(0),
-		inout.Verbose(c.Verbose))
+		inout.Source(cfg.Source),
+		inout.Query(cfg.Query),
+		inout.WaitFor(cfg.WaitFor),
+		inout.WaitUntil(cfg.WaitUntil),
+		inout.Screenshot(cfg.Screenshot),
+		inout.Timeout(cfg.Timeout),
+		inout.Verbose(cfg.Verbose),
+		inout.UserAgent(cfg.UserAgent),
+	)
 	if err != nil {
 		return in, err
 	}

@@ -45,11 +45,14 @@ type Config struct {
 	ContentType
 	Content string
 
+	Timeout time.Duration
+
 	// headless
 	Query      string
 	WaitFor    string
 	WaitUntil  time.Duration
 	Screenshot bool
+	UserAgent  string
 
 	// misc
 	Limit       int

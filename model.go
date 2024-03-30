@@ -14,11 +14,14 @@ var (
 	Language = config.Language
 	Content  = config.Content
 
+	Timeout = config.Timeout
+
 	// headless
 	Query      = config.Query
 	WaitFor    = config.WaitFor
 	WaitUntil  = config.WaitUntil
 	Screenshot = config.Screenshot
+	UserAgent  = config.UserAgent
 
 	// misc
 	TargetType  = config.TargetType
