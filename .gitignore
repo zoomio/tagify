@@ -3,6 +3,7 @@
 /tagify_linux*
 /cli
 vendor/
+/_dist/
 *.out
 *.test
 *.cpu
