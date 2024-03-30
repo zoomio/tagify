@@ -52,6 +52,7 @@ type Config struct {
 	WaitFor    string
 	WaitUntil  time.Duration
 	Screenshot bool
+	UserAgent  string
 
 	// misc
 	Limit       int

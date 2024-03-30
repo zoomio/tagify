@@ -36,7 +36,9 @@ func newIn(ctx context.Context, cfg *Config) (in, error) {
 		inout.WaitUntil(cfg.WaitUntil),
 		inout.Screenshot(cfg.Screenshot),
 		inout.Timeout(cfg.Timeout),
-		inout.Verbose(cfg.Verbose))
+		inout.Verbose(cfg.Verbose),
+		inout.UserAgent(cfg.UserAgent),
+	)
 	if err != nil {
 		return in, err
 	}

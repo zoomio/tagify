@@ -64,6 +64,13 @@ var (
 		}
 	}
 
+	// UserAgent allows to specify custom User Agent of the HTTP headless calls.
+	UserAgent = func(ua string) Option {
+		return func(c *Config) {
+			c.UserAgent = ua
+		}
+	}
+
 	// Content sets content of the target.
 	Content = func(v string) Option {
 		return func(c *Config) {

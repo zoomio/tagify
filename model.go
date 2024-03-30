@@ -21,6 +21,7 @@ var (
 	WaitFor    = config.WaitFor
 	WaitUntil  = config.WaitUntil
 	Screenshot = config.Screenshot
+	UserAgent  = config.UserAgent
 
 	// misc
 	TargetType  = config.TargetType
