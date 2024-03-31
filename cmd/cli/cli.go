@@ -124,12 +124,12 @@ func main() {
 		options = append(options, tagify.ExtraTagWeightsJSON(*extraTagWeightsJSON))
 	}
 
-	// print progress updates to terminal
+	// print progress spinner to terminal
 	stopCh := make(chan struct{})
 	var wg sync.WaitGroup
 	if !*verbose {
 		wg.Add(1)
-		go printProgress(stopCh, &wg)
+		go shellSpinner(stopCh, &wg)
 	}
 
 	res, err := tagify.Run(context.Background(), options...)
@@ -170,7 +170,7 @@ func main() {
 	fmt.Fprintf(os.Stdout, "%s%s\n", prfx, strings.Join(res.TagsStrings(), " "))
 }
 
-func printProgress(stopCh chan struct{}, wg *sync.WaitGroup) {
+func shellSpinner(stopCh chan struct{}, wg *sync.WaitGroup) {
 	ticker := time.NewTicker(80 * time.Millisecond)
 	i := -1
 	symbs := []string{"|", "\\", "-", "/"}
